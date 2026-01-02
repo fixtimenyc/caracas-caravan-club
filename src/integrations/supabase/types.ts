@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payment_method: string
+          reservation_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payment_method: string
+          reservation_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_method?: string
+          reservation_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -25,6 +63,7 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
+          verified: boolean
         }
         Insert: {
           address?: string | null
@@ -36,6 +75,7 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
+          verified?: boolean
         }
         Update: {
           address?: string | null
@@ -47,8 +87,91 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+          verified?: boolean
         }
         Relationships: []
+      }
+      reservations: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          renter_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["reservation_status"]
+          total_price: number
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          renter_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          total_price: number
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          renter_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          total_price?: number
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          author_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          reservation_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          reservation_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          reservation_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: true
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -71,6 +194,54 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicles: {
+        Row: {
+          active: boolean
+          available: boolean
+          brand: string
+          created_at: string
+          description: string | null
+          id: string
+          location: string
+          model: string
+          owner_id: string
+          photos: string[] | null
+          price_per_day: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          active?: boolean
+          available?: boolean
+          brand: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          location: string
+          model: string
+          owner_id: string
+          photos?: string[] | null
+          price_per_day: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          active?: boolean
+          available?: boolean
+          brand?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string
+          model?: string
+          owner_id?: string
+          photos?: string[] | null
+          price_per_day?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -86,6 +257,13 @@ export type Database = {
     }
     Enums: {
       app_role: "renter" | "owner" | "admin"
+      payment_status: "pending" | "completed" | "failed" | "refunded"
+      reservation_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -214,6 +392,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["renter", "owner", "admin"],
+      payment_status: ["pending", "completed", "failed", "refunded"],
+      reservation_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "completed",
+        "cancelled",
+      ],
     },
   },
 } as const
