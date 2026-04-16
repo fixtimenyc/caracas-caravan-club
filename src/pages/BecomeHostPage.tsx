@@ -89,7 +89,7 @@ const BecomeHostPage = () => {
   };
 
   const monthlyGross = pricePerDay * daysPerMonth;
-  const commission = Math.round(monthlyGross * 0.15);
+  const commission = Math.round(monthlyGross * 0.30);
   const monthlyNet = monthlyGross - commission;
 
   return (
@@ -179,7 +179,7 @@ const BecomeHostPage = () => {
                       <span className="font-semibold">${monthlyGross}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="opacity-90">Comisión RuedaVe (15%)</span>
+                      <span className="opacity-90">Comisión RuedaVe (30%)</span>
                       <span className="font-semibold">-${commission}</span>
                     </div>
                   </div>
