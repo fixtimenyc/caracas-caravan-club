@@ -110,7 +110,7 @@ const BecomeHostPage = () => {
                 Únete a la comunidad de anfitriones de RuedaVe en Caracas y empieza a generar ingresos con tu carro hoy mismo.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Button variant="hero" size="lg" onClick={() => navigate('/auth')}>
+                <Button variant="hero" size="lg" onClick={() => navigate('/auth?mode=signup&role=owner')}>
                   Publicar mi vehículo
                 </Button>
                 <Button variant="heroOutline" size="lg" onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}>
@@ -261,7 +261,7 @@ const BecomeHostPage = () => {
                 <p className="text-muted-foreground mb-6">
                   Asegurar la calidad y seguridad de la comunidad es nuestra prioridad. Estos son los requisitos básicos para publicar tu vehículo.
                 </p>
-                <Button variant="default" size="lg" onClick={() => navigate('/auth')}>
+                <Button variant="default" size="lg" onClick={() => navigate('/auth?mode=signup&role=owner')}>
                   <Upload className="w-4 h-4 mr-2" />
                   Empezar publicación
                 </Button>
@@ -291,7 +291,7 @@ const BecomeHostPage = () => {
               <p className="text-primary-foreground/90 mb-8 max-w-xl mx-auto">
                 Únete a cientos de anfitriones que ya están aprovechando su vehículo en Caracas.
               </p>
-              <Button variant="heroOutline" size="lg" onClick={() => navigate('/auth')}>
+              <Button variant="heroOutline" size="lg" onClick={() => navigate('/auth?mode=signup&role=owner')}>
                 Publicar mi vehículo gratis
               </Button>
             </Card>
