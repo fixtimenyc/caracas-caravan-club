@@ -50,9 +50,9 @@ const Navbar = () => {
             <button onClick={() => navigate('/como-funciona')} className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
               Cómo funciona
             </button>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
+            <button onClick={() => navigate('/conviertete-en-anfitrion')} className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
               Convertirte en anfitrión
-            </a>
+            </button>
             <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
               Ayuda
             </a>
@@ -132,9 +132,9 @@ const Navbar = () => {
               <button onClick={() => { navigate('/como-funciona'); setIsMenuOpen(false); }} className="text-left text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
                 Cómo funciona
               </button>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
+              <button onClick={() => { navigate('/conviertete-en-anfitrion'); setIsMenuOpen(false); }} className="text-left text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
                 Convertirte en anfitrión
-              </a>
+              </button>
               <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
                 Ayuda
               </a>
