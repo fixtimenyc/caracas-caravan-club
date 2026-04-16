@@ -47,9 +47,9 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
+            <button onClick={() => navigate('/como-funciona')} className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
               Cómo funciona
-            </a>
+            </button>
             <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
               Convertirte en anfitrión
             </a>
@@ -129,9 +129,9 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
+              <button onClick={() => { navigate('/como-funciona'); setIsMenuOpen(false); }} className="text-left text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
                 Cómo funciona
-              </a>
+              </button>
               <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
                 Convertirte en anfitrión
               </a>
