@@ -25,6 +25,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/como-funciona" element={<HowItWorksPage />} />
             <Route path="/conviertete-en-anfitrion" element={<BecomeHostPage />} />
+            <Route path="/aliado/solicitud" element={<OwnerApplicationPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
