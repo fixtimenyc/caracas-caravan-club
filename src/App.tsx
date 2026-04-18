@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import BecomeHostPage from "./pages/BecomeHostPage";
+import OwnerApplicationPage from "./pages/OwnerApplicationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
