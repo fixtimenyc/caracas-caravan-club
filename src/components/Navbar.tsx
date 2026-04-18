@@ -1,4 +1,4 @@
-import { Car, Menu, User, X, LogOut, ChevronDown } from "lucide-react";
+import { Car, Menu, User, X, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -56,6 +56,15 @@ const Navbar = () => {
             <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
               Ayuda
             </a>
+            {roles.includes('admin') && (
+              <button
+                onClick={() => navigate('/admin/solicitudes')}
+                className="flex items-center gap-1.5 text-primary hover:text-primary/80 transition-smooth text-sm font-medium"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                Solicitudes
+              </button>
+            )}
           </div>
 
           {/* Desktop Actions */}
@@ -92,9 +101,9 @@ const Navbar = () => {
                     </DropdownMenuItem>
                   ) : null}
                   {roles.includes('admin') && (
-                    <DropdownMenuItem onClick={() => navigate('/admin')}>
-                      <User className="w-4 h-4 mr-2" />
-                      Panel Admin
+                    <DropdownMenuItem onClick={() => navigate('/admin/solicitudes')}>
+                      <ShieldCheck className="w-4 h-4 mr-2" />
+                      Solicitudes de aliados
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -161,8 +170,9 @@ const Navbar = () => {
                       </Button>
                     )}
                     {roles.includes('admin') && (
-                      <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate('/admin')}>
-                        Panel Admin
+                      <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/solicitudes'); setIsMenuOpen(false); }}>
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Solicitudes de aliados
                       </Button>
                     )}
                     <Button variant="ghost" size="sm" className="justify-start text-destructive" onClick={handleSignOut}>
