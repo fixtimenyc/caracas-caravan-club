@@ -94,12 +94,13 @@ const Auth = () => {
             toast.error(error.message);
           }
         } else {
-          toast.success(
-            role === 'owner'
-              ? '¡Cuenta de aliado creada! Ya puedes publicar tu vehículo.'
-              : '¡Cuenta creada exitosamente!'
-          );
-          navigate('/');
+          if (role === 'owner') {
+            toast.success('¡Cuenta creada! Completa tu solicitud de aliado.');
+            navigate('/aliado/solicitud');
+          } else {
+            toast.success('¡Cuenta creada exitosamente!');
+            navigate('/');
+          }
         }
       }
     } catch (error) {
