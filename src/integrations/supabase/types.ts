@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      owner_applications: {
+        Row: {
+          accepted_terms: boolean
+          address: string
+          admin_notes: string | null
+          availability_notes: string | null
+          birth_date: string | null
+          cedula: string
+          cedula_doc_url: string | null
+          city: string
+          created_at: string
+          fuel_type: string | null
+          id: string
+          insurance_doc_url: string | null
+          mileage: number | null
+          phone: string
+          status: Database["public"]["Enums"]["application_status"]
+          suggested_price_per_day: number
+          title_doc_url: string | null
+          transmission: string | null
+          updated_at: string
+          user_id: string
+          vehicle_brand: string
+          vehicle_color: string | null
+          vehicle_model: string
+          vehicle_photos: string[] | null
+          vehicle_plate: string
+          vehicle_year: number
+        }
+        Insert: {
+          accepted_terms?: boolean
+          address: string
+          admin_notes?: string | null
+          availability_notes?: string | null
+          birth_date?: string | null
+          cedula: string
+          cedula_doc_url?: string | null
+          city: string
+          created_at?: string
+          fuel_type?: string | null
+          id?: string
+          insurance_doc_url?: string | null
+          mileage?: number | null
+          phone: string
+          status?: Database["public"]["Enums"]["application_status"]
+          suggested_price_per_day: number
+          title_doc_url?: string | null
+          transmission?: string | null
+          updated_at?: string
+          user_id: string
+          vehicle_brand: string
+          vehicle_color?: string | null
+          vehicle_model: string
+          vehicle_photos?: string[] | null
+          vehicle_plate: string
+          vehicle_year: number
+        }
+        Update: {
+          accepted_terms?: boolean
+          address?: string
+          admin_notes?: string | null
+          availability_notes?: string | null
+          birth_date?: string | null
+          cedula?: string
+          cedula_doc_url?: string | null
+          city?: string
+          created_at?: string
+          fuel_type?: string | null
+          id?: string
+          insurance_doc_url?: string | null
+          mileage?: number | null
+          phone?: string
+          status?: Database["public"]["Enums"]["application_status"]
+          suggested_price_per_day?: number
+          title_doc_url?: string | null
+          transmission?: string | null
+          updated_at?: string
+          user_id?: string
+          vehicle_brand?: string
+          vehicle_color?: string | null
+          vehicle_model?: string
+          vehicle_photos?: string[] | null
+          vehicle_plate?: string
+          vehicle_year?: number
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -257,6 +344,7 @@ export type Database = {
     }
     Enums: {
       app_role: "renter" | "owner" | "admin"
+      application_status: "pending" | "approved" | "rejected"
       payment_status: "pending" | "completed" | "failed" | "refunded"
       reservation_status:
         | "pending"
@@ -392,6 +480,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["renter", "owner", "admin"],
+      application_status: ["pending", "approved", "rejected"],
       payment_status: ["pending", "completed", "failed", "refunded"],
       reservation_status: [
         "pending",
