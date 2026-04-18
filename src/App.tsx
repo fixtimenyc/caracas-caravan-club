@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import BecomeHostPage from "./pages/BecomeHostPage";
+import OwnerApplicationPage from "./pages/OwnerApplicationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/como-funciona" element={<HowItWorksPage />} />
             <Route path="/conviertete-en-anfitrion" element={<BecomeHostPage />} />
+            <Route path="/aliado/solicitud" element={<OwnerApplicationPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
