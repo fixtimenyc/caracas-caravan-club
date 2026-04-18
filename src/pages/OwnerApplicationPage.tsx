@@ -87,7 +87,7 @@ type VehicleData = z.infer<typeof vehicleSchema>;
 
 const OwnerApplicationPage = () => {
   const navigate = useNavigate();
-  const { user, loading, hasRole } = useAuth();
+  const { user, loading } = useAuth();
 
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
