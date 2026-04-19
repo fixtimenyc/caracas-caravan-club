@@ -9,7 +9,6 @@ import {
   TrendingUp,
   Eye,
   Pencil,
-  Power,
   Clock,
   CheckCircle2,
   XCircle,
