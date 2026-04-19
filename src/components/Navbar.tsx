@@ -118,7 +118,7 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
                   Iniciar sesión
                 </Button>
-                <Button variant="default" size="sm" onClick={() => navigate('/auth')}>
+                <Button variant="default" size="sm" onClick={() => navigate('/auth?mode=signup')}>
                   Registrarse
                 </Button>
               </>
@@ -184,7 +184,7 @@ const Navbar = () => {
                     <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate('/auth')}>
                       Iniciar sesión
                     </Button>
-                    <Button variant="default" size="sm" onClick={() => navigate('/auth')}>
+                    <Button variant="default" size="sm" onClick={() => navigate('/auth?mode=signup')}>
                       Registrarse
                     </Button>
                   </>
