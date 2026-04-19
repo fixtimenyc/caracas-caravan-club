@@ -651,32 +651,68 @@ const BookingRow = ({
   reservation,
   onView,
   badge,
+  hoursLeft,
+  onAccept,
+  onDecline,
 }: {
   reservation: Reservation;
   onView: () => void;
   badge: React.ReactNode;
-}) => (
-  <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/40 rounded-lg">
-    <div className="flex items-center gap-3">
-      <CalendarDays className="w-4 h-4 text-primary shrink-0" />
-      <div>
-        <p className="text-sm font-medium text-foreground">
-          {format(new Date(reservation.start_date), "d MMM", { locale: es })} →{" "}
-          {format(new Date(reservation.end_date), "d MMM yyyy", { locale: es })}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          ${Number(reservation.total_price).toFixed(2)} · ganas $
-          {(Number(reservation.total_price) * 0.7).toFixed(2)}
-        </p>
+  hoursLeft?: number;
+  onAccept?: () => void;
+  onDecline?: () => void;
+}) => {
+  const showActions =
+    onAccept && onDecline && reservation.status === "pending" && (hoursLeft ?? 0) > 0;
+  const expired =
+    reservation.status === "pending" && (hoursLeft ?? 0) <= 0;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/40 rounded-lg">
+      <div className="flex items-center gap-3">
+        <CalendarDays className="w-4 h-4 text-primary shrink-0" />
+        <div>
+          <p className="text-sm font-medium text-foreground">
+            {format(new Date(reservation.start_date), "d MMM", { locale: es })} →{" "}
+            {format(new Date(reservation.end_date), "d MMM yyyy", { locale: es })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            ${Number(reservation.total_price).toFixed(2)} · ganas $
+            {(Number(reservation.total_price) * 0.7).toFixed(2)}
+            {reservation.status === "pending" && hoursLeft !== undefined && (
+              <span className={expired ? "text-destructive ml-1" : "text-accent ml-1"}>
+                · {expired ? "Plazo vencido" : `${hoursLeft}h restantes`}
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {badge}
+        {showActions && (
+          <>
+            <Button
+              size="sm"
+              onClick={onAccept}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Check className="w-4 h-4 mr-1" /> Aceptar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onDecline}
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <X className="w-4 h-4 mr-1" /> Rechazar
+            </Button>
+          </>
+        )}
+        <Button size="sm" variant="ghost" onClick={onView}>
+          <Eye className="w-4 h-4 mr-1" /> Ver
+        </Button>
       </div>
     </div>
-    <div className="flex items-center gap-2">
-      {badge}
-      <Button size="sm" variant="ghost" onClick={onView}>
-        <Eye className="w-4 h-4 mr-1" /> Ver
-      </Button>
-    </div>
-  </div>
-);
+  );
+};
 
 export default OwnerDashboardPage;
