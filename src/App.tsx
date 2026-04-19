@@ -10,6 +10,7 @@ import HowItWorksPage from "./pages/HowItWorksPage";
 import BecomeHostPage from "./pages/BecomeHostPage";
 import OwnerApplicationPage from "./pages/OwnerApplicationPage";
 import AdminApplicationsPage from "./pages/AdminApplicationsPage";
+import VehicleDetailPage from "./pages/VehicleDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/conviertete-en-anfitrion" element={<BecomeHostPage />} />
             <Route path="/aliado/solicitud" element={<OwnerApplicationPage />} />
             <Route path="/admin/solicitudes" element={<AdminApplicationsPage />} />
+            <Route path="/vehiculo/:id" element={<VehicleDetailPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
