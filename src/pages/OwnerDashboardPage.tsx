@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format, isFuture, isPast } from "date-fns";
+import { format, isFuture, isPast, differenceInHours } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Car,
@@ -15,6 +15,8 @@ import {
   XCircle,
   AlertCircle,
   Plus,
+  Check,
+  X,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
