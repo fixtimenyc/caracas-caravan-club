@@ -624,6 +624,36 @@ const OwnerDashboardPage = () => {
                     </code>
                   }
                 />
+                {selectedReservation.status === "pending" && (
+                  <div className="pt-3">
+                    {hoursLeftForResponse(selectedReservation) > 0 ? (
+                      <>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Tienes {hoursLeftForResponse(selectedReservation)}h para responder esta solicitud.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            className="flex-1"
+                            onClick={() => respondReservation(selectedReservation, "approved")}
+                          >
+                            <Check className="w-4 h-4 mr-1" /> Aceptar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1 text-destructive"
+                            onClick={() => respondReservation(selectedReservation, "rejected")}
+                          >
+                            <X className="w-4 h-4 mr-1" /> Rechazar
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-xs text-destructive">
+                        El plazo de 24 horas ha expirado.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </DialogContent>
