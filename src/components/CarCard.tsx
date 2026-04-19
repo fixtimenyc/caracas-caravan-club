@@ -1,5 +1,6 @@
 import { Heart, MapPin, Star, Users } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 interface CarCardProps {
   car: {
@@ -20,7 +21,10 @@ const CarCard = ({ car }: CarCardProps) => {
   const [isFavorite, setIsFavorite] = useState(car.isFavorite || false);
 
   return (
-    <div className="group bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-smooth cursor-pointer">
+    <Link
+      to={`/vehiculo/${car.id}`}
+      className="group block bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-smooth cursor-pointer"
+    >
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
@@ -84,7 +88,7 @@ const CarCard = ({ car }: CarCardProps) => {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
