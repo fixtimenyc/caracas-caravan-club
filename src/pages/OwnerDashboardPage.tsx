@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format, isFuture, isPast } from "date-fns";
+import { format, isFuture, isPast, differenceInHours } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Car,
@@ -9,12 +9,13 @@ import {
   TrendingUp,
   Eye,
   Pencil,
-  Power,
   Clock,
   CheckCircle2,
   XCircle,
   AlertCircle,
   Plus,
+  Check,
+  X,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -172,6 +173,54 @@ const OwnerDashboardPage = () => {
     } else {
       toast.success(newVal ? "Vehículo disponible" : "Vehículo pausado");
     }
+  };
+
+  const respondReservation = async (
+    r: Reservation,
+    decision: "approved" | "rejected"
+  ) => {
+    // 24-hour rule
+    const hoursElapsed = differenceInHours(new Date(), new Date(r.created_at));
+    if (hoursElapsed > 24) {
+      toast.error("El plazo de 24 horas para responder ha expirado");
+      return;
+    }
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: decision })
+      .eq("id", r.id);
+    if (error) {
+      toast.error("No se pudo actualizar la reserva");
+      return;
+    }
+    setReservations((prev) =>
+      prev.map((x) => (x.id === r.id ? { ...x, status: decision } : x))
+    );
+    setSelectedReservation(null);
+    // Notify renter
+    await supabase.from("notifications").insert({
+      user_id: r.renter_id,
+      type: decision === "approved" ? "reservation_approved" : "reservation_rejected",
+      title:
+        decision === "approved"
+          ? "¡Tu reserva fue aprobada!"
+          : "Reserva rechazada",
+      message: `${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(
+        new Date(r.end_date),
+        "d MMM yyyy",
+        { locale: es }
+      )}`,
+      reservation_id: r.id,
+      vehicle_id: r.vehicle_id,
+    });
+    toast.success(
+      decision === "approved" ? "Reserva aprobada" : "Reserva rechazada"
+    );
+  };
+
+  const hoursLeftForResponse = (r: Reservation) => {
+    const elapsed = differenceInHours(new Date(), new Date(r.created_at));
+    return Math.max(0, 24 - elapsed);
   };
 
   const getStatusBadge = (v: Vehicle) => {
@@ -484,6 +533,17 @@ const OwnerDashboardPage = () => {
                                   reservation={r}
                                   onView={() => setSelectedReservation(r)}
                                   badge={getReservationBadge(r.status)}
+                                  hoursLeft={hoursLeftForResponse(r)}
+                                  onAccept={
+                                    r.status === "pending"
+                                      ? () => respondReservation(r, "approved")
+                                      : undefined
+                                  }
+                                  onDecline={
+                                    r.status === "pending"
+                                      ? () => respondReservation(r, "rejected")
+                                      : undefined
+                                  }
                                 />
                               ))}
                             </div>
@@ -563,6 +623,36 @@ const OwnerDashboardPage = () => {
                     </code>
                   }
                 />
+                {selectedReservation.status === "pending" && (
+                  <div className="pt-3">
+                    {hoursLeftForResponse(selectedReservation) > 0 ? (
+                      <>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Tienes {hoursLeftForResponse(selectedReservation)}h para responder esta solicitud.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            className="flex-1"
+                            onClick={() => respondReservation(selectedReservation, "approved")}
+                          >
+                            <Check className="w-4 h-4 mr-1" /> Aceptar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1 text-destructive"
+                            onClick={() => respondReservation(selectedReservation, "rejected")}
+                          >
+                            <X className="w-4 h-4 mr-1" /> Rechazar
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-xs text-destructive">
+                        El plazo de 24 horas ha expirado.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </DialogContent>
@@ -590,32 +680,68 @@ const BookingRow = ({
   reservation,
   onView,
   badge,
+  hoursLeft,
+  onAccept,
+  onDecline,
 }: {
   reservation: Reservation;
   onView: () => void;
   badge: React.ReactNode;
-}) => (
-  <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/40 rounded-lg">
-    <div className="flex items-center gap-3">
-      <CalendarDays className="w-4 h-4 text-primary shrink-0" />
-      <div>
-        <p className="text-sm font-medium text-foreground">
-          {format(new Date(reservation.start_date), "d MMM", { locale: es })} →{" "}
-          {format(new Date(reservation.end_date), "d MMM yyyy", { locale: es })}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          ${Number(reservation.total_price).toFixed(2)} · ganas $
-          {(Number(reservation.total_price) * 0.7).toFixed(2)}
-        </p>
+  hoursLeft?: number;
+  onAccept?: () => void;
+  onDecline?: () => void;
+}) => {
+  const showActions =
+    onAccept && onDecline && reservation.status === "pending" && (hoursLeft ?? 0) > 0;
+  const expired =
+    reservation.status === "pending" && (hoursLeft ?? 0) <= 0;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/40 rounded-lg">
+      <div className="flex items-center gap-3">
+        <CalendarDays className="w-4 h-4 text-primary shrink-0" />
+        <div>
+          <p className="text-sm font-medium text-foreground">
+            {format(new Date(reservation.start_date), "d MMM", { locale: es })} →{" "}
+            {format(new Date(reservation.end_date), "d MMM yyyy", { locale: es })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            ${Number(reservation.total_price).toFixed(2)} · ganas $
+            {(Number(reservation.total_price) * 0.7).toFixed(2)}
+            {reservation.status === "pending" && hoursLeft !== undefined && (
+              <span className={expired ? "text-destructive ml-1" : "text-accent ml-1"}>
+                · {expired ? "Plazo vencido" : `${hoursLeft}h restantes`}
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {badge}
+        {showActions && (
+          <>
+            <Button
+              size="sm"
+              onClick={onAccept}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Check className="w-4 h-4 mr-1" /> Aceptar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onDecline}
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <X className="w-4 h-4 mr-1" /> Rechazar
+            </Button>
+          </>
+        )}
+        <Button size="sm" variant="ghost" onClick={onView}>
+          <Eye className="w-4 h-4 mr-1" /> Ver
+        </Button>
       </div>
     </div>
-    <div className="flex items-center gap-2">
-      {badge}
-      <Button size="sm" variant="ghost" onClick={onView}>
-        <Eye className="w-4 h-4 mr-1" /> Ver
-      </Button>
-    </div>
-  </div>
-);
+  );
+};
 
 export default OwnerDashboardPage;
