@@ -534,6 +534,17 @@ const OwnerDashboardPage = () => {
                                   reservation={r}
                                   onView={() => setSelectedReservation(r)}
                                   badge={getReservationBadge(r.status)}
+                                  hoursLeft={hoursLeftForResponse(r)}
+                                  onAccept={
+                                    r.status === "pending"
+                                      ? () => respondReservation(r, "approved")
+                                      : undefined
+                                  }
+                                  onDecline={
+                                    r.status === "pending"
+                                      ? () => respondReservation(r, "rejected")
+                                      : undefined
+                                  }
                                 />
                               ))}
                             </div>
