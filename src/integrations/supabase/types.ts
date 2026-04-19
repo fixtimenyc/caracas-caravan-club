@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          reservation_id: string | null
+          title: string
+          type: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          reservation_id?: string | null
+          title: string
+          type: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          reservation_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: []
+      }
       owner_applications: {
         Row: {
           accepted_terms: boolean
