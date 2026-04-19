@@ -11,6 +11,7 @@ import BecomeHostPage from "./pages/BecomeHostPage";
 import OwnerApplicationPage from "./pages/OwnerApplicationPage";
 import AdminApplicationsPage from "./pages/AdminApplicationsPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
+import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/aliado/solicitud" element={<OwnerApplicationPage />} />
             <Route path="/admin/solicitudes" element={<AdminApplicationsPage />} />
             <Route path="/vehiculo/:id" element={<VehicleDetailPage />} />
+            <Route path="/my-vehicles" element={<OwnerDashboardPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
