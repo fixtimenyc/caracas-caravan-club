@@ -176,6 +176,54 @@ const OwnerDashboardPage = () => {
     }
   };
 
+  const respondReservation = async (
+    r: Reservation,
+    decision: "approved" | "rejected"
+  ) => {
+    // 24-hour rule
+    const hoursElapsed = differenceInHours(new Date(), new Date(r.created_at));
+    if (hoursElapsed > 24) {
+      toast.error("El plazo de 24 horas para responder ha expirado");
+      return;
+    }
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: decision })
+      .eq("id", r.id);
+    if (error) {
+      toast.error("No se pudo actualizar la reserva");
+      return;
+    }
+    setReservations((prev) =>
+      prev.map((x) => (x.id === r.id ? { ...x, status: decision } : x))
+    );
+    setSelectedReservation(null);
+    // Notify renter
+    await supabase.from("notifications").insert({
+      user_id: r.renter_id,
+      type: decision === "approved" ? "reservation_approved" : "reservation_rejected",
+      title:
+        decision === "approved"
+          ? "¡Tu reserva fue aprobada!"
+          : "Reserva rechazada",
+      message: `${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(
+        new Date(r.end_date),
+        "d MMM yyyy",
+        { locale: es }
+      )}`,
+      reservation_id: r.id,
+      vehicle_id: r.vehicle_id,
+    });
+    toast.success(
+      decision === "approved" ? "Reserva aprobada" : "Reserva rechazada"
+    );
+  };
+
+  const hoursLeftForResponse = (r: Reservation) => {
+    const elapsed = differenceInHours(new Date(), new Date(r.created_at));
+    return Math.max(0, 24 - elapsed);
+  };
+
   const getStatusBadge = (v: Vehicle) => {
     if (!v.active)
       return (
