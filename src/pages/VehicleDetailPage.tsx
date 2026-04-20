@@ -43,6 +43,8 @@ import { toast } from "sonner";
 import type { DateRange } from "react-day-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import ReviewsSection from "@/components/ReviewsSection";
+import ReviewDialog from "@/components/ReviewDialog";
 
 type VehicleRow = {
   id: string;
@@ -85,6 +87,9 @@ const VehicleDetailPage = () => {
   const [vehicle, setVehicle] = useState<VehicleRow | null>(null);
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
+  const [ratingSummary, setRatingSummary] = useState<{ avg: number | null; count: number }>({ avg: null, count: 0 });
+  const [renterCompletedReservation, setRenterCompletedReservation] = useState<{ id: string } | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   const [photoIndex, setPhotoIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -133,10 +138,52 @@ const VehicleDetailPage = () => {
         blocked.push(...days);
       });
       setBookedDates(blocked);
+
+      // Fetch rating summary
+      const { data: ratingData } = await supabase.rpc("vehicle_rating_summary", {
+        _vehicle_id: id,
+      });
+      const row = (ratingData as Array<{ avg_rating: number | null; review_count: number }> | null)?.[0];
+      setRatingSummary({
+        avg: row?.avg_rating ? Number(row.avg_rating) : null,
+        count: Number(row?.review_count || 0),
+      });
+
       setLoading(false);
     };
     load();
   }, [id]);
+
+  // Check if logged-in renter has a completed reservation pending review
+  useEffect(() => {
+    if (!user || !id) {
+      setRenterCompletedReservation(null);
+      return;
+    }
+    const check = async () => {
+      const { data: rsv } = await supabase
+        .from("reservations")
+        .select("id")
+        .eq("vehicle_id", id)
+        .eq("renter_id", user.id)
+        .eq("status", "completed")
+        .order("end_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!rsv) {
+        setRenterCompletedReservation(null);
+        return;
+      }
+      const { data: existing } = await supabase
+        .from("reviews")
+        .select("id")
+        .eq("reservation_id", rsv.id)
+        .eq("author_id", user.id)
+        .maybeSingle();
+      setRenterCompletedReservation(existing ? null : { id: rsv.id });
+    };
+    check();
+  }, [user, id]);
 
   const photos = useMemo(() => {
     if (!vehicle?.photos?.length) return ["/placeholder.svg"];
@@ -293,7 +340,14 @@ const VehicleDetailPage = () => {
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-accent text-accent" />
-                <span className="font-semibold text-foreground">Nuevo</span>
+                <span className="font-semibold text-foreground">
+                  {ratingSummary.avg !== null ? ratingSummary.avg.toFixed(1) : "Nuevo"}
+                </span>
+                {ratingSummary.count > 0 && (
+                  <span className="text-muted-foreground">
+                    ({ratingSummary.count})
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
