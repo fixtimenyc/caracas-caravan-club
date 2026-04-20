@@ -37,6 +37,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ReviewDialog from "@/components/ReviewDialog";
+import { Star } from "lucide-react";
 
 type Vehicle = {
   id: string;
@@ -81,6 +83,8 @@ const OwnerDashboardPage = () => {
   const [pendingApps, setPendingApps] = useState<PendingApp[]>([]);
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+  const [reviewTarget, setReviewTarget] = useState<Reservation | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
