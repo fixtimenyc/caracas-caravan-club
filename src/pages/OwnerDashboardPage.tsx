@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format, isFuture, isPast, differenceInHours } from "date-fns";
+import { format, isPast, differenceInHours } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Car,
@@ -16,6 +16,8 @@ import {
   Plus,
   Check,
   X,
+  PlayCircle,
+  Flag,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -54,7 +56,7 @@ type Reservation = {
   start_date: string;
   end_date: string;
   total_price: number;
-  status: "pending" | "approved" | "rejected" | "completed" | "cancelled";
+  status: "pending" | "approved" | "active" | "rejected" | "completed" | "cancelled";
   renter_id: string;
   created_at: string;
 };
@@ -146,14 +148,17 @@ const OwnerDashboardPage = () => {
     reservations.filter(
       (r) =>
         r.vehicle_id === vehicleId &&
-        isFuture(new Date(r.start_date)) &&
-        ["pending", "approved"].includes(r.status)
+        ["pending", "approved", "active"].includes(r.status) &&
+        !isPast(new Date(r.end_date))
     );
   const pastByVehicle = (vehicleId: string) =>
     reservations.filter(
       (r) =>
         r.vehicle_id === vehicleId &&
-        (isPast(new Date(r.end_date)) || r.status === "completed" || r.status === "cancelled")
+        (r.status === "completed" ||
+          r.status === "cancelled" ||
+          r.status === "rejected" ||
+          (isPast(new Date(r.end_date)) && r.status !== "active"))
     );
 
   const toggleAvailability = async (v: Vehicle) => {
@@ -218,6 +223,54 @@ const OwnerDashboardPage = () => {
     );
   };
 
+  const transitionReservation = async (
+    r: Reservation,
+    newStatus: "active" | "completed" | "cancelled"
+  ) => {
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: newStatus })
+      .eq("id", r.id);
+    if (error) {
+      toast.error("No se pudo actualizar la reserva");
+      return;
+    }
+    setReservations((prev) =>
+      prev.map((x) => (x.id === r.id ? { ...x, status: newStatus } : x))
+    );
+    setSelectedReservation((prev) =>
+      prev && prev.id === r.id ? { ...prev, status: newStatus } : prev
+    );
+
+    const notifMap = {
+      active: {
+        type: "reservation_active",
+        title: "¡Tu viaje ha comenzado!",
+        message: `Disfruta tu viaje del ${format(new Date(r.start_date), "d MMM", { locale: es })} al ${format(new Date(r.end_date), "d MMM yyyy", { locale: es })}.`,
+      },
+      completed: {
+        type: "reservation_completed",
+        title: "Viaje completado",
+        message: `Tu reserva del ${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(new Date(r.end_date), "d MMM", { locale: es })} fue marcada como completada. ¡Déjale una reseña al anfitrión!`,
+      },
+      cancelled: {
+        type: "reservation_cancelled",
+        title: "Reserva cancelada",
+        message: `La reserva del ${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(new Date(r.end_date), "d MMM", { locale: es })} fue cancelada.`,
+      },
+    };
+    const n = notifMap[newStatus];
+    await supabase.from("notifications").insert({
+      user_id: r.renter_id,
+      type: n.type,
+      title: n.title,
+      message: n.message,
+      reservation_id: r.id,
+      vehicle_id: r.vehicle_id,
+    });
+    toast.success(n.title);
+  };
+
   const hoursLeftForResponse = (r: Reservation) => {
     const elapsed = differenceInHours(new Date(), new Date(r.created_at));
     return Math.max(0, 24 - elapsed);
@@ -246,7 +299,8 @@ const OwnerDashboardPage = () => {
   const getReservationBadge = (status: Reservation["status"]) => {
     const map: Record<Reservation["status"], { label: string; className: string }> = {
       pending: { label: "Pendiente", className: "bg-accent/20 text-accent-foreground" },
-      approved: { label: "Aprobada", className: "bg-primary/20 text-primary" },
+      approved: { label: "Confirmada", className: "bg-primary/20 text-primary" },
+      active: { label: "En curso", className: "bg-primary text-primary-foreground" },
       completed: { label: "Completada", className: "bg-secondary text-secondary-foreground" },
       rejected: { label: "Rechazada", className: "bg-destructive/10 text-destructive" },
       cancelled: { label: "Cancelada", className: "bg-muted text-muted-foreground" },
@@ -651,6 +705,41 @@ const OwnerDashboardPage = () => {
                         El plazo de 24 horas ha expirado.
                       </p>
                     )}
+                  </div>
+                )}
+                {selectedReservation.status === "approved" && (
+                  <div className="pt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Cuando comience el viaje, márcalo como en curso.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        onClick={() => transitionReservation(selectedReservation, "active")}
+                      >
+                        <PlayCircle className="w-4 h-4 mr-1" /> Iniciar viaje
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-destructive"
+                        onClick={() => transitionReservation(selectedReservation, "cancelled")}
+                      >
+                        <X className="w-4 h-4 mr-1" /> Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {selectedReservation.status === "active" && (
+                  <div className="pt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Cuando termine el viaje, márcalo como completado para liberar el pago.
+                    </p>
+                    <Button
+                      className="w-full"
+                      onClick={() => transitionReservation(selectedReservation, "completed")}
+                    >
+                      <Flag className="w-4 h-4 mr-1" /> Marcar como completado
+                    </Button>
                   </div>
                 )}
               </div>
