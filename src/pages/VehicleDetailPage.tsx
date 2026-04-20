@@ -698,6 +698,20 @@ const VehicleDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Review dialog (renter reviewing this vehicle/owner) */}
+      {renterCompletedReservation && vehicle && (
+        <ReviewDialog
+          open={reviewDialogOpen}
+          onOpenChange={setReviewDialogOpen}
+          reservationId={renterCompletedReservation.id}
+          vehicleId={vehicle.id}
+          subjectUserId={vehicle.owner_id}
+          reviewerType="renter"
+          contextLabel={`${vehicle.brand} ${vehicle.model}`}
+          onSubmitted={() => setRenterCompletedReservation(null)}
+        />
+      )}
     </div>
   );
 };
