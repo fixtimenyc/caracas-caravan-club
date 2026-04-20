@@ -707,6 +707,41 @@ const OwnerDashboardPage = () => {
                     )}
                   </div>
                 )}
+                {selectedReservation.status === "approved" && (
+                  <div className="pt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Cuando comience el viaje, márcalo como en curso.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        onClick={() => transitionReservation(selectedReservation, "active")}
+                      >
+                        <PlayCircle className="w-4 h-4 mr-1" /> Iniciar viaje
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-destructive"
+                        onClick={() => transitionReservation(selectedReservation, "cancelled")}
+                      >
+                        <X className="w-4 h-4 mr-1" /> Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {selectedReservation.status === "active" && (
+                  <div className="pt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Cuando termine el viaje, márcalo como completado para liberar el pago.
+                    </p>
+                    <Button
+                      className="w-full"
+                      onClick={() => transitionReservation(selectedReservation, "completed")}
+                    >
+                      <Flag className="w-4 h-4 mr-1" /> Marcar como completado
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </DialogContent>
