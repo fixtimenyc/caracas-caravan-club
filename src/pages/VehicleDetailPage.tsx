@@ -332,6 +332,28 @@ const VehicleDetailPage = () => {
           Volver al catálogo
         </Link>
 
+        {/* Pending review CTA for renter */}
+        {renterCompletedReservation && user && vehicle && (
+          <Card className="p-4 mb-6 border-accent/40 bg-accent/5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+                <Star className="w-5 h-5 text-accent fill-accent" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">
+                  ¿Cómo fue tu viaje?
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Califica tu experiencia con este vehículo y anfitrión.
+                </p>
+              </div>
+            </div>
+            <Button onClick={() => setReviewDialogOpen(true)}>
+              Dejar reseña
+            </Button>
+          </Card>
+        )}
+
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
@@ -516,6 +538,9 @@ const VehicleDetailPage = () => {
                 />
               </div>
             </section>
+
+            {/* Reviews */}
+            <ReviewsSection vehicleId={vehicle.id} />
           </div>
 
           {/* Booking sidebar */}
