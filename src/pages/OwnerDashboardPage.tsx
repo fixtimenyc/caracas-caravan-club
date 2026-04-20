@@ -123,7 +123,21 @@ const OwnerDashboardPage = () => {
           .in("vehicle_id", ids)
           .order("start_date", { ascending: false });
         if (error) toast.error("Error cargando reservas");
-        setReservations((resData || []) as Reservation[]);
+        const reservationList = (resData || []) as Reservation[];
+        setReservations(reservationList);
+
+        // Load owner's existing reviews to know which reservations were already reviewed
+        const completedIds = reservationList
+          .filter((r) => r.status === "completed")
+          .map((r) => r.id);
+        if (completedIds.length > 0) {
+          const { data: rvs } = await supabase
+            .from("reviews")
+            .select("reservation_id")
+            .eq("author_id", user.id)
+            .in("reservation_id", completedIds);
+          setReviewedIds(new Set((rvs || []).map((r: any) => r.reservation_id)));
+        }
       } else {
         setReservations([]);
       }
