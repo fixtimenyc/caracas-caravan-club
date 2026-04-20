@@ -264,36 +264,63 @@ export type Database = {
       reviews: {
         Row: {
           author_id: string
+          car_condition: number | null
           comment: string | null
           created_at: string
           id: string
+          listing_accuracy: number | null
+          owner_communication: number | null
+          punctuality: number | null
           rating: number
+          renter_responsibility: number | null
           reservation_id: string
+          reviewer_type: string
+          subject_user_id: string | null
           updated_at: string
+          vehicle_id: string | null
+          vehicle_returned_condition: number | null
         }
         Insert: {
           author_id: string
+          car_condition?: number | null
           comment?: string | null
           created_at?: string
           id?: string
+          listing_accuracy?: number | null
+          owner_communication?: number | null
+          punctuality?: number | null
           rating: number
+          renter_responsibility?: number | null
           reservation_id: string
+          reviewer_type?: string
+          subject_user_id?: string | null
           updated_at?: string
+          vehicle_id?: string | null
+          vehicle_returned_condition?: number | null
         }
         Update: {
           author_id?: string
+          car_condition?: number | null
           comment?: string | null
           created_at?: string
           id?: string
+          listing_accuracy?: number | null
+          owner_communication?: number | null
+          punctuality?: number | null
           rating?: number
+          renter_responsibility?: number | null
           reservation_id?: string
+          reviewer_type?: string
+          subject_user_id?: string | null
           updated_at?: string
+          vehicle_id?: string | null
+          vehicle_returned_condition?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "reviews_reservation_id_fkey"
             columns: ["reservation_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
@@ -379,6 +406,21 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_review_public: { Args: { _reservation_id: string }; Returns: boolean }
+      user_rating_summary: {
+        Args: { _user_id: string }
+        Returns: {
+          avg_rating: number
+          review_count: number
+        }[]
+      }
+      vehicle_rating_summary: {
+        Args: { _vehicle_id: string }
+        Returns: {
+          avg_rating: number
+          review_count: number
+        }[]
       }
     }
     Enums: {
