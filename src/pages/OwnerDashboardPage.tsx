@@ -37,6 +37,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ReviewDialog from "@/components/ReviewDialog";
+import { Star } from "lucide-react";
 
 type Vehicle = {
   id: string;
@@ -81,6 +83,8 @@ const OwnerDashboardPage = () => {
   const [pendingApps, setPendingApps] = useState<PendingApp[]>([]);
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+  const [reviewTarget, setReviewTarget] = useState<Reservation | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -119,7 +123,21 @@ const OwnerDashboardPage = () => {
           .in("vehicle_id", ids)
           .order("start_date", { ascending: false });
         if (error) toast.error("Error cargando reservas");
-        setReservations((resData || []) as Reservation[]);
+        const reservationList = (resData || []) as Reservation[];
+        setReservations(reservationList);
+
+        // Load owner's existing reviews to know which reservations were already reviewed
+        const completedIds = reservationList
+          .filter((r) => r.status === "completed")
+          .map((r) => r.id);
+        if (completedIds.length > 0) {
+          const { data: rvs } = await supabase
+            .from("reviews")
+            .select("reservation_id")
+            .eq("author_id", user.id)
+            .in("reservation_id", completedIds);
+          setReviewedIds(new Set((rvs || []).map((r: any) => r.reservation_id)));
+        }
       } else {
         setReservations([]);
       }
@@ -742,10 +760,50 @@ const OwnerDashboardPage = () => {
                     </Button>
                   </div>
                 )}
+                {selectedReservation.status === "completed" &&
+                  !reviewedIds.has(selectedReservation.id) && (
+                    <div className="pt-3 space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        Califica al arrendatario sobre este viaje. Tu reseña se publicará cuando ambas partes hayan calificado o tras 7 días.
+                      </p>
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          setReviewTarget(selectedReservation);
+                          setSelectedReservation(null);
+                        }}
+                      >
+                        <Star className="w-4 h-4 mr-1" /> Calificar arrendatario
+                      </Button>
+                    </div>
+                  )}
+                {selectedReservation.status === "completed" &&
+                  reviewedIds.has(selectedReservation.id) && (
+                    <p className="text-xs text-primary pt-3 flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4" /> Ya calificaste a este arrendatario.
+                    </p>
+                  )}
               </div>
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Review dialog (owner reviewing renter) */}
+        {reviewTarget && (
+          <ReviewDialog
+            open={!!reviewTarget}
+            onOpenChange={(o) => !o && setReviewTarget(null)}
+            reservationId={reviewTarget.id}
+            vehicleId={reviewTarget.vehicle_id}
+            subjectUserId={reviewTarget.renter_id}
+            reviewerType="owner"
+            contextLabel={`Reserva del ${format(new Date(reviewTarget.start_date), "d MMM", { locale: es })} al ${format(new Date(reviewTarget.end_date), "d MMM yyyy", { locale: es })}`}
+            onSubmitted={() => {
+              setReviewedIds((prev) => new Set(prev).add(reviewTarget.id));
+              setReviewTarget(null);
+            }}
+          />
+        )}
       </main>
       <Footer />
     </div>

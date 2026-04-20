@@ -43,6 +43,8 @@ import { toast } from "sonner";
 import type { DateRange } from "react-day-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import ReviewsSection from "@/components/ReviewsSection";
+import ReviewDialog from "@/components/ReviewDialog";
 
 type VehicleRow = {
   id: string;
@@ -85,6 +87,9 @@ const VehicleDetailPage = () => {
   const [vehicle, setVehicle] = useState<VehicleRow | null>(null);
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
+  const [ratingSummary, setRatingSummary] = useState<{ avg: number | null; count: number }>({ avg: null, count: 0 });
+  const [renterCompletedReservation, setRenterCompletedReservation] = useState<{ id: string } | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   const [photoIndex, setPhotoIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -133,10 +138,52 @@ const VehicleDetailPage = () => {
         blocked.push(...days);
       });
       setBookedDates(blocked);
+
+      // Fetch rating summary
+      const { data: ratingData } = await supabase.rpc("vehicle_rating_summary", {
+        _vehicle_id: id,
+      });
+      const row = (ratingData as Array<{ avg_rating: number | null; review_count: number }> | null)?.[0];
+      setRatingSummary({
+        avg: row?.avg_rating ? Number(row.avg_rating) : null,
+        count: Number(row?.review_count || 0),
+      });
+
       setLoading(false);
     };
     load();
   }, [id]);
+
+  // Check if logged-in renter has a completed reservation pending review
+  useEffect(() => {
+    if (!user || !id) {
+      setRenterCompletedReservation(null);
+      return;
+    }
+    const check = async () => {
+      const { data: rsv } = await supabase
+        .from("reservations")
+        .select("id")
+        .eq("vehicle_id", id)
+        .eq("renter_id", user.id)
+        .eq("status", "completed")
+        .order("end_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!rsv) {
+        setRenterCompletedReservation(null);
+        return;
+      }
+      const { data: existing } = await supabase
+        .from("reviews")
+        .select("id")
+        .eq("reservation_id", rsv.id)
+        .eq("author_id", user.id)
+        .maybeSingle();
+      setRenterCompletedReservation(existing ? null : { id: rsv.id });
+    };
+    check();
+  }, [user, id]);
 
   const photos = useMemo(() => {
     if (!vehicle?.photos?.length) return ["/placeholder.svg"];
@@ -285,6 +332,28 @@ const VehicleDetailPage = () => {
           Volver al catálogo
         </Link>
 
+        {/* Pending review CTA for renter */}
+        {renterCompletedReservation && user && vehicle && (
+          <Card className="p-4 mb-6 border-accent/40 bg-accent/5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+                <Star className="w-5 h-5 text-accent fill-accent" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">
+                  ¿Cómo fue tu viaje?
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Califica tu experiencia con este vehículo y anfitrión.
+                </p>
+              </div>
+            </div>
+            <Button onClick={() => setReviewDialogOpen(true)}>
+              Dejar reseña
+            </Button>
+          </Card>
+        )}
+
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
@@ -293,7 +362,14 @@ const VehicleDetailPage = () => {
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-accent text-accent" />
-                <span className="font-semibold text-foreground">Nuevo</span>
+                <span className="font-semibold text-foreground">
+                  {ratingSummary.avg !== null ? ratingSummary.avg.toFixed(1) : "Nuevo"}
+                </span>
+                {ratingSummary.count > 0 && (
+                  <span className="text-muted-foreground">
+                    ({ratingSummary.count})
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
@@ -462,6 +538,9 @@ const VehicleDetailPage = () => {
                 />
               </div>
             </section>
+
+            {/* Reviews */}
+            <ReviewsSection vehicleId={vehicle.id} />
           </div>
 
           {/* Booking sidebar */}
@@ -619,6 +698,20 @@ const VehicleDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Review dialog (renter reviewing this vehicle/owner) */}
+      {renterCompletedReservation && vehicle && (
+        <ReviewDialog
+          open={reviewDialogOpen}
+          onOpenChange={setReviewDialogOpen}
+          reservationId={renterCompletedReservation.id}
+          vehicleId={vehicle.id}
+          subjectUserId={vehicle.owner_id}
+          reviewerType="renter"
+          contextLabel={`${vehicle.brand} ${vehicle.model}`}
+          onSubmitted={() => setRenterCompletedReservation(null)}
+        />
+      )}
     </div>
   );
 };
