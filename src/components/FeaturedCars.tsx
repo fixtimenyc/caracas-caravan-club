@@ -1,98 +1,88 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CarCard from "./CarCard";
-import CategoryFilter from "./CategoryFilter";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
-import carSedan from "@/assets/car-sedan.jpg";
-import carSuv from "@/assets/car-suv.jpg";
-import carCompact from "@/assets/car-compact.jpg";
-import carPickup from "@/assets/car-pickup.jpg";
+import carPlaceholder from "@/assets/car-sedan.jpg";
 
-const cars = [
-  {
-    id: "1",
-    name: "Toyota Corolla 2022",
-    image: carSedan,
-    price: 45,
-    rating: 4.9,
-    reviews: 128,
-    location: "Las Mercedes",
-    seats: 5,
-    transmission: "Automático",
-    category: "sedan",
-  },
-  {
-    id: "2",
-    name: "Honda CR-V 2023",
-    image: carSuv,
-    price: 65,
-    rating: 4.8,
-    reviews: 89,
-    location: "Altamira",
-    seats: 5,
-    transmission: "Automático",
-    category: "suv",
-  },
-  {
-    id: "3",
-    name: "Chevrolet Spark 2021",
-    image: carCompact,
-    price: 28,
-    rating: 4.7,
-    reviews: 156,
-    location: "Chacao",
-    seats: 4,
-    transmission: "Manual",
-    category: "compact",
-  },
-  {
-    id: "4",
-    name: "Toyota Hilux 2022",
-    image: carPickup,
-    price: 85,
-    rating: 4.9,
-    reviews: 67,
-    location: "El Hatillo",
-    seats: 5,
-    transmission: "Automático",
-    category: "pickup",
-  },
-  {
-    id: "5",
-    name: "Hyundai Accent 2023",
-    image: carSedan,
-    price: 42,
-    rating: 4.6,
-    reviews: 94,
-    location: "La Castellana",
-    seats: 5,
-    transmission: "Automático",
-    category: "sedan",
-  },
-  {
-    id: "6",
-    name: "Kia Sportage 2022",
-    image: carSuv,
-    price: 70,
-    rating: 4.8,
-    reviews: 112,
-    location: "Sabana Grande",
-    seats: 5,
-    transmission: "Automático",
-    category: "suv",
-  },
-];
+interface VehicleRow {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  location: string;
+  price_per_day: number;
+  photos: string[] | null;
+}
+
+interface CardCar {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  rating: number;
+  reviews: number;
+  location: string;
+  seats: number;
+  transmission: string;
+}
+
+const resolvePhoto = (path?: string | null) => {
+  if (!path) return carPlaceholder;
+  if (path.startsWith("http")) return path;
+  const { data } = supabase.storage.from("vehicle-photos").getPublicUrl(path);
+  return data.publicUrl || carPlaceholder;
+};
 
 const FeaturedCars = () => {
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [cars, setCars] = useState<CardCar[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredCars = activeCategory === "all" 
-    ? cars 
-    : cars.filter(car => car.category === activeCategory);
+  useEffect(() => {
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, brand, model, year, location, price_per_day, photos")
+        .eq("active", true)
+        .eq("available", true)
+        .order("created_at", { ascending: false })
+        .limit(9);
+
+      if (error || !data) {
+        setLoading(false);
+        return;
+      }
+
+      const enriched = await Promise.all(
+        (data as VehicleRow[]).map(async (v) => {
+          const { data: rating } = await supabase.rpc("vehicle_rating_summary", {
+            _vehicle_id: v.id,
+          });
+          const summary = rating?.[0];
+          return {
+            id: v.id,
+            name: `${v.brand.trim()} ${v.model} ${v.year}`,
+            image: resolvePhoto(v.photos?.[0]),
+            price: Number(v.price_per_day),
+            rating: summary?.avg_rating ? Number(summary.avg_rating) : 0,
+            reviews: summary?.review_count ? Number(summary.review_count) : 0,
+            location: v.location,
+            seats: 5,
+            transmission: "Automático",
+          } as CardCar;
+        })
+      );
+
+      setCars(enriched);
+      setLoading(false);
+    };
+
+    load();
+  }, []);
 
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Vehículos destacados
@@ -102,33 +92,27 @@ const FeaturedCars = () => {
           </p>
         </div>
 
-        {/* Category Filter */}
-        <div className="mb-10">
-          <CategoryFilter
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-          />
-        </div>
-
-        {/* Cars Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCars.map((car, index) => (
-            <div
-              key={car.id}
-              className="animate-scale-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <CarCard car={car} />
-            </div>
-          ))}
-        </div>
-
-        {/* View All Button */}
-        <div className="text-center mt-12">
-          <button className="px-8 py-3 bg-secondary text-secondary-foreground rounded-xl font-semibold hover:bg-secondary/80 transition-smooth">
-            Ver todos los vehículos
-          </button>
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : cars.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">
+            Aún no hay vehículos disponibles. ¡Vuelve pronto!
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cars.map((car, index) => (
+              <div
+                key={car.id}
+                className="animate-scale-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <CarCard car={car} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
