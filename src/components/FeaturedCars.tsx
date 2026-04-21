@@ -33,11 +33,20 @@ interface CardCar {
   category: VehicleCategory;
 }
 
-const resolvePhoto = (path?: string | null) => {
+const resolvePhoto = async (path?: string | null): Promise<string> => {
   if (!path) return carPlaceholder;
   if (path.startsWith("http")) return path;
-  const { data } = supabase.storage.from("vehicle-photos").getPublicUrl(path);
-  return data.publicUrl || carPlaceholder;
+  // Try public bucket first
+  const pub = supabase.storage.from("vehicle-photos").getPublicUrl(path);
+  try {
+    const head = await fetch(pub.data.publicUrl, { method: "HEAD" });
+    if (head.ok) return pub.data.publicUrl;
+  } catch {}
+  // Fallback: signed URL from private owner-documents bucket
+  const { data: signed } = await supabase.storage
+    .from("owner-documents")
+    .createSignedUrl(path, 60 * 60);
+  return signed?.signedUrl || carPlaceholder;
 };
 
 const PRICE_MAX = 200;
@@ -67,14 +76,15 @@ const FeaturedCars = () => {
 
       const enriched = await Promise.all(
         (data as VehicleRow[]).map(async (v) => {
-          const { data: rating } = await supabase.rpc("vehicle_rating_summary", {
-            _vehicle_id: v.id,
-          });
+          const [{ data: rating }, image] = await Promise.all([
+            supabase.rpc("vehicle_rating_summary", { _vehicle_id: v.id }),
+            resolvePhoto(v.photos?.[0]),
+          ]);
           const summary = rating?.[0];
           return {
             id: v.id,
             name: `${v.brand.trim()} ${v.model} ${v.year}`,
-            image: resolvePhoto(v.photos?.[0]),
+            image,
             price: Number(v.price_per_day),
             rating: summary?.avg_rating ? Number(summary.avg_rating) : 0,
             reviews: summary?.review_count ? Number(summary.review_count) : 0,
