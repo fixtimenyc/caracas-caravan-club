@@ -104,10 +104,16 @@ const Navbar = () => {
                     </DropdownMenuItem>
                   ) : null}
                   {roles.includes('admin') && (
-                    <DropdownMenuItem onClick={() => navigate('/admin/solicitudes')}>
-                      <ShieldCheck className="w-4 h-4 mr-2" />
-                      Solicitudes de aliados
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem onClick={() => navigate('/admin/solicitudes')}>
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Solicitudes de aliados
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/usuarios')}>
+                        <User className="w-4 h-4 mr-2" />
+                        Administrar usuarios
+                      </DropdownMenuItem>
+                    </>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
@@ -174,10 +180,16 @@ const Navbar = () => {
                       </Button>
                     )}
                     {roles.includes('admin') && (
-                      <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/solicitudes'); setIsMenuOpen(false); }}>
-                        <ShieldCheck className="w-4 h-4 mr-2" />
-                        Solicitudes de aliados
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/solicitudes'); setIsMenuOpen(false); }}>
+                          <ShieldCheck className="w-4 h-4 mr-2" />
+                          Solicitudes de aliados
+                        </Button>
+                        <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/usuarios'); setIsMenuOpen(false); }}>
+                          <User className="w-4 h-4 mr-2" />
+                          Administrar usuarios
+                        </Button>
+                      </>
                     )}
                     <Button variant="ghost" size="sm" className="justify-start text-destructive" onClick={handleSignOut}>
                       Cerrar sesión
