@@ -4,22 +4,23 @@ interface Category {
   id: string;
   name: string;
   icon: React.ReactNode;
-  count: number;
 }
 
 const categories: Category[] = [
-  { id: "sedan", name: "Sedán", icon: <Car className="w-6 h-6" />, count: 124 },
-  { id: "suv", name: "SUV", icon: <Car className="w-6 h-6" />, count: 89 },
-  { id: "compact", name: "Compacto", icon: <Zap className="w-6 h-6" />, count: 156 },
-  { id: "pickup", name: "Camioneta", icon: <Truck className="w-6 h-6" />, count: 67 },
+  { id: "sedan", name: "Sedán", icon: <Car className="w-5 h-5" /> },
+  { id: "suv", name: "SUV", icon: <Car className="w-5 h-5" /> },
+  { id: "compact", name: "Compacto", icon: <Zap className="w-5 h-5" /> },
+  { id: "pickup", name: "Camioneta", icon: <Truck className="w-5 h-5" /> },
 ];
 
 interface CategoryFilterProps {
   activeCategory: string;
   onCategoryChange: (category: string) => void;
+  counts?: Record<string, number>;
+  totalCount?: number;
 }
 
-const CategoryFilter = ({ activeCategory, onCategoryChange }: CategoryFilterProps) => {
+const CategoryFilter = ({ activeCategory, onCategoryChange, counts = {}, totalCount = 0 }: CategoryFilterProps) => {
   return (
     <div className="flex flex-wrap gap-3 justify-center">
       <button
@@ -31,7 +32,7 @@ const CategoryFilter = ({ activeCategory, onCategoryChange }: CategoryFilterProp
         }`}
       >
         Todos
-        <span className="text-xs opacity-70">436</span>
+        <span className="text-xs opacity-70">{totalCount}</span>
       </button>
       {categories.map((category) => (
         <button
@@ -45,7 +46,7 @@ const CategoryFilter = ({ activeCategory, onCategoryChange }: CategoryFilterProp
         >
           {category.icon}
           {category.name}
-          <span className="text-xs opacity-70">{category.count}</span>
+          <span className="text-xs opacity-70">{counts[category.id] ?? 0}</span>
         </button>
       ))}
     </div>
