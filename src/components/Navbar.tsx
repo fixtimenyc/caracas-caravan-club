@@ -193,6 +193,10 @@ const Navbar = () => {
                           <User className="w-4 h-4 mr-2" />
                           Administrar usuarios
                         </Button>
+                        <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/soporte'); setIsMenuOpen(false); }}>
+                          <ShieldCheck className="w-4 h-4 mr-2" />
+                          Tickets de soporte
+                        </Button>
                       </>
                     )}
                     <Button variant="ghost" size="sm" className="justify-start text-destructive" onClick={handleSignOut}>
