@@ -39,6 +39,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReviewDialog from "@/components/ReviewDialog";
 import { Star } from "lucide-react";
+import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 
 type Vehicle = {
   id: string;
@@ -85,6 +86,7 @@ const OwnerDashboardPage = () => {
     useState<Reservation | null>(null);
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
   const [reviewTarget, setReviewTarget] = useState<Reservation | null>(null);
+  const [vehiclePhotos, setVehiclePhotos] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -114,6 +116,16 @@ const OwnerDashboardPage = () => {
       const vehs = (vehRes.data || []) as Vehicle[];
       setVehicles(vehs);
       setPendingApps((appRes.data || []) as PendingApp[]);
+
+      // Resolve cover photo for each vehicle (public bucket -> signed URL fallback)
+      Promise.all(
+        vehs.map(async (v) => {
+          const url = await resolveVehiclePhoto(v.photos?.[0]);
+          return [v.id, url] as const;
+        })
+      ).then((entries) => {
+        setVehiclePhotos(Object.fromEntries(entries));
+      });
 
       if (vehs.length > 0) {
         const ids = vehs.map((v) => v.id);
@@ -520,11 +532,7 @@ const OwnerDashboardPage = () => {
                     <div className="relative bg-muted aspect-[4/3] md:aspect-auto">
                       {v.photos?.[0] ? (
                         <img
-                          src={
-                            v.photos[0].startsWith("http")
-                              ? v.photos[0]
-                              : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-photos/${v.photos[0]}`
-                          }
+                          src={vehiclePhotos[v.id] || "/placeholder.svg"}
                           alt={`${v.brand} ${v.model}`}
                           className="w-full h-full object-cover"
                         />
