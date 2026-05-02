@@ -45,6 +45,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ReviewsSection from "@/components/ReviewsSection";
 import ReviewDialog from "@/components/ReviewDialog";
+import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 
 type VehicleRow = {
   id: string;
@@ -73,11 +74,6 @@ type ReservationDates = {
   status: string;
 };
 
-const photoUrl = (p: string) =>
-  p.startsWith("http")
-    ? p
-    : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/vehicle-photos/${p}`;
-
 const VehicleDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -85,6 +81,7 @@ const VehicleDetailPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [vehicle, setVehicle] = useState<VehicleRow | null>(null);
+  const [resolvedPhotos, setResolvedPhotos] = useState<string[]>([]);
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
   const [ratingSummary, setRatingSummary] = useState<{ avg: number | null; count: number }>({ avg: null, count: 0 });
@@ -113,6 +110,7 @@ const VehicleDetailPage = () => {
         return;
       }
       setVehicle(veh as VehicleRow);
+      resolveVehiclePhotos((veh as VehicleRow).photos).then(setResolvedPhotos);
 
       const [{ data: prof }, { data: resv }] = await Promise.all([
         supabase
@@ -186,9 +184,9 @@ const VehicleDetailPage = () => {
   }, [user, id]);
 
   const photos = useMemo(() => {
-    if (!vehicle?.photos?.length) return ["/placeholder.svg"];
-    return vehicle.photos.map(photoUrl);
-  }, [vehicle]);
+    if (resolvedPhotos.length) return resolvedPhotos;
+    return ["/placeholder.svg"];
+  }, [resolvedPhotos]);
 
   const days =
     dateRange?.from && dateRange?.to
