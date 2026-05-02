@@ -36,7 +36,7 @@ const Footer = () => {
               <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Buscar vehículos</a></li>
               <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Cómo funciona</a></li>
               <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Convertirse en anfitrión</a></li>
-              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Preguntas frecuentes</a></li>
+              <li><a href="/ayuda" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Centro de ayuda</a></li>
             </ul>
           </div>
 

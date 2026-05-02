@@ -54,9 +54,9 @@ const Navbar = () => {
             <button onClick={() => navigate('/conviertete-en-anfitrion')} className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
               Convertirte en anfitrión
             </button>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
+            <button onClick={() => navigate('/ayuda')} className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
               Ayuda
-            </a>
+            </button>
             {roles.includes('admin') && (
               <button
                 onClick={() => navigate('/admin/solicitudes')}
@@ -109,9 +109,13 @@ const Navbar = () => {
                         <ShieldCheck className="w-4 h-4 mr-2" />
                         Solicitudes de aliados
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/admin/usuarios')}>
+                        <DropdownMenuItem onClick={() => navigate('/admin/usuarios')}>
                         <User className="w-4 h-4 mr-2" />
                         Administrar usuarios
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/soporte')}>
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Tickets de soporte
                       </DropdownMenuItem>
                     </>
                   )}
@@ -154,9 +158,9 @@ const Navbar = () => {
               <button onClick={() => { navigate('/conviertete-en-anfitrion'); setIsMenuOpen(false); }} className="text-left text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
                 Convertirte en anfitrión
               </button>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
+              <button onClick={() => { navigate('/ayuda'); setIsMenuOpen(false); }} className="text-left text-muted-foreground hover:text-foreground transition-smooth text-sm font-medium">
                 Ayuda
-              </a>
+              </button>
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 {user ? (
                   <>
@@ -188,6 +192,10 @@ const Navbar = () => {
                         <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/usuarios'); setIsMenuOpen(false); }}>
                           <User className="w-4 h-4 mr-2" />
                           Administrar usuarios
+                        </Button>
+                        <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/soporte'); setIsMenuOpen(false); }}>
+                          <ShieldCheck className="w-4 h-4 mr-2" />
+                          Tickets de soporte
                         </Button>
                       </>
                     )}

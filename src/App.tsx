@@ -14,6 +14,8 @@ import AdminUsersPage from "./pages/AdminUsersPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
 import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import ProfilePage from "./pages/ProfilePage";
+import HelpPage from "./pages/HelpPage";
+import AdminSupportPage from "./pages/AdminSupportPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/vehiculo/:id" element={<VehicleDetailPage />} />
             <Route path="/my-vehicles" element={<OwnerDashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/ayuda" element={<HelpPage />} />
+            <Route path="/admin/soporte" element={<AdminSupportPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

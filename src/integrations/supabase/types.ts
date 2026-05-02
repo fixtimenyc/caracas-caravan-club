@@ -326,6 +326,54 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          admin_response: string | null
+          category: Database["public"]["Enums"]["ticket_category"]
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          responded_at: string | null
+          responded_by: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_response?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_response?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -434,6 +482,14 @@ export type Database = {
         | "rejected"
         | "completed"
         | "cancelled"
+      ticket_category:
+        | "reservas"
+        | "pagos"
+        | "aliados"
+        | "cuenta"
+        | "seguridad"
+        | "otro"
+      ticket_status: "open" | "in_progress" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -572,6 +628,15 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      ticket_category: [
+        "reservas",
+        "pagos",
+        "aliados",
+        "cuenta",
+        "seguridad",
+        "otro",
+      ],
+      ticket_status: ["open", "in_progress", "resolved", "closed"],
     },
   },
 } as const
