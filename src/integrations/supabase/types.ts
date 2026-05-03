@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_user_actions: {
+        Row: {
+          action_type: Database["public"]["Enums"]["admin_action_type"]
+          admin_id: string
+          created_at: string
+          details: string | null
+          id: string
+          target_user_id: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["admin_action_type"]
+          admin_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          target_user_id: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["admin_action_type"]
+          admin_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
+      admin_user_notes: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          note: string
+          target_user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          note: string
+          target_user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -180,36 +231,45 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: Database["public"]["Enums"]["account_status"]
           address: string | null
           avatar_url: string | null
+          birth_date: string | null
           cedula: string | null
           created_at: string
           full_name: string | null
           id: string
+          last_login_at: string | null
           phone: string | null
           updated_at: string
           user_id: string
           verified: boolean
         }
         Insert: {
+          account_status?: Database["public"]["Enums"]["account_status"]
           address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
           cedula?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          last_login_at?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
           verified?: boolean
         }
         Update: {
+          account_status?: Database["public"]["Enums"]["account_status"]
           address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
           cedula?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          last_login_at?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
@@ -472,6 +532,19 @@ export type Database = {
       }
     }
     Enums: {
+      account_status: "active" | "suspended" | "banned"
+      admin_action_type:
+        | "warning_sent"
+        | "suspended"
+        | "banned"
+        | "unsuspended"
+        | "unbanned"
+        | "verified"
+        | "unverified"
+        | "role_added"
+        | "role_removed"
+        | "deleted"
+        | "note"
       app_role: "renter" | "owner" | "admin"
       application_status: "pending" | "approved" | "rejected"
       payment_status: "pending" | "completed" | "failed" | "refunded"
@@ -617,6 +690,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["active", "suspended", "banned"],
+      admin_action_type: [
+        "warning_sent",
+        "suspended",
+        "banned",
+        "unsuspended",
+        "unbanned",
+        "verified",
+        "unverified",
+        "role_added",
+        "role_removed",
+        "deleted",
+        "note",
+      ],
       app_role: ["renter", "owner", "admin"],
       application_status: ["pending", "approved", "rejected"],
       payment_status: ["pending", "completed", "failed", "refunded"],
