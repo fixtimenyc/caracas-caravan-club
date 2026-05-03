@@ -448,7 +448,7 @@ const AdminUserDetailPage = () => {
                     ? "¿Quitar verificación?"
                     : "¿Verificar identidad?",
                   description: "Esta acción quedará registrada en el log.",
-                  run: async () => setVerified(!profile.verified),
+                  run: async () => { await setVerified(!profile.verified); },
                 })
               }
             >
@@ -466,13 +466,14 @@ const AdminUserDetailPage = () => {
                       : "¿Suspender cuenta?",
                   description:
                     "Una cuenta suspendida no puede operar hasta ser reactivada.",
-                  run: async () =>
-                    setStatus(
+                  run: async () => {
+                    await setStatus(
                       profile.account_status === "suspended" ? "active" : "suspended",
                       profile.account_status === "suspended"
                         ? "unsuspended"
                         : "suspended"
-                    ),
+                    );
+                  },
                 })
               }
             >
@@ -489,11 +490,12 @@ const AdminUserDetailPage = () => {
                       ? "¿Quitar baneo?"
                       : "¿Banear cuenta?",
                   description: "El baneo bloquea permanentemente al usuario.",
-                  run: async () =>
-                    setStatus(
+                  run: async () => {
+                    await setStatus(
                       profile.account_status === "banned" ? "active" : "banned",
                       profile.account_status === "banned" ? "unbanned" : "banned"
-                    ),
+                    );
+                  },
                 })
               }
             >
@@ -758,7 +760,7 @@ const AdminUserDetailPage = () => {
                   <div className="flex justify-between items-start gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <StarRating rating={r.rating} size="sm" />
+                        <StarRating value={r.rating} size="sm" readOnly />
                         <Badge variant="outline">
                           {r.reviewer_type === "renter"
                             ? "Como aliado"
@@ -777,7 +779,7 @@ const AdminUserDetailPage = () => {
                         setConfirm({
                           title: "¿Eliminar reseña?",
                           description: "Esta acción es permanente.",
-                          run: async () => deleteReview(r.id),
+                          run: async () => { await deleteReview(r.id); },
                         })
                       }
                     >
