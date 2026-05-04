@@ -1,12 +1,9 @@
 import { Car, DollarSign, Calendar, Shield, Camera, Users, TrendingUp, CheckCircle2, Upload, FileCheck, Wallet } from "lucide-react";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 const benefits = [
   {
