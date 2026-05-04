@@ -17,6 +17,7 @@ import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import HelpPage from "./pages/HelpPage";
 import AdminSupportPage from "./pages/AdminSupportPage";
+import MessagesPage from "./pages/MessagesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
