@@ -179,8 +179,12 @@ const Navbar = () => {
                         </span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate('/profile')}>
+                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/profile'); setIsMenuOpen(false); }}>
                       Mi perfil
+                    </Button>
+                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mensajes'); setIsMenuOpen(false); }}>
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Mensajes
                     </Button>
                     {(roles.includes('owner') || roles.includes('admin')) && (
                       <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate('/my-vehicles')}>
