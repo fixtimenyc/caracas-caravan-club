@@ -97,6 +97,10 @@ const Navbar = () => {
                     <User className="w-4 h-4 mr-2" />
                     Mi perfil
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/mensajes')}>
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Mensajes
+                  </DropdownMenuItem>
                   {roles.includes('owner') || roles.includes('admin') ? (
                     <DropdownMenuItem onClick={() => navigate('/my-vehicles')}>
                       <Car className="w-4 h-4 mr-2" />
