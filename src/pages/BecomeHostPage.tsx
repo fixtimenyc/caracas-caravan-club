@@ -103,7 +103,7 @@ const BecomeHostPage = () => {
         </section>
 
         {/* Benefits */}
-        <section className="py-20 bg-secondary/30">
+        <section id="benefits" className="py-20 bg-secondary/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -158,7 +158,7 @@ const BecomeHostPage = () => {
         </section>
 
         {/* Requirements */}
-        <section className="py-20 bg-secondary/30">
+        <section id="benefits" className="py-20 bg-secondary/30">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
               <div>
