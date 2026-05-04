@@ -1,4 +1,4 @@
-import { Car, Menu, User, X, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
+import { Car, Menu, User, X, LogOut, ChevronDown, ShieldCheck, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
