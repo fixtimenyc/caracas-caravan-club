@@ -1,12 +1,9 @@
 import { Car, DollarSign, Calendar, Shield, Camera, Users, TrendingUp, CheckCircle2, Upload, FileCheck, Wallet } from "lucide-react";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 const benefits = [
   {
@@ -75,22 +72,6 @@ const requirements = [
 
 const BecomeHostPage = () => {
   const navigate = useNavigate();
-  const [pricePerDay, setPricePerDay] = useState(35);
-  const [daysPerMonth, setDaysPerMonth] = useState(10);
-
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Math.max(0, Math.min(500, Number(e.target.value) || 0));
-    setPricePerDay(val);
-  };
-
-  const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Math.max(0, Math.min(30, Number(e.target.value) || 0));
-    setDaysPerMonth(val);
-  };
-
-  const monthlyGross = pricePerDay * daysPerMonth;
-  const commission = Math.round(monthlyGross * 0.30);
-  const monthlyNet = monthlyGross - commission;
 
   return (
     <div className="min-h-screen">
@@ -113,87 +94,16 @@ const BecomeHostPage = () => {
                 <Button variant="hero" size="lg" onClick={() => navigate('/auth?mode=signup&role=owner')}>
                   Publicar mi vehículo
                 </Button>
-                <Button variant="heroOutline" size="lg" onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}>
-                  Calcular ingresos
+                <Button variant="heroOutline" size="lg" onClick={() => document.getElementById('benefits')?.scrollIntoView({ behavior: 'smooth' })}>
+                  Ver beneficios
                 </Button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Earnings Calculator */}
-        <section id="calculator" className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                ¿Cuánto puedes ganar?
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Calcula tus ingresos estimados según el precio y la disponibilidad de tu vehículo
-              </p>
-            </div>
-
-            <Card className="max-w-4xl mx-auto p-6 md:p-10 shadow-card">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="price" className="text-sm font-semibold mb-2 block">
-                      Precio por día (USD)
-                    </Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      min={0}
-                      max={500}
-                      value={pricePerDay}
-                      onChange={handlePriceChange}
-                      className="text-lg h-12"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Rango sugerido: $25 - $80</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="days" className="text-sm font-semibold mb-2 block">
-                      Días alquilados al mes
-                    </Label>
-                    <Input
-                      id="days"
-                      type="number"
-                      min={0}
-                      max={30}
-                      value={daysPerMonth}
-                      onChange={handleDaysChange}
-                      className="text-lg h-12"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Promedio en Caracas: 8-15 días</p>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-hero rounded-2xl p-8 text-primary-foreground">
-                  <p className="text-sm opacity-90 mb-2">Ingreso neto estimado</p>
-                  <p className="text-5xl font-bold mb-1">${monthlyNet}</p>
-                  <p className="text-sm opacity-90 mb-6">por mes</p>
-                  <div className="space-y-2 pt-4 border-t border-white/20 text-sm">
-                    <div className="flex justify-between">
-                      <span className="opacity-90">Ingreso bruto</span>
-                      <span className="font-semibold">${monthlyGross}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="opacity-90">Comisión RuedaVe (30%)</span>
-                      <span className="font-semibold">-${commission}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground text-center mt-6">
-                * Estimación referencial. Los ingresos reales dependen de la demanda, ubicación y estado del vehículo.
-              </p>
-            </Card>
-          </div>
-        </section>
-
         {/* Benefits */}
-        <section className="py-20 bg-secondary/30">
+        <section id="benefits" className="py-20 bg-secondary/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -248,7 +158,7 @@ const BecomeHostPage = () => {
         </section>
 
         {/* Requirements */}
-        <section className="py-20 bg-secondary/30">
+        <section id="benefits" className="py-20 bg-secondary/30">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
               <div>
