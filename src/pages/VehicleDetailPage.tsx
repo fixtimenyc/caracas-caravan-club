@@ -490,7 +490,29 @@ const VehicleDetailPage = () => {
                       Responde típicamente en 24 horas
                     </div>
                   </div>
-                  <Button variant="outline" className="gap-2">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={async () => {
+                      if (!user) { navigate('/auth'); return; }
+                      if (!vehicle) return;
+                      if (user.id === vehicle.owner_id) {
+                        toast.info("No puedes contactarte a ti mismo");
+                        return;
+                      }
+                      try {
+                        const { getOrCreateConversation } = await import("@/lib/conversations");
+                        const cid = await getOrCreateConversation({
+                          renterId: user.id,
+                          ownerId: vehicle.owner_id,
+                          vehicleId: vehicle.id,
+                        });
+                        navigate(`/mensajes?c=${cid}`);
+                      } catch (e) {
+                        toast.error("No se pudo abrir la conversación");
+                      }
+                    }}
+                  >
                     <MessageCircle className="w-4 h-4" />
                     Contactar
                   </Button>

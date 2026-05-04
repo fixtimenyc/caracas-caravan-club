@@ -1,4 +1,4 @@
-import { Car, Menu, User, X, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
+import { Car, Menu, User, X, LogOut, ChevronDown, ShieldCheck, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -97,6 +97,10 @@ const Navbar = () => {
                     <User className="w-4 h-4 mr-2" />
                     Mi perfil
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/mensajes')}>
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Mensajes
+                  </DropdownMenuItem>
                   {roles.includes('owner') || roles.includes('admin') ? (
                     <DropdownMenuItem onClick={() => navigate('/my-vehicles')}>
                       <Car className="w-4 h-4 mr-2" />
@@ -175,8 +179,12 @@ const Navbar = () => {
                         </span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate('/profile')}>
+                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/profile'); setIsMenuOpen(false); }}>
                       Mi perfil
+                    </Button>
+                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mensajes'); setIsMenuOpen(false); }}>
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Mensajes
                     </Button>
                     {(roles.includes('owner') || roles.includes('admin')) && (
                       <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate('/my-vehicles')}>
