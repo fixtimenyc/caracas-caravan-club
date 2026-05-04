@@ -43,6 +43,7 @@ const App = () => (
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/ayuda" element={<HelpPage />} />
             <Route path="/admin/soporte" element={<AdminSupportPage />} />
+            <Route path="/mensajes" element={<MessagesPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
