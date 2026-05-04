@@ -72,22 +72,6 @@ const requirements = [
 
 const BecomeHostPage = () => {
   const navigate = useNavigate();
-  const [pricePerDay, setPricePerDay] = useState(35);
-  const [daysPerMonth, setDaysPerMonth] = useState(10);
-
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Math.max(0, Math.min(500, Number(e.target.value) || 0));
-    setPricePerDay(val);
-  };
-
-  const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Math.max(0, Math.min(30, Number(e.target.value) || 0));
-    setDaysPerMonth(val);
-  };
-
-  const monthlyGross = pricePerDay * daysPerMonth;
-  const commission = Math.round(monthlyGross * 0.30);
-  const monthlyNet = monthlyGross - commission;
 
   return (
     <div className="min-h-screen">
