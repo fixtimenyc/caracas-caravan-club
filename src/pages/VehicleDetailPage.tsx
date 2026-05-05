@@ -125,7 +125,7 @@ const VehicleDetailPage = () => {
           .in("status", ["pending", "approved"]),
       ]);
 
-      setOwner((prof as OwnerProfile) || null);
+      setOwner((prof as unknown as OwnerProfile) || null);
 
       const blocked: Date[] = [];
       ((resv as ReservationDates[]) || []).forEach((r) => {
