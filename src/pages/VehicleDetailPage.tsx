@@ -114,7 +114,7 @@ const VehicleDetailPage = () => {
 
       const [{ data: prof }, { data: resv }] = await Promise.all([
         supabase
-          .from("profiles")
+          .from("profiles_public" as any)
           .select("full_name, avatar_url, verified, created_at")
           .eq("user_id", veh.owner_id)
           .maybeSingle(),
