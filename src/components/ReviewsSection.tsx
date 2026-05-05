@@ -62,7 +62,7 @@ const ReviewsSection = ({ vehicleId }: ReviewsSectionProps) => {
       if (list.length > 0) {
         const authorIds = [...new Set(list.map((r) => r.author_id))];
         const { data: profs } = await supabase
-          .from("profiles")
+          .from("profiles_public" as any)
           .select("user_id, full_name, avatar_url")
           .in("user_id", authorIds);
         const map: AuthorMap = {};
