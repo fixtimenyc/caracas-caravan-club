@@ -1,11 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import CarCard from "./CarCard";
-import CategoryFilter from "./CategoryFilter";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, DollarSign } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { inferCategory, VehicleCategory } from "@/lib/vehicleCategory";
 
 import carPlaceholder from "@/assets/car-sedan.jpg";
