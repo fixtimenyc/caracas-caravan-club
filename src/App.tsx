@@ -18,6 +18,9 @@ import ProfilePage from "./pages/ProfilePage";
 import HelpPage from "./pages/HelpPage";
 import AdminSupportPage from "./pages/AdminSupportPage";
 import MessagesPage from "./pages/MessagesPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import CancellationPage from "./pages/CancellationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
