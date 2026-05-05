@@ -83,7 +83,7 @@ const MessagesPage = () => {
 
     const [{ data: profs }, { data: vehs }] = await Promise.all([
       otherIds.length
-        ? supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", otherIds)
+        ? supabase.from("profiles_public" as any).select("user_id, full_name, avatar_url").in("user_id", otherIds)
         : Promise.resolve({ data: [] as ProfileLite[] }),
       vehIds.length
         ? supabase.from("vehicles").select("id, brand, model, year").in("id", vehIds)
