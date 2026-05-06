@@ -250,6 +250,16 @@ const Auth = () => {
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
               )}
+              {isLogin && (
+                <div className="text-right">
+                  <Link
+                    to="/recuperar-contrasena"
+                    className="text-sm text-primary hover:underline font-medium"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
