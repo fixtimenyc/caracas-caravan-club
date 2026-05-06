@@ -21,6 +21,8 @@ import MessagesPage from "./pages/MessagesPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import CancellationPage from "./pages/CancellationPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
