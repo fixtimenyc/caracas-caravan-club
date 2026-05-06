@@ -21,6 +21,8 @@ import MessagesPage from "./pages/MessagesPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import CancellationPage from "./pages/CancellationPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,8 @@ const App = () => (
             <Route path="/terminos" element={<TermsPage />} />
             <Route path="/politica-privacidad" element={<PrivacyPage />} />
             <Route path="/politica-cancelacion" element={<CancellationPage />} />
+            <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

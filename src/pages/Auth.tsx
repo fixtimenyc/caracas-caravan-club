@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Car, Mail, Lock, User, ArrowLeft, Key, Handshake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -249,6 +249,16 @@ const Auth = () => {
               </div>
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
+              )}
+              {isLogin && (
+                <div className="text-right">
+                  <Link
+                    to="/recuperar-contrasena"
+                    className="text-sm text-primary hover:underline font-medium"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
               )}
             </div>
 
