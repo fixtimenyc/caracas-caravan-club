@@ -96,7 +96,6 @@ const ResetPasswordPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
                   maxLength={72}
-                  disabled={!ready}
                 />
               </div>
             </div>
@@ -113,7 +112,6 @@ const ResetPasswordPage = () => {
                   onChange={(e) => setConfirm(e.target.value)}
                   className="pl-10"
                   maxLength={72}
-                  disabled={!ready}
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
