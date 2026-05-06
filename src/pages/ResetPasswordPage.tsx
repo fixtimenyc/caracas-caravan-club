@@ -117,9 +117,14 @@ const ResetPasswordPage = () => {
               {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading || !ready}>
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Actualizando...' : 'Actualizar contraseña'}
             </Button>
+            {!ready && (
+              <p className="text-xs text-muted-foreground text-center">
+                Si llegaste aquí desde el correo de recuperación, podrás continuar.
+              </p>
+            )}
           </form>
         </div>
       </div>
