@@ -52,6 +52,8 @@ const App = () => (
             <Route path="/terminos" element={<TermsPage />} />
             <Route path="/politica-privacidad" element={<PrivacyPage />} />
             <Route path="/politica-cancelacion" element={<CancellationPage />} />
+            <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
