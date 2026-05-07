@@ -161,12 +161,35 @@ const EditVehiclePage = () => {
     update("photos", next);
   };
 
+  const currentYear = new Date().getFullYear();
+
   const validate = (): string | null => {
     if (!form.title.trim()) return "El título es obligatorio";
-    if (form.pricePerDay <= 0) return "El precio debe ser mayor a 0";
+    if (form.title.trim().length < 10)
+      return "El título debe tener al menos 10 caracteres";
+    if (!form.brand.trim()) return "La marca es obligatoria";
+    if (!form.model.trim()) return "El modelo es obligatorio";
+    if (!form.year || form.year < 1980 || form.year > currentYear + 1)
+      return `El año debe estar entre 1980 y ${currentYear + 1}`;
+    if (!form.location.trim()) return "La ubicación es obligatoria";
     if (form.description.trim().length < 20)
       return "La descripción debe tener al menos 20 caracteres";
     if (form.photos.length < 1) return "Debe haber al menos 1 foto";
+    if (form.pricePerDay <= 0) return "El precio debe ser mayor a 0";
+    if (!Number.isFinite(form.minRentalDays) || form.minRentalDays < 1)
+      return "La duración mínima de alquiler debe ser de al menos 1 día";
+    if (form.minRentalDays > 30)
+      return "La duración mínima de alquiler no puede superar 30 días";
+    if (!Number.isFinite(form.minAdvanceHours) || form.minAdvanceHours < 0)
+      return "El anticipo mínimo en horas no puede ser negativo";
+    if (form.minAdvanceHours > 168)
+      return "El anticipo mínimo no puede superar 168 horas (7 días)";
+    if (form.homeDelivery) {
+      if (!Number.isFinite(form.homeDeliveryFee) || form.homeDeliveryFee < 0)
+        return "El costo de entrega a domicilio no puede ser negativo";
+      if (form.homeDeliveryFee > 500)
+        return "El costo de entrega a domicilio parece demasiado alto";
+    }
     return null;
   };
 
