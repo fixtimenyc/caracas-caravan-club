@@ -14,6 +14,7 @@ import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminUserDetailPage from "./pages/AdminUserDetailPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
 import OwnerDashboardPage from "./pages/OwnerDashboardPage";
+import EditVehiclePage from "./pages/EditVehiclePage";
 import ProfilePage from "./pages/ProfilePage";
 import HelpPage from "./pages/HelpPage";
 import AdminSupportPage from "./pages/AdminSupportPage";
