@@ -550,26 +550,58 @@ const EditVehiclePage = () => {
               <AccordionContent className="space-y-5 pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Duración mínima de alquiler (días)</Label>
+                    <Label htmlFor="minRentalDays">
+                      Duración mínima de alquiler (días)
+                    </Label>
                     <Input
+                      id="minRentalDays"
                       type="number"
                       min={1}
+                      max={30}
                       value={form.minRentalDays}
                       onChange={(e) =>
-                        update("minRentalDays", Math.max(1, Number(e.target.value) || 1))
+                        update(
+                          "minRentalDays",
+                          Math.max(1, Number(e.target.value) || 1)
+                        )
                       }
                     />
+                    <p
+                      className={`text-xs ${
+                        form.minRentalDays < 1 || form.minRentalDays > 30
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      Entre 1 y 30 días
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Anticipo mínimo requerido (horas)</Label>
+                    <Label htmlFor="minAdvanceHours">
+                      Anticipo mínimo requerido (horas)
+                    </Label>
                     <Input
+                      id="minAdvanceHours"
                       type="number"
                       min={0}
+                      max={168}
                       value={form.minAdvanceHours}
                       onChange={(e) =>
-                        update("minAdvanceHours", Math.max(0, Number(e.target.value) || 0))
+                        update(
+                          "minAdvanceHours",
+                          Math.max(0, Number(e.target.value) || 0)
+                        )
                       }
                     />
+                    <p
+                      className={`text-xs ${
+                        form.minAdvanceHours < 0 || form.minAdvanceHours > 168
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      Entre 0 y 168 horas (máx. 7 días)
+                    </p>
                   </div>
                 </div>
 
@@ -588,16 +620,34 @@ const EditVehiclePage = () => {
                   </div>
                   {form.homeDelivery && (
                     <div className="space-y-2">
-                      <Label>Costo adicional (USD)</Label>
+                      <Label htmlFor="homeDeliveryFee">
+                        Costo adicional (USD)
+                      </Label>
                       <Input
+                        id="homeDeliveryFee"
                         type="number"
                         min={0}
+                        max={500}
                         step="0.01"
                         value={form.homeDeliveryFee}
                         onChange={(e) =>
-                          update("homeDeliveryFee", Math.max(0, Number(e.target.value) || 0))
+                          update(
+                            "homeDeliveryFee",
+                            Math.max(0, Number(e.target.value) || 0)
+                          )
                         }
                       />
+                      <p
+                        className={`text-xs ${
+                          form.homeDeliveryFee < 0 || form.homeDeliveryFee > 500
+                            ? "text-destructive"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {form.homeDeliveryFee === 0
+                          ? "Entrega gratuita"
+                          : `Se cobrará $${form.homeDeliveryFee.toFixed(2)} adicionales por entrega`}
+                      </p>
                     </div>
                   )}
                 </div>
