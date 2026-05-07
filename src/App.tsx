@@ -46,6 +46,7 @@ const App = () => (
             <Route path="/admin/usuarios/:userId" element={<AdminUserDetailPage />} />
             <Route path="/vehiculo/:id" element={<VehicleDetailPage />} />
             <Route path="/my-vehicles" element={<OwnerDashboardPage />} />
+            <Route path="/my-vehicles/:id/editar" element={<EditVehiclePage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/ayuda" element={<HelpPage />} />
             <Route path="/admin/soporte" element={<AdminSupportPage />} />
