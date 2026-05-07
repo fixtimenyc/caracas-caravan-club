@@ -161,12 +161,35 @@ const EditVehiclePage = () => {
     update("photos", next);
   };
 
+  const currentYear = new Date().getFullYear();
+
   const validate = (): string | null => {
     if (!form.title.trim()) return "El título es obligatorio";
-    if (form.pricePerDay <= 0) return "El precio debe ser mayor a 0";
+    if (form.title.trim().length < 10)
+      return "El título debe tener al menos 10 caracteres";
+    if (!form.brand.trim()) return "La marca es obligatoria";
+    if (!form.model.trim()) return "El modelo es obligatorio";
+    if (!form.year || form.year < 1980 || form.year > currentYear + 1)
+      return `El año debe estar entre 1980 y ${currentYear + 1}`;
+    if (!form.location.trim()) return "La ubicación es obligatoria";
     if (form.description.trim().length < 20)
       return "La descripción debe tener al menos 20 caracteres";
     if (form.photos.length < 1) return "Debe haber al menos 1 foto";
+    if (form.pricePerDay <= 0) return "El precio debe ser mayor a 0";
+    if (!Number.isFinite(form.minRentalDays) || form.minRentalDays < 1)
+      return "La duración mínima de alquiler debe ser de al menos 1 día";
+    if (form.minRentalDays > 30)
+      return "La duración mínima de alquiler no puede superar 30 días";
+    if (!Number.isFinite(form.minAdvanceHours) || form.minAdvanceHours < 0)
+      return "El anticipo mínimo en horas no puede ser negativo";
+    if (form.minAdvanceHours > 168)
+      return "El anticipo mínimo no puede superar 168 horas (7 días)";
+    if (form.homeDelivery) {
+      if (!Number.isFinite(form.homeDeliveryFee) || form.homeDeliveryFee < 0)
+        return "El costo de entrega a domicilio no puede ser negativo";
+      if (form.homeDeliveryFee > 500)
+        return "El costo de entrega a domicilio parece demasiado alto";
+    }
     return null;
   };
 
@@ -527,26 +550,58 @@ const EditVehiclePage = () => {
               <AccordionContent className="space-y-5 pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Duración mínima de alquiler (días)</Label>
+                    <Label htmlFor="minRentalDays">
+                      Duración mínima de alquiler (días)
+                    </Label>
                     <Input
+                      id="minRentalDays"
                       type="number"
                       min={1}
+                      max={30}
                       value={form.minRentalDays}
                       onChange={(e) =>
-                        update("minRentalDays", Math.max(1, Number(e.target.value) || 1))
+                        update(
+                          "minRentalDays",
+                          Math.max(1, Number(e.target.value) || 1)
+                        )
                       }
                     />
+                    <p
+                      className={`text-xs ${
+                        form.minRentalDays < 1 || form.minRentalDays > 30
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      Entre 1 y 30 días
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Anticipo mínimo requerido (horas)</Label>
+                    <Label htmlFor="minAdvanceHours">
+                      Anticipo mínimo requerido (horas)
+                    </Label>
                     <Input
+                      id="minAdvanceHours"
                       type="number"
                       min={0}
+                      max={168}
                       value={form.minAdvanceHours}
                       onChange={(e) =>
-                        update("minAdvanceHours", Math.max(0, Number(e.target.value) || 0))
+                        update(
+                          "minAdvanceHours",
+                          Math.max(0, Number(e.target.value) || 0)
+                        )
                       }
                     />
+                    <p
+                      className={`text-xs ${
+                        form.minAdvanceHours < 0 || form.minAdvanceHours > 168
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      Entre 0 y 168 horas (máx. 7 días)
+                    </p>
                   </div>
                 </div>
 
@@ -565,16 +620,34 @@ const EditVehiclePage = () => {
                   </div>
                   {form.homeDelivery && (
                     <div className="space-y-2">
-                      <Label>Costo adicional (USD)</Label>
+                      <Label htmlFor="homeDeliveryFee">
+                        Costo adicional (USD)
+                      </Label>
                       <Input
+                        id="homeDeliveryFee"
                         type="number"
                         min={0}
+                        max={500}
                         step="0.01"
                         value={form.homeDeliveryFee}
                         onChange={(e) =>
-                          update("homeDeliveryFee", Math.max(0, Number(e.target.value) || 0))
+                          update(
+                            "homeDeliveryFee",
+                            Math.max(0, Number(e.target.value) || 0)
+                          )
                         }
                       />
+                      <p
+                        className={`text-xs ${
+                          form.homeDeliveryFee < 0 || form.homeDeliveryFee > 500
+                            ? "text-destructive"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {form.homeDeliveryFee === 0
+                          ? "Entrega gratuita"
+                          : `Se cobrará $${form.homeDeliveryFee.toFixed(2)} adicionales por entrega`}
+                      </p>
                     </div>
                   )}
                 </div>
