@@ -580,9 +580,7 @@ const OwnerDashboardPage = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() =>
-                              toast.info("Próximamente: editar vehículo")
-                            }
+                            onClick={() => navigate(`/my-vehicles/${v.id}/editar`)}
                           >
                             <Pencil className="w-4 h-4 mr-1" /> Editar
                           </Button>
