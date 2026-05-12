@@ -391,6 +391,27 @@ const AdminUserDetailPage = () => {
     toast.success("Cuenta marcada como eliminada (baneada).");
   };
 
+  const setVerificationStatus = async (status: 'approved' | 'rejected') => {
+    if (!verification) return;
+    const { error } = await supabase
+      .from('renter_verifications')
+      .update({ status, admin_notes: newNote.trim() || null })
+      .eq('id', verification.id);
+    if (error) return toast.error(error.message);
+    await logAction(status === 'approved' ? 'verified' : 'unverified',
+      `Verificación de arrendatario ${status === 'approved' ? 'aprobada' : 'rechazada'}`);
+    await supabase.from('notifications').insert({
+      user_id: verification.id ? (verification as any).user_id || userId : userId,
+      type: status === 'approved' ? 'verification_approved' : 'verification_rejected',
+      title: status === 'approved' ? 'Verificación aprobada' : 'Verificación rechazada',
+      message: status === 'approved'
+        ? 'Tu identidad ha sido verificada. Ya puedes alquilar vehículos.'
+        : 'Tu verificación fue rechazada. Contacta al equipo de soporte.',
+    });
+    toast.success('Estado de verificación actualizado');
+    if (userId) loadAll(userId);
+  };
+
   if (loading || !profile) {
     return (
       <div className="min-h-screen bg-background">
