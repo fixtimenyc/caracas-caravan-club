@@ -60,7 +60,7 @@ const HeroSection = () => {
         {/* Search Card */}
         <div className="max-w-4xl mx-auto animate-slide-up" style={{ animationDelay: "0.2s" }}>
           <div className="bg-card rounded-2xl shadow-card p-4 md:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Location */}
               <div className="md:col-span-1">
                 <label className="text-xs font-medium text-muted-foreground mb-2 block">
@@ -82,6 +82,29 @@ const HeroSection = () => {
                   </select>
                 </div>
               </div>
+
+              {/* Vehicle Type */}
+              <div className="md:col-span-1">
+                <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                  Tipo de vehículo
+                </label>
+                <div className="relative">
+                  <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+                  >
+                    <option value="">Todos los tipos</option>
+                    {VEHICLE_CATEGORIES.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
 
               {/* From Date */}
               <div className="md:col-span-1">
