@@ -48,16 +48,26 @@ const resolvePhoto = async (path?: string | null): Promise<string> => {
 const FeaturedCars = () => {
   const [cars, setCars] = useState<CardCar[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const zoneFilter = searchParams.get("zona") ?? "";
+  const validZone = CARACAS_ZONES.find((z) => z === zoneFilter) ?? "";
 
   useEffect(() => {
     const load = async () => {
-      const { data, error } = await supabase
+      setLoading(true);
+      let query = supabase
         .from("vehicles")
         .select("id, brand, model, year, location, price_per_day, photos")
         .eq("active", true)
         .eq("available", true)
         .order("created_at", { ascending: false })
         .limit(30);
+
+      if (validZone) {
+        query = query.ilike("location", `%${validZone}%`);
+      }
+
+      const { data, error } = await query;
 
       if (error || !data) {
         setLoading(false);
@@ -91,7 +101,13 @@ const FeaturedCars = () => {
     };
 
     load();
-  }, []);
+  }, [validZone]);
+
+  const clearZone = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("zona");
+    setSearchParams(next, { replace: true });
+  };
 
   return (
     <section className="py-20 bg-background">
