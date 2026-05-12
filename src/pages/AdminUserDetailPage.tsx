@@ -148,6 +148,8 @@ const AdminUserDetailPage = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [userRoles, setUserRoles] = useState<AppRole[]>([]);
   const [application, setApplication] = useState<Application | null>(null);
+  const [verification, setVerification] = useState<RenterVerification | null>(null);
+  const [verificationDocs, setVerificationDocs] = useState<Record<string, string>>({});
   const [reservations, setReservations] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [vehiclePhotos, setVehiclePhotos] = useState<Record<string, string>>({});
