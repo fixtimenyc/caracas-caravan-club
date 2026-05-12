@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import CarCard from "./CarCard";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, X } from "lucide-react";
-import { inferCategory, VehicleCategory } from "@/lib/vehicleCategory";
+import { Loader2, MapPin, X, Car as CarIcon } from "lucide-react";
+import { inferCategory, VehicleCategory, VEHICLE_CATEGORIES } from "@/lib/vehicleCategory";
 import { CARACAS_ZONES } from "@/lib/locations";
 
 import carPlaceholder from "@/assets/car-sedan.jpg";
