@@ -40,6 +40,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CARACAS_ZONES } from "@/lib/locations";
+import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const FEATURES = [
