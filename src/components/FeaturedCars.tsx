@@ -51,6 +51,8 @@ const FeaturedCars = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const zoneFilter = searchParams.get("zona") ?? "";
   const validZone = CARACAS_ZONES.find((z) => z === zoneFilter) ?? "";
+  const typeFilter = searchParams.get("tipo") ?? "";
+  const validType = VEHICLE_CATEGORIES.find((c) => c.id === typeFilter);
 
   useEffect(() => {
     const load = async () => {
