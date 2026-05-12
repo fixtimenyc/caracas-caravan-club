@@ -612,6 +612,7 @@ const AdminUserDetailPage = () => {
         <Tabs defaultValue="info">
           <TabsList className="flex flex-wrap h-auto">
             <TabsTrigger value="info">Personal</TabsTrigger>
+            {verification && <TabsTrigger value="verification">Verificación</TabsTrigger>}
             <TabsTrigger value="activity">Actividad</TabsTrigger>
             <TabsTrigger value="bookings">Reservas</TabsTrigger>
             {isOwner && <TabsTrigger value="vehicles">Vehículos</TabsTrigger>}
