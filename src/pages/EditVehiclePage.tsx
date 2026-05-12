@@ -40,6 +40,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CARACAS_ZONES } from "@/lib/locations";
+import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const FEATURES = [
@@ -97,15 +100,96 @@ const SAMPLE: FormState = {
 const EditVehiclePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>(SAMPLE);
   const [newCustomFeature, setNewCustomFeature] = useState("");
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
+  // Load real vehicle from DB
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 700);
-    return () => clearTimeout(t);
+    let cancelled = false;
+    const load = async () => {
+      if (!id) return;
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error || !data) {
+        toast.error("No se pudo cargar el vehículo");
+        setLoading(false);
+        return;
+      }
+
+      // Parse "detail, zone, city" → zone + addressDetail
+      let zone = "";
+      let addressDetail = "";
+      if (data.location) {
+        const parts = data.location
+          .split(",")
+          .map((p: string) => p.trim())
+          .filter(Boolean);
+        const zoneIdx = parts.findIndex((p: string) =>
+          (CARACAS_ZONES as readonly string[]).includes(p)
+        );
+        if (zoneIdx >= 0) {
+          zone = parts[zoneIdx];
+          addressDetail = parts.slice(0, zoneIdx).join(", ");
+        } else {
+          addressDetail = data.location;
+        }
+      }
+
+      setForm({
+        title: `${data.brand} ${data.model} ${data.year}`,
+        description: data.description || "",
+        pricePerDay: Number(data.price_per_day) || 0,
+        zone,
+        addressDetail,
+        brand: data.brand || "",
+        model: data.model || "",
+        year: data.year || new Date().getFullYear(),
+        features: [],
+        customFeatures: [],
+        photos: data.photos || [],
+        blockedDates: [],
+        minRentalDays: 1,
+        minAdvanceHours: 12,
+        homeDelivery: false,
+        homeDeliveryFee: 0,
+        active: data.active ?? true,
+      });
+      setLoading(false);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
+
+  // Resolve storage paths → display URLs
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!form.photos || form.photos.length === 0) {
+        setPhotoUrls([]);
+        return;
+      }
+      const urls = await resolveVehiclePhotos(form.photos);
+      if (!cancelled) setPhotoUrls(urls);
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.photos]);
 
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -141,21 +225,52 @@ const EditVehiclePage = () => {
       form.customFeatures.filter((x) => x !== v)
     );
 
-  const addPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const addPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
     if (form.photos.length + files.length > 10) {
       toast.error("Máximo 10 fotos");
       return;
     }
-    const urls = files.map((f) => URL.createObjectURL(f));
-    update("photos", [...form.photos, ...urls]);
-    e.target.value = "";
+    if (!user || !id) {
+      toast.error("Debes iniciar sesión");
+      return;
+    }
+    setUploadingPhotos(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${id}/${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 8)}.${ext}`;
+        const { error } = await supabase.storage
+          .from("vehicle-photos")
+          .upload(path, file, { cacheControl: "3600", upsert: false });
+        if (error) {
+          toast.error(`Error subiendo ${file.name}`);
+          continue;
+        }
+        uploaded.push(path);
+      }
+      if (uploaded.length) {
+        update("photos", [...form.photos, ...uploaded]);
+        toast.success(`${uploaded.length} foto(s) subida(s)`);
+      }
+    } finally {
+      setUploadingPhotos(false);
+    }
   };
 
-  const removePhoto = (i: number) => {
+  const removePhoto = async (i: number) => {
     if (form.photos.length <= 1) {
       toast.error("Debe haber al menos 1 foto");
       return;
+    }
+    const target = form.photos[i];
+    if (target && !target.startsWith("http") && !target.startsWith("blob:")) {
+      await supabase.storage.from("vehicle-photos").remove([target]);
     }
     update(
       "photos",
@@ -204,17 +319,36 @@ const EditVehiclePage = () => {
     return null;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const err = validate();
     if (err) {
       toast.error(err);
       return;
     }
+    if (!id) return;
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      toast.success("Cambios guardados con éxito");
-    }, 900);
+    const location = form.addressDetail.trim()
+      ? `${form.addressDetail.trim()}, ${form.zone}, Caracas`
+      : `${form.zone}, Caracas`;
+    const { error } = await supabase
+      .from("vehicles")
+      .update({
+        brand: form.brand.trim(),
+        model: form.model.trim(),
+        year: form.year,
+        location,
+        description: form.description.trim(),
+        price_per_day: form.pricePerDay,
+        photos: form.photos,
+        active: form.active,
+      })
+      .eq("id", id);
+    setSaving(false);
+    if (error) {
+      toast.error("No se pudieron guardar los cambios");
+      return;
+    }
+    toast.success("Cambios guardados con éxito");
   };
 
   const handleCancel = () => navigate("/my-vehicles");
@@ -448,16 +582,17 @@ const EditVehiclePage = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label>Fotos ({form.photos.length}/10)</Label>
-                    <label className="cursor-pointer">
+                    <label className={`cursor-pointer ${uploadingPhotos ? "opacity-60 pointer-events-none" : ""}`}>
                       <input
                         type="file"
                         accept="image/*"
                         multiple
                         className="hidden"
                         onChange={addPhoto}
+                        disabled={uploadingPhotos}
                       />
                       <span className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-input hover:bg-accent/10">
-                        <Plus className="w-4 h-4" /> Subir fotos
+                        <Plus className="w-4 h-4" /> {uploadingPhotos ? "Subiendo..." : "Subir fotos"}
                       </span>
                     </label>
                   </div>
@@ -468,9 +603,12 @@ const EditVehiclePage = () => {
                         className="relative group rounded-lg overflow-hidden border border-border bg-muted aspect-video"
                       >
                         <img
-                          src={src}
+                          src={photoUrls[i] || "/placeholder.svg"}
                           alt={`Foto ${i + 1}`}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/placeholder.svg";
+                          }}
                         />
                         {i === 0 && (
                           <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
