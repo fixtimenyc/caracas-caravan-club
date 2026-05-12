@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import CarCard from "./CarCard";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, X } from "lucide-react";
-import { inferCategory, VehicleCategory } from "@/lib/vehicleCategory";
+import { Loader2, MapPin, X, Car as CarIcon } from "lucide-react";
+import { inferCategory, VehicleCategory, VEHICLE_CATEGORIES } from "@/lib/vehicleCategory";
 import { CARACAS_ZONES } from "@/lib/locations";
 
 import carPlaceholder from "@/assets/car-sedan.jpg";
@@ -51,6 +51,8 @@ const FeaturedCars = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const zoneFilter = searchParams.get("zona") ?? "";
   const validZone = CARACAS_ZONES.find((z) => z === zoneFilter) ?? "";
+  const typeFilter = searchParams.get("tipo") ?? "";
+  const validType = VEHICLE_CATEGORIES.find((c) => c.id === typeFilter);
 
   useEffect(() => {
     const load = async () => {
@@ -109,6 +111,14 @@ const FeaturedCars = () => {
     setSearchParams(next, { replace: true });
   };
 
+  const clearType = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("tipo");
+    setSearchParams(next, { replace: true });
+  };
+
+  const filteredCars = validType ? cars.filter((c) => c.category === validType.id) : cars;
+
   return (
     <section id="vehiculos" className="py-20 bg-background scroll-mt-20">
       <div className="container mx-auto px-4">
@@ -121,16 +131,28 @@ const FeaturedCars = () => {
           </p>
         </div>
 
-        {validZone && (
-          <div className="flex justify-center mb-8">
-            <button
-              onClick={clearZone}
-              className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-2 text-sm font-medium hover:bg-primary/20 transition-smooth"
-            >
-              <MapPin className="w-4 h-4" />
-              Zona: {validZone}
-              <X className="w-4 h-4" />
-            </button>
+        {(validZone || validType) && (
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            {validZone && (
+              <button
+                onClick={clearZone}
+                className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-2 text-sm font-medium hover:bg-primary/20 transition-smooth"
+              >
+                <MapPin className="w-4 h-4" />
+                Zona: {validZone}
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            {validType && (
+              <button
+                onClick={clearType}
+                className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-2 text-sm font-medium hover:bg-primary/20 transition-smooth"
+              >
+                <CarIcon className="w-4 h-4" />
+                Tipo: {validType.name}
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
 
@@ -138,15 +160,19 @@ const FeaturedCars = () => {
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : cars.length === 0 ? (
+        ) : filteredCars.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            {validZone
+            {validType && validZone
+              ? `No hay vehículos ${validType.name} en ${validZone} por ahora.`
+              : validType
+              ? `No hay vehículos del tipo ${validType.name} por ahora.`
+              : validZone
               ? `No hay vehículos disponibles en ${validZone} por ahora.`
               : "No hay vehículos disponibles en este momento."}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cars.slice(0, 9).map((car, index) => (
+            {filteredCars.slice(0, 9).map((car, index) => (
               <div
                 key={car.id}
                 className="animate-scale-in"
