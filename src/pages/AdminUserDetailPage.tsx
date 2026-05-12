@@ -85,6 +85,47 @@ interface Application {
   address: string | null;
 }
 
+interface RenterVerification {
+  id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  full_name: string;
+  document_type: string;
+  document_number: string;
+  birth_date: string;
+  nationality: string | null;
+  gender: string | null;
+  occupation: string | null;
+  employer: string | null;
+  phone: string;
+  phone_secondary: string | null;
+  contact_email: string | null;
+  address: string;
+  city: string;
+  state: string | null;
+  country: string;
+  emergency_contact_name: string;
+  emergency_contact_relationship: string;
+  emergency_contact_phone: string;
+  driving_license_number: string;
+  driving_license_expiry: string;
+  has_medical_condition: boolean;
+  identity_doc_url: string;
+  driving_license_doc_url: string;
+  medical_certificate_url: string | null;
+  selfie_url: string;
+  own_social_platform: string;
+  own_social_url: string;
+  own_social_age_months: number;
+  reference_name: string;
+  reference_relationship: string;
+  reference_phone: string;
+  reference_social_platform: string;
+  reference_social_url: string;
+  reference_social_age_months: number;
+  admin_notes: string | null;
+  created_at: string;
+}
+
 type ConfirmAction = {
   title: string;
   description: string;
@@ -107,6 +148,8 @@ const AdminUserDetailPage = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [userRoles, setUserRoles] = useState<AppRole[]>([]);
   const [application, setApplication] = useState<Application | null>(null);
+  const [verification, setVerification] = useState<RenterVerification | null>(null);
+  const [verificationDocs, setVerificationDocs] = useState<Record<string, string>>({});
   const [reservations, setReservations] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [vehiclePhotos, setVehiclePhotos] = useState<Record<string, string>>({});
@@ -128,10 +171,10 @@ const AdminUserDetailPage = () => {
     if (userId) loadAll(userId);
   }, [user, roles, authLoading, userId]);
 
-  const signDoc = async (path: string | null) => {
+  const signDoc = async (path: string | null, bucket: 'owner-documents' | 'renter-documents' = 'owner-documents') => {
     if (!path) return null;
     const { data } = await supabase.storage
-      .from("owner-documents")
+      .from(bucket)
       .createSignedUrl(path, 3600);
     return data?.signedUrl || null;
   };
@@ -143,6 +186,7 @@ const AdminUserDetailPage = () => {
         profileRes,
         rolesRes,
         appRes,
+        verifRes,
         reservAsRenter,
         vehiclesRes,
         reviewsRes,
@@ -159,6 +203,11 @@ const AdminUserDetailPage = () => {
           .eq("user_id", uid)
           .order("created_at", { ascending: false })
           .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("renter_verifications")
+          .select("*")
+          .eq("user_id", uid)
           .maybeSingle(),
         supabase
           .from("reservations")
@@ -224,7 +273,7 @@ const AdminUserDetailPage = () => {
       );
       setVehiclePhotos(photos);
 
-      // Sign documents
+      // Sign owner documents
       if (appRes.data) {
         const a = appRes.data as Application;
         const [cedula, title, insurance] = await Promise.all([
@@ -237,6 +286,24 @@ const AdminUserDetailPage = () => {
         if (title) docs.title = title;
         if (insurance) docs.insurance = insurance;
         setDocUrls(docs);
+      }
+
+      // Renter verification + signed docs
+      const verifData = verifRes.data as RenterVerification | null;
+      setVerification(verifData);
+      if (verifData) {
+        const [identity, license, selfieUrl, medical] = await Promise.all([
+          signDoc(verifData.identity_doc_url, 'renter-documents'),
+          signDoc(verifData.driving_license_doc_url, 'renter-documents'),
+          signDoc(verifData.selfie_url, 'renter-documents'),
+          signDoc(verifData.medical_certificate_url, 'renter-documents'),
+        ]);
+        const vdocs: Record<string, string> = {};
+        if (identity) vdocs.identity = identity;
+        if (license) vdocs.license = license;
+        if (selfieUrl) vdocs.selfie = selfieUrl;
+        if (medical) vdocs.medical = medical;
+        setVerificationDocs(vdocs);
       }
     } catch (e: any) {
       toast.error("Error cargando perfil: " + e.message);
@@ -322,6 +389,27 @@ const AdminUserDetailPage = () => {
     // Soft delete: ban + log
     await setStatus("banned", "deleted");
     toast.success("Cuenta marcada como eliminada (baneada).");
+  };
+
+  const setVerificationStatus = async (status: 'approved' | 'rejected') => {
+    if (!verification) return;
+    const { error } = await supabase
+      .from('renter_verifications')
+      .update({ status, admin_notes: newNote.trim() || null })
+      .eq('id', verification.id);
+    if (error) return toast.error(error.message);
+    await logAction(status === 'approved' ? 'verified' : 'unverified',
+      `Verificación de arrendatario ${status === 'approved' ? 'aprobada' : 'rechazada'}`);
+    await supabase.from('notifications').insert({
+      user_id: verification.id ? (verification as any).user_id || userId : userId,
+      type: status === 'approved' ? 'verification_approved' : 'verification_rejected',
+      title: status === 'approved' ? 'Verificación aprobada' : 'Verificación rechazada',
+      message: status === 'approved'
+        ? 'Tu identidad ha sido verificada. Ya puedes alquilar vehículos.'
+        : 'Tu verificación fue rechazada. Contacta al equipo de soporte.',
+    });
+    toast.success('Estado de verificación actualizado');
+    if (userId) loadAll(userId);
   };
 
   if (loading || !profile) {
@@ -524,6 +612,7 @@ const AdminUserDetailPage = () => {
         <Tabs defaultValue="info">
           <TabsList className="flex flex-wrap h-auto">
             <TabsTrigger value="info">Personal</TabsTrigger>
+            {verification && <TabsTrigger value="verification">Verificación</TabsTrigger>}
             <TabsTrigger value="activity">Actividad</TabsTrigger>
             <TabsTrigger value="bookings">Reservas</TabsTrigger>
             {isOwner && <TabsTrigger value="vehicles">Vehículos</TabsTrigger>}
@@ -583,7 +672,118 @@ const AdminUserDetailPage = () => {
             )}
           </TabsContent>
 
-          {/* Activity */}
+          {/* Renter verification */}
+          {verification && (
+            <TabsContent value="verification" className="space-y-4">
+              <div className="rounded-xl border bg-card p-6">
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                  <div>
+                    <h3 className="font-semibold">Verificación de Arrendatario</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Enviada el {new Date(verification.created_at).toLocaleString("es-VE")}
+                    </p>
+                  </div>
+                  <Badge
+                    className={
+                      verification.status === 'approved'
+                        ? 'bg-primary text-primary-foreground'
+                        : verification.status === 'rejected'
+                        ? 'bg-destructive text-destructive-foreground'
+                        : ''
+                    }
+                    variant={verification.status === 'pending' ? 'secondary' : 'default'}
+                  >
+                    {verification.status === 'approved' ? 'Aprobada'
+                      : verification.status === 'rejected' ? 'Rechazada' : 'Pendiente'}
+                  </Badge>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <Info label="Nombre completo" value={verification.full_name} />
+                  <Info label={`Documento (${verification.document_type})`} value={verification.document_number} />
+                  <Info label="Fecha de nacimiento" value={new Date(verification.birth_date).toLocaleDateString("es-VE")} />
+                  <Info label="Nacionalidad" value={verification.nationality} />
+                  <Info label="Género" value={verification.gender} />
+                  <Info label="Ocupación" value={verification.occupation} />
+                  <Info label="Empleador" value={verification.employer} />
+                  <Info label="Teléfono principal" value={verification.phone} />
+                  <Info label="Teléfono secundario" value={verification.phone_secondary} />
+                  <Info label="Email contacto" value={verification.contact_email} />
+                  <Info label="Dirección" value={`${verification.address}, ${verification.city}${verification.state ? ', ' + verification.state : ''}, ${verification.country}`} />
+                  <Info label="Licencia N°" value={verification.driving_license_number} />
+                  <Info label="Vence licencia" value={new Date(verification.driving_license_expiry).toLocaleDateString("es-VE")} />
+                  <Info label="Condición médica" value={verification.has_medical_condition ? 'Sí' : 'No'} />
+                </div>
+              </div>
+
+              <div className="rounded-xl border bg-card p-6">
+                <h3 className="font-semibold mb-3">Contacto de emergencia</h3>
+                <div className="grid sm:grid-cols-3 gap-4 text-sm">
+                  <Info label="Nombre" value={verification.emergency_contact_name} />
+                  <Info label="Parentesco" value={verification.emergency_contact_relationship} />
+                  <Info label="Teléfono" value={verification.emergency_contact_phone} />
+                </div>
+              </div>
+
+              <div className="rounded-xl border bg-card p-6">
+                <h3 className="font-semibold mb-3">Redes sociales y referencia</h3>
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <Info label="Su red social" value={`${verification.own_social_platform} · ${verification.own_social_age_months} meses`} />
+                  <div>
+                    <p className="text-xs text-muted-foreground">URL del perfil</p>
+                    <a href={verification.own_social_url} target="_blank" rel="noreferrer"
+                      className="text-primary hover:underline text-sm break-all">
+                      {verification.own_social_url}
+                    </a>
+                  </div>
+                  <Info label="Referencia personal" value={`${verification.reference_name} (${verification.reference_relationship})`} />
+                  <Info label="Teléfono referencia" value={verification.reference_phone} />
+                  <Info label="Red social referencia" value={`${verification.reference_social_platform} · ${verification.reference_social_age_months} meses`} />
+                  <div>
+                    <p className="text-xs text-muted-foreground">URL referencia</p>
+                    <a href={verification.reference_social_url} target="_blank" rel="noreferrer"
+                      className="text-primary hover:underline text-sm break-all">
+                      {verification.reference_social_url}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {(verificationDocs.identity || verificationDocs.license || verificationDocs.selfie || verificationDocs.medical) && (
+                <div className="rounded-xl border bg-card p-6">
+                  <h3 className="font-semibold mb-4">Documentos cargados</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {verificationDocs.identity && <DocPreview label="Identidad" url={verificationDocs.identity} />}
+                    {verificationDocs.license && <DocPreview label="Licencia" url={verificationDocs.license} />}
+                    {verificationDocs.selfie && <DocPreview label="Selfie" url={verificationDocs.selfie} />}
+                    {verificationDocs.medical && <DocPreview label="Certificado médico" url={verificationDocs.medical} />}
+                  </div>
+                </div>
+              )}
+
+              {verification.admin_notes && (
+                <div className="rounded-xl border bg-card p-4 text-sm">
+                  <p className="text-xs text-muted-foreground mb-1">Notas del administrador</p>
+                  <p>{verification.admin_notes}</p>
+                </div>
+              )}
+
+              {verification.status === 'pending' && (
+                <div className="rounded-xl border bg-card p-4 flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => setVerificationStatus('approved')}>
+                    <ShieldCheck className="w-4 h-4 mr-1" /> Aprobar verificación
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => setVerificationStatus('rejected')}>
+                    <Ban className="w-4 h-4 mr-1" /> Rechazar
+                  </Button>
+                  <p className="text-xs text-muted-foreground w-full mt-2">
+                    Tip: agrega una nota interna antes de rechazar para registrar el motivo.
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          )}
+
           <TabsContent value="activity">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="rounded-xl border bg-card p-6">
