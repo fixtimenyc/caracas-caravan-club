@@ -181,7 +181,8 @@ const EditVehiclePage = () => {
     if (!form.model.trim()) return "El modelo es obligatorio";
     if (!form.year || form.year < 1980 || form.year > currentYear + 1)
       return `El año debe estar entre 1980 y ${currentYear + 1}`;
-    if (!form.location.trim()) return "La ubicación es obligatoria";
+    if (!form.zone.trim() || !CARACAS_ZONES.includes(form.zone as typeof CARACAS_ZONES[number]))
+      return "Selecciona una zona válida de Caracas";
     if (form.description.trim().length < 20)
       return "La descripción debe tener al menos 20 caracteres";
     if (form.photos.length < 1) return "Debe haber al menos 1 foto";
