@@ -232,6 +232,8 @@ const OwnerApplicationPage = () => {
         mileage: vehicle.mileage,
         suggested_price_per_day: vehicle.pricePerDay,
         availability_notes: vehicle.availabilityNotes || null,
+        vehicle_zone: vehicle.zone,
+        vehicle_address_detail: vehicle.addressDetail || null,
         cedula_doc_url: cedulaPath,
         title_doc_url: titlePath,
         insurance_doc_url: insurancePath,
