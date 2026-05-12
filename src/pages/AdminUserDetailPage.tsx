@@ -171,10 +171,10 @@ const AdminUserDetailPage = () => {
     if (userId) loadAll(userId);
   }, [user, roles, authLoading, userId]);
 
-  const signDoc = async (path: string | null) => {
+  const signDoc = async (path: string | null, bucket: 'owner-documents' | 'renter-documents' = 'owner-documents') => {
     if (!path) return null;
     const { data } = await supabase.storage
-      .from("owner-documents")
+      .from(bucket)
       .createSignedUrl(path, 3600);
     return data?.signedUrl || null;
   };
@@ -186,6 +186,7 @@ const AdminUserDetailPage = () => {
         profileRes,
         rolesRes,
         appRes,
+        verifRes,
         reservAsRenter,
         vehiclesRes,
         reviewsRes,
@@ -202,6 +203,11 @@ const AdminUserDetailPage = () => {
           .eq("user_id", uid)
           .order("created_at", { ascending: false })
           .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("renter_verifications")
+          .select("*")
+          .eq("user_id", uid)
           .maybeSingle(),
         supabase
           .from("reservations")
@@ -267,7 +273,7 @@ const AdminUserDetailPage = () => {
       );
       setVehiclePhotos(photos);
 
-      // Sign documents
+      // Sign owner documents
       if (appRes.data) {
         const a = appRes.data as Application;
         const [cedula, title, insurance] = await Promise.all([
@@ -280,6 +286,24 @@ const AdminUserDetailPage = () => {
         if (title) docs.title = title;
         if (insurance) docs.insurance = insurance;
         setDocUrls(docs);
+      }
+
+      // Renter verification + signed docs
+      const verifData = verifRes.data as RenterVerification | null;
+      setVerification(verifData);
+      if (verifData) {
+        const [identity, license, selfieUrl, medical] = await Promise.all([
+          signDoc(verifData.identity_doc_url, 'renter-documents'),
+          signDoc(verifData.driving_license_doc_url, 'renter-documents'),
+          signDoc(verifData.selfie_url, 'renter-documents'),
+          signDoc(verifData.medical_certificate_url, 'renter-documents'),
+        ]);
+        const vdocs: Record<string, string> = {};
+        if (identity) vdocs.identity = identity;
+        if (license) vdocs.license = license;
+        if (selfieUrl) vdocs.selfie = selfieUrl;
+        if (medical) vdocs.medical = medical;
+        setVerificationDocs(vdocs);
       }
     } catch (e: any) {
       toast.error("Error cargando perfil: " + e.message);
