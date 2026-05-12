@@ -57,7 +57,8 @@ type FormState = {
   title: string;
   description: string;
   pricePerDay: number;
-  location: string;
+  zone: string;
+  addressDetail: string;
   brand: string;
   model: string;
   year: number;
@@ -77,7 +78,8 @@ const SAMPLE: FormState = {
   description:
     "SUV cómoda y económica, ideal para moverse por Caracas. Excelente rendimiento de combustible, mantenimiento al día y aire acondicionado en perfecto estado.",
   pricePerDay: 50,
-  location: "Altamira, Caracas",
+  zone: "Altamira",
+  addressDetail: "Av. Luis Roche, frente a la plaza",
   brand: "Toyota",
   model: "Terios",
   year: 2016,
