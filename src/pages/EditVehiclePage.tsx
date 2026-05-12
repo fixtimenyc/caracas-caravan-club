@@ -327,14 +327,41 @@ const EditVehiclePage = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="location">Ubicación</Label>
-                  <Input
-                    id="location"
-                    value={form.location}
-                    onChange={(e) => update("location", e.target.value)}
-                    placeholder="Ej: Altamira, Caracas"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="zone">Zona de Caracas</Label>
+                    <Select
+                      value={form.zone}
+                      onValueChange={(v) => update("zone", v)}
+                    >
+                      <SelectTrigger id="zone">
+                        <SelectValue placeholder="Selecciona una zona" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CARACAS_ZONES.map((z) => (
+                          <SelectItem key={z} value={z}>
+                            {z}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Coincide con las zonas del buscador de la página principal.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="addressDetail">Ubicación más precisa (opcional)</Label>
+                    <Input
+                      id="addressDetail"
+                      value={form.addressDetail}
+                      onChange={(e) => update("addressDetail", e.target.value)}
+                      placeholder="Av., calle, edificio o referencia"
+                      maxLength={120}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Visible solo para los arrendatarios después de reservar.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
