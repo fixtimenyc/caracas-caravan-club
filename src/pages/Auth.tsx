@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -19,6 +20,9 @@ const signupSchema = z.object({
   email: z.string().trim().email('Email inválido').max(255),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').max(72),
   role: z.enum(['renter', 'owner']),
+  acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar los términos y políticas para continuar' }) }),
+  acceptedPrivacy: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar la política de privacidad' }) }),
+  acceptedCancellation: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar la política de cancelación' }) }),
 });
 
 type SignupRole = 'renter' | 'owner';
