@@ -107,7 +107,7 @@ const Auth = () => {
           navigate('/');
         }
       } else {
-        const validation = signupSchema.safeParse({ fullName, email, password, role });
+        const validation = signupSchema.safeParse({ fullName, email, password, role, acceptedTerms, acceptedPrivacy, acceptedCancellation });
         if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
           validation.error.errors.forEach((err) => {
