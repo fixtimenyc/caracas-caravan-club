@@ -319,17 +319,36 @@ const EditVehiclePage = () => {
     return null;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const err = validate();
     if (err) {
       toast.error(err);
       return;
     }
+    if (!id) return;
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      toast.success("Cambios guardados con éxito");
-    }, 900);
+    const location = form.addressDetail.trim()
+      ? `${form.addressDetail.trim()}, ${form.zone}, Caracas`
+      : `${form.zone}, Caracas`;
+    const { error } = await supabase
+      .from("vehicles")
+      .update({
+        brand: form.brand.trim(),
+        model: form.model.trim(),
+        year: form.year,
+        location,
+        description: form.description.trim(),
+        price_per_day: form.pricePerDay,
+        photos: form.photos,
+        active: form.active,
+      })
+      .eq("id", id);
+    setSaving(false);
+    if (error) {
+      toast.error("No se pudieron guardar los cambios");
+      return;
+    }
+    toast.success("Cambios guardados con éxito");
   };
 
   const handleCancel = () => navigate("/my-vehicles");
