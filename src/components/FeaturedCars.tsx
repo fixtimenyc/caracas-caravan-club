@@ -111,6 +111,14 @@ const FeaturedCars = () => {
     setSearchParams(next, { replace: true });
   };
 
+  const clearType = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("tipo");
+    setSearchParams(next, { replace: true });
+  };
+
+  const filteredCars = validType ? cars.filter((c) => c.category === validType.id) : cars;
+
   return (
     <section id="vehiculos" className="py-20 bg-background scroll-mt-20">
       <div className="container mx-auto px-4">
@@ -122,6 +130,58 @@ const FeaturedCars = () => {
             Explora nuestra selección de vehículos verificados disponibles en Caracas
           </p>
         </div>
+
+        {(validZone || validType) && (
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            {validZone && (
+              <button
+                onClick={clearZone}
+                className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-2 text-sm font-medium hover:bg-primary/20 transition-smooth"
+              >
+                <MapPin className="w-4 h-4" />
+                Zona: {validZone}
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            {validType && (
+              <button
+                onClick={clearType}
+                className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-2 text-sm font-medium hover:bg-primary/20 transition-smooth"
+              >
+                <CarIcon className="w-4 h-4" />
+                Tipo: {validType.name}
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : filteredCars.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">
+            {validType && validZone
+              ? `No hay vehículos ${validType.name} en ${validZone} por ahora.`
+              : validType
+              ? `No hay vehículos del tipo ${validType.name} por ahora.`
+              : validZone
+              ? `No hay vehículos disponibles en ${validZone} por ahora.`
+              : "No hay vehículos disponibles en este momento."}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCars.slice(0, 9).map((car, index) => (
+              <div
+                key={car.id}
+                className="animate-scale-in"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <CarCard car={car} />
+              </div>
+            ))}
+          </div>
 
         {validZone && (
           <div className="flex justify-center mb-8">
