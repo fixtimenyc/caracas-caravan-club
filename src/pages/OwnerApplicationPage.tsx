@@ -614,6 +614,49 @@ const OwnerApplicationPage = () => {
                   />
                 </Field>
 
+                <FieldGroup>
+                  <Field
+                    label="Zona donde se entrega el vehículo"
+                    error={errors.zone}
+                    htmlFor="zone"
+                    hint="Coincide con las zonas del buscador"
+                  >
+                    <Select
+                      value={vehicle.zone}
+                      onValueChange={(v) => setVehicle({ ...vehicle, zone: v })}
+                    >
+                      <SelectTrigger id="zone">
+                        <SelectValue placeholder="Selecciona una zona" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CARACAS_ZONES.map((z) => (
+                          <SelectItem key={z} value={z}>
+                            {z}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field
+                    label="Ubicación más precisa (opcional)"
+                    error={errors.addressDetail}
+                    htmlFor="addressDetail"
+                    hint="Calle, edificio o referencia"
+                  >
+                    <Input
+                      id="addressDetail"
+                      value={vehicle.addressDetail ?? ''}
+                      onChange={(e) =>
+                        setVehicle({
+                          ...vehicle,
+                          addressDetail: e.target.value,
+                        })
+                      }
+                      placeholder="Ej: Av. Luis Roche, frente a la plaza"
+                      maxLength={120}
+                    />
+                  </Field>
+                </FieldGroup>
                 <Field
                   label="Notas de disponibilidad (opcional)"
                   htmlFor="availabilityNotes"
