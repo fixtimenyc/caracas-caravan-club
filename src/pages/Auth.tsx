@@ -98,8 +98,8 @@ const Auth = () => {
             toast.success('¡Cuenta creada! Completa tu solicitud de aliado.');
             navigate('/aliado/solicitud');
           } else {
-            toast.success('¡Cuenta creada exitosamente!');
-            navigate('/');
+            toast.success('¡Cuenta creada! Completa tu verificación de identidad.');
+            navigate('/arrendatario/verificacion');
           }
         }
       }
