@@ -32,6 +32,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CARACAS_ZONES, matchZone } from "@/lib/locations";
 import { toast } from "sonner";
 
 const FEATURES = [
