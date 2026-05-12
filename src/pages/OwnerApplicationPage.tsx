@@ -121,6 +121,8 @@ const OwnerApplicationPage = () => {
     transmission: '',
     mileage: 0,
     pricePerDay: 25,
+    zone: '',
+    addressDetail: '',
     availabilityNotes: '',
   });
 
