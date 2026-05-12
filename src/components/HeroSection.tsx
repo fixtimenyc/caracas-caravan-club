@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Search } from "lucide-react";
+import { Calendar, Car, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CARACAS_ZONES } from "@/lib/locations";
+import { VEHICLE_CATEGORIES } from "@/lib/vehicleCategory";
 import heroImage from "@/assets/hero-car.jpg";
 
 
@@ -13,12 +14,14 @@ const HeroSection = () => {
     .toISOString()
     .split("T")[0];
   const [zone, setZone] = useState<string>("");
+  const [type, setType] = useState<string>("");
   const [from, setFrom] = useState<string>(today);
   const [to, setTo] = useState<string>(inThreeDays);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (zone) params.set("zona", zone);
+    if (type) params.set("tipo", type);
     if (from) params.set("desde", from);
     if (to) params.set("hasta", to);
     const qs = params.toString();
