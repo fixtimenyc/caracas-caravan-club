@@ -1,6 +1,10 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Calendar, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CARACAS_ZONES } from "@/lib/locations";
 import heroImage from "@/assets/hero-car.jpg";
+
 
 const HeroSection = () => {
   return (
