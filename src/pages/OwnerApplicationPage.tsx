@@ -31,6 +31,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { CARACAS_ZONES } from '@/lib/locations';
 
 const VENEZUELAN_CITIES = [
   'Caracas',
