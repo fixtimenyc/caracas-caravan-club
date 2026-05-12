@@ -32,6 +32,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CARACAS_ZONES } from "@/lib/locations";
 import { toast } from "sonner";
 
 const FEATURES = [
@@ -49,7 +57,8 @@ type FormState = {
   title: string;
   description: string;
   pricePerDay: number;
-  location: string;
+  zone: string;
+  addressDetail: string;
   brand: string;
   model: string;
   year: number;
@@ -69,7 +78,8 @@ const SAMPLE: FormState = {
   description:
     "SUV cómoda y económica, ideal para moverse por Caracas. Excelente rendimiento de combustible, mantenimiento al día y aire acondicionado en perfecto estado.",
   pricePerDay: 50,
-  location: "Altamira, Caracas",
+  zone: "Altamira",
+  addressDetail: "Av. Luis Roche, frente a la plaza",
   brand: "Toyota",
   model: "Terios",
   year: 2016,
@@ -171,7 +181,8 @@ const EditVehiclePage = () => {
     if (!form.model.trim()) return "El modelo es obligatorio";
     if (!form.year || form.year < 1980 || form.year > currentYear + 1)
       return `El año debe estar entre 1980 y ${currentYear + 1}`;
-    if (!form.location.trim()) return "La ubicación es obligatoria";
+    if (!form.zone.trim() || !CARACAS_ZONES.includes(form.zone as typeof CARACAS_ZONES[number]))
+      return "Selecciona una zona válida de Caracas";
     if (form.description.trim().length < 20)
       return "La descripción debe tener al menos 20 caracteres";
     if (form.photos.length < 1) return "Debe haber al menos 1 foto";
@@ -316,14 +327,41 @@ const EditVehiclePage = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="location">Ubicación</Label>
-                  <Input
-                    id="location"
-                    value={form.location}
-                    onChange={(e) => update("location", e.target.value)}
-                    placeholder="Ej: Altamira, Caracas"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="zone">Zona de Caracas</Label>
+                    <Select
+                      value={form.zone}
+                      onValueChange={(v) => update("zone", v)}
+                    >
+                      <SelectTrigger id="zone">
+                        <SelectValue placeholder="Selecciona una zona" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CARACAS_ZONES.map((z) => (
+                          <SelectItem key={z} value={z}>
+                            {z}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Coincide con las zonas del buscador de la página principal.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="addressDetail">Ubicación más precisa (opcional)</Label>
+                    <Input
+                      id="addressDetail"
+                      value={form.addressDetail}
+                      onChange={(e) => update("addressDetail", e.target.value)}
+                      placeholder="Av., calle, edificio o referencia"
+                      maxLength={120}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Visible solo para los arrendatarios después de reservar.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-2">

@@ -1,8 +1,34 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Calendar, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CARACAS_ZONES } from "@/lib/locations";
 import heroImage from "@/assets/hero-car.jpg";
 
+
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const today = new Date().toISOString().split("T")[0];
+  const inThreeDays = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+  const [zone, setZone] = useState<string>("");
+  const [from, setFrom] = useState<string>(today);
+  const [to, setTo] = useState<string>(inThreeDays);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (zone) params.set("zona", zone);
+    if (from) params.set("desde", from);
+    if (to) params.set("hasta", to);
+    const qs = params.toString();
+    navigate(qs ? `/?${qs}#vehiculos` : "/#vehiculos");
+    setTimeout(() => {
+      const el = document.getElementById("vehiculos");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -38,14 +64,18 @@ const HeroSection = () => {
                   Ubicación
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <select className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
-                    <option>Las Mercedes</option>
-                    <option>Altamira</option>
-                    <option>Chacao</option>
-                    <option>El Hatillo</option>
-                    <option>La Castellana</option>
-                    <option>Sabana Grande</option>
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                  <select
+                    value={zone}
+                    onChange={(e) => setZone(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+                  >
+                    <option value="">Todas las zonas</option>
+                    {CARACAS_ZONES.map((z) => (
+                      <option key={z} value={z}>
+                        {z}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -59,8 +89,9 @@ const HeroSection = () => {
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="date"
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                    defaultValue={new Date().toISOString().split("T")[0]}
                   />
                 </div>
               </div>
@@ -74,15 +105,16 @@ const HeroSection = () => {
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="date"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                    defaultValue={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
                   />
                 </div>
               </div>
 
               {/* Search Button */}
               <div className="md:col-span-1 flex items-end">
-                <Button variant="hero" size="lg" className="w-full">
+                <Button variant="hero" size="lg" className="w-full" onClick={handleSearch}>
                   <Search className="w-5 h-5" />
                   Buscar
                 </Button>

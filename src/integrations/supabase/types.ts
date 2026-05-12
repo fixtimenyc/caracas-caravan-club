@@ -194,12 +194,14 @@ export type Database = {
           transmission: string | null
           updated_at: string
           user_id: string
+          vehicle_address_detail: string | null
           vehicle_brand: string
           vehicle_color: string | null
           vehicle_model: string
           vehicle_photos: string[] | null
           vehicle_plate: string
           vehicle_year: number
+          vehicle_zone: string | null
         }
         Insert: {
           accepted_terms?: boolean
@@ -222,12 +224,14 @@ export type Database = {
           transmission?: string | null
           updated_at?: string
           user_id: string
+          vehicle_address_detail?: string | null
           vehicle_brand: string
           vehicle_color?: string | null
           vehicle_model: string
           vehicle_photos?: string[] | null
           vehicle_plate: string
           vehicle_year: number
+          vehicle_zone?: string | null
         }
         Update: {
           accepted_terms?: boolean
@@ -250,12 +254,14 @@ export type Database = {
           transmission?: string | null
           updated_at?: string
           user_id?: string
+          vehicle_address_detail?: string | null
           vehicle_brand?: string
           vehicle_color?: string | null
           vehicle_model?: string
           vehicle_photos?: string[] | null
           vehicle_plate?: string
           vehicle_year?: number
+          vehicle_zone?: string | null
         }
         Relationships: []
       }
