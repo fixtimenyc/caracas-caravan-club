@@ -85,6 +85,47 @@ interface Application {
   address: string | null;
 }
 
+interface RenterVerification {
+  id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  full_name: string;
+  document_type: string;
+  document_number: string;
+  birth_date: string;
+  nationality: string | null;
+  gender: string | null;
+  occupation: string | null;
+  employer: string | null;
+  phone: string;
+  phone_secondary: string | null;
+  contact_email: string | null;
+  address: string;
+  city: string;
+  state: string | null;
+  country: string;
+  emergency_contact_name: string;
+  emergency_contact_relationship: string;
+  emergency_contact_phone: string;
+  driving_license_number: string;
+  driving_license_expiry: string;
+  has_medical_condition: boolean;
+  identity_doc_url: string;
+  driving_license_doc_url: string;
+  medical_certificate_url: string | null;
+  selfie_url: string;
+  own_social_platform: string;
+  own_social_url: string;
+  own_social_age_months: number;
+  reference_name: string;
+  reference_relationship: string;
+  reference_phone: string;
+  reference_social_platform: string;
+  reference_social_url: string;
+  reference_social_age_months: number;
+  admin_notes: string | null;
+  created_at: string;
+}
+
 type ConfirmAction = {
   title: string;
   description: string;
