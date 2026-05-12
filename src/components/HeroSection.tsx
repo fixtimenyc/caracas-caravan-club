@@ -7,6 +7,28 @@ import heroImage from "@/assets/hero-car.jpg";
 
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const today = new Date().toISOString().split("T")[0];
+  const inThreeDays = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+  const [zone, setZone] = useState<string>("");
+  const [from, setFrom] = useState<string>(today);
+  const [to, setTo] = useState<string>(inThreeDays);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (zone) params.set("zona", zone);
+    if (from) params.set("desde", from);
+    if (to) params.set("hasta", to);
+    const qs = params.toString();
+    navigate(qs ? `/?${qs}#vehiculos` : "/#vehiculos");
+    setTimeout(() => {
+      const el = document.getElementById("vehiculos");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
