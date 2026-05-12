@@ -582,16 +582,17 @@ const EditVehiclePage = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label>Fotos ({form.photos.length}/10)</Label>
-                    <label className="cursor-pointer">
+                    <label className={`cursor-pointer ${uploadingPhotos ? "opacity-60 pointer-events-none" : ""}`}>
                       <input
                         type="file"
                         accept="image/*"
                         multiple
                         className="hidden"
                         onChange={addPhoto}
+                        disabled={uploadingPhotos}
                       />
                       <span className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-input hover:bg-accent/10">
-                        <Plus className="w-4 h-4" /> Subir fotos
+                        <Plus className="w-4 h-4" /> {uploadingPhotos ? "Subiendo..." : "Subir fotos"}
                       </span>
                     </label>
                   </div>
@@ -602,9 +603,12 @@ const EditVehiclePage = () => {
                         className="relative group rounded-lg overflow-hidden border border-border bg-muted aspect-video"
                       >
                         <img
-                          src={src}
+                          src={photoUrls[i] || "/placeholder.svg"}
                           alt={`Foto ${i + 1}`}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/placeholder.svg";
+                          }}
                         />
                         {i === 0 && (
                           <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
