@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -19,6 +20,9 @@ const signupSchema = z.object({
   email: z.string().trim().email('Email inválido').max(255),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').max(72),
   role: z.enum(['renter', 'owner']),
+  acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar los términos y políticas para continuar' }) }),
+  acceptedPrivacy: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar la política de privacidad' }) }),
+  acceptedCancellation: z.literal(true, { errorMap: () => ({ message: 'Debes aceptar la política de cancelación' }) }),
 });
 
 type SignupRole = 'renter' | 'owner';
@@ -35,6 +39,9 @@ const Auth = () => {
   const [role, setRole] = useState<SignupRole>(initialRole);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [acceptedCancellation, setAcceptedCancellation] = useState(false);
 
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -100,7 +107,7 @@ const Auth = () => {
           navigate('/');
         }
       } else {
-        const validation = signupSchema.safeParse({ fullName, email, password, role });
+        const validation = signupSchema.safeParse({ fullName, email, password, role, acceptedTerms, acceptedPrivacy, acceptedCancellation });
         if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
           validation.error.errors.forEach((err) => {
@@ -286,6 +293,62 @@ const Auth = () => {
                 </div>
               )}
             </div>
+
+            {!isLogin && (
+              <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                <p className="text-sm font-medium text-foreground">
+                  Para crear tu cuenta, debes leer y aceptar:
+                </p>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={acceptedTerms}
+                    onCheckedChange={(v) => setAcceptedTerms(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-foreground leading-snug">
+                    He leído y acepto los{' '}
+                    <Link to="/terminos" target="_blank" className="text-primary hover:underline font-medium">
+                      Términos y Condiciones
+                    </Link>
+                  </span>
+                </label>
+                {errors.acceptedTerms && (
+                  <p className="text-xs text-destructive">{errors.acceptedTerms}</p>
+                )}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={acceptedPrivacy}
+                    onCheckedChange={(v) => setAcceptedPrivacy(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-foreground leading-snug">
+                    He leído y acepto la{' '}
+                    <Link to="/politica-privacidad" target="_blank" className="text-primary hover:underline font-medium">
+                      Política de Privacidad
+                    </Link>
+                  </span>
+                </label>
+                {errors.acceptedPrivacy && (
+                  <p className="text-xs text-destructive">{errors.acceptedPrivacy}</p>
+                )}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={acceptedCancellation}
+                    onCheckedChange={(v) => setAcceptedCancellation(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-foreground leading-snug">
+                    He leído y acepto la{' '}
+                    <Link to="/politica-cancelacion" target="_blank" className="text-primary hover:underline font-medium">
+                      Política de Cancelación y Reembolsos
+                    </Link>
+                  </span>
+                </label>
+                {errors.acceptedCancellation && (
+                  <p className="text-xs text-destructive">{errors.acceptedCancellation}</p>
+                )}
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading
