@@ -345,6 +345,138 @@ export type Database = {
         }
         Relationships: []
       }
+      renter_verifications: {
+        Row: {
+          accepted_terms: boolean
+          address: string
+          admin_notes: string | null
+          birth_date: string
+          city: string
+          contact_email: string | null
+          country: string
+          created_at: string
+          document_number: string
+          document_type: string
+          driving_license_doc_url: string
+          driving_license_expiry: string | null
+          driving_license_number: string | null
+          emergency_contact_name: string
+          emergency_contact_phone: string
+          emergency_contact_relationship: string
+          employer: string | null
+          full_name: string
+          gender: string | null
+          has_medical_condition: boolean
+          id: string
+          identity_doc_url: string
+          medical_certificate_url: string | null
+          nationality: string | null
+          occupation: string | null
+          own_social_age_months: number
+          own_social_platform: string
+          own_social_url: string
+          phone: string
+          phone_secondary: string | null
+          reference_name: string
+          reference_phone: string
+          reference_relationship: string
+          reference_social_age_months: number
+          reference_social_platform: string
+          reference_social_url: string
+          selfie_url: string
+          state: string | null
+          status: Database["public"]["Enums"]["renter_verification_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_terms?: boolean
+          address: string
+          admin_notes?: string | null
+          birth_date: string
+          city: string
+          contact_email?: string | null
+          country?: string
+          created_at?: string
+          document_number: string
+          document_type: string
+          driving_license_doc_url: string
+          driving_license_expiry?: string | null
+          driving_license_number?: string | null
+          emergency_contact_name: string
+          emergency_contact_phone: string
+          emergency_contact_relationship: string
+          employer?: string | null
+          full_name: string
+          gender?: string | null
+          has_medical_condition?: boolean
+          id?: string
+          identity_doc_url: string
+          medical_certificate_url?: string | null
+          nationality?: string | null
+          occupation?: string | null
+          own_social_age_months: number
+          own_social_platform: string
+          own_social_url: string
+          phone: string
+          phone_secondary?: string | null
+          reference_name: string
+          reference_phone: string
+          reference_relationship: string
+          reference_social_age_months: number
+          reference_social_platform: string
+          reference_social_url: string
+          selfie_url: string
+          state?: string | null
+          status?: Database["public"]["Enums"]["renter_verification_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_terms?: boolean
+          address?: string
+          admin_notes?: string | null
+          birth_date?: string
+          city?: string
+          contact_email?: string | null
+          country?: string
+          created_at?: string
+          document_number?: string
+          document_type?: string
+          driving_license_doc_url?: string
+          driving_license_expiry?: string | null
+          driving_license_number?: string | null
+          emergency_contact_name?: string
+          emergency_contact_phone?: string
+          emergency_contact_relationship?: string
+          employer?: string | null
+          full_name?: string
+          gender?: string | null
+          has_medical_condition?: boolean
+          id?: string
+          identity_doc_url?: string
+          medical_certificate_url?: string | null
+          nationality?: string | null
+          occupation?: string | null
+          own_social_age_months?: number
+          own_social_platform?: string
+          own_social_url?: string
+          phone?: string
+          phone_secondary?: string | null
+          reference_name?: string
+          reference_phone?: string
+          reference_relationship?: string
+          reference_social_age_months?: number
+          reference_social_platform?: string
+          reference_social_url?: string
+          selfie_url?: string
+          state?: string | null
+          status?: Database["public"]["Enums"]["renter_verification_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reservations: {
         Row: {
           created_at: string
@@ -643,6 +775,7 @@ export type Database = {
       app_role: "renter" | "owner" | "admin"
       application_status: "pending" | "approved" | "rejected"
       payment_status: "pending" | "completed" | "failed" | "refunded"
+      renter_verification_status: "pending" | "approved" | "rejected"
       reservation_status:
         | "pending"
         | "approved"
@@ -802,6 +935,7 @@ export const Constants = {
       app_role: ["renter", "owner", "admin"],
       application_status: ["pending", "approved", "rejected"],
       payment_status: ["pending", "completed", "failed", "refunded"],
+      renter_verification_status: ["pending", "approved", "rejected"],
       reservation_status: [
         "pending",
         "approved",
