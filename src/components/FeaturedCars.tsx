@@ -182,42 +182,6 @@ const FeaturedCars = () => {
               </div>
             ))}
           </div>
-
-        {validZone && (
-          <div className="flex justify-center mb-8">
-            <button
-              onClick={clearZone}
-              className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-2 text-sm font-medium hover:bg-primary/20 transition-smooth"
-            >
-              <MapPin className="w-4 h-4" />
-              Zona: {validZone}
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : cars.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            {validZone
-              ? `No hay vehículos disponibles en ${validZone} por ahora.`
-              : "No hay vehículos disponibles en este momento."}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cars.slice(0, 9).map((car, index) => (
-              <div
-                key={car.id}
-                className="animate-scale-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <CarCard car={car} />
-              </div>
-            ))}
-          </div>
         )}
       </div>
     </section>
