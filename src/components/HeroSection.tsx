@@ -149,21 +149,7 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="max-w-3xl mx-auto mt-12 grid grid-cols-3 gap-8 animate-slide-up" style={{ animationDelay: "0.3s" }}>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary-foreground">500+</div>
-            <div className="text-sm text-primary-foreground/70">Vehículos</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary-foreground">2,000+</div>
-            <div className="text-sm text-primary-foreground/70">Usuarios</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary-foreground">4.9</div>
-            <div className="text-sm text-primary-foreground/70">Calificación</div>
-          </div>
-        </div>
+        {/* Stats removed */}
       </div>
     </section>
   );
