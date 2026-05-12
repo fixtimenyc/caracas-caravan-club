@@ -110,9 +110,9 @@ const FeaturedCars = () => {
   };
 
   return (
-    <section className="py-20 bg-background">
+    <section id="vehiculos" className="py-20 bg-background scroll-mt-20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Vehículos destacados
           </h2>
@@ -121,13 +121,28 @@ const FeaturedCars = () => {
           </p>
         </div>
 
+        {validZone && (
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={clearZone}
+              className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-2 text-sm font-medium hover:bg-primary/20 transition-smooth"
+            >
+              <MapPin className="w-4 h-4" />
+              Zona: {validZone}
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : cars.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            No hay vehículos disponibles en este momento.
+            {validZone
+              ? `No hay vehículos disponibles en ${validZone} por ahora.`
+              : "No hay vehículos disponibles en este momento."}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
