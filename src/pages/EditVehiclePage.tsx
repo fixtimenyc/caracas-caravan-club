@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CARACAS_ZONES, matchZone } from "@/lib/locations";
+import { CARACAS_ZONES } from "@/lib/locations";
 import { toast } from "sonner";
 
 const FEATURES = [
