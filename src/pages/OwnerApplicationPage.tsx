@@ -80,6 +80,13 @@ const vehicleSchema = z.object({
   transmission: z.string().min(1, 'Selecciona la transmisión'),
   mileage: z.coerce.number().min(0).max(1000000),
   pricePerDay: z.coerce.number().min(5, 'Precio mínimo 5 USD').max(1000),
+  zone: z
+    .string()
+    .min(1, 'Selecciona la zona donde se entrega el vehículo')
+    .refine((v) => (CARACAS_ZONES as readonly string[]).includes(v), {
+      message: 'Zona inválida',
+    }),
+  addressDetail: z.string().trim().max(120).optional(),
   availabilityNotes: z.string().max(500).optional(),
 });
 
