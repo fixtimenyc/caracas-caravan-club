@@ -294,6 +294,62 @@ const Auth = () => {
               )}
             </div>
 
+            {!isLogin && (
+              <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                <p className="text-sm font-medium text-foreground">
+                  Para crear tu cuenta, debes leer y aceptar:
+                </p>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={acceptedTerms}
+                    onCheckedChange={(v) => setAcceptedTerms(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-foreground leading-snug">
+                    He leído y acepto los{' '}
+                    <Link to="/terminos" target="_blank" className="text-primary hover:underline font-medium">
+                      Términos y Condiciones
+                    </Link>
+                  </span>
+                </label>
+                {errors.acceptedTerms && (
+                  <p className="text-xs text-destructive">{errors.acceptedTerms}</p>
+                )}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={acceptedPrivacy}
+                    onCheckedChange={(v) => setAcceptedPrivacy(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-foreground leading-snug">
+                    He leído y acepto la{' '}
+                    <Link to="/politica-privacidad" target="_blank" className="text-primary hover:underline font-medium">
+                      Política de Privacidad
+                    </Link>
+                  </span>
+                </label>
+                {errors.acceptedPrivacy && (
+                  <p className="text-xs text-destructive">{errors.acceptedPrivacy}</p>
+                )}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={acceptedCancellation}
+                    onCheckedChange={(v) => setAcceptedCancellation(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-foreground leading-snug">
+                    He leído y acepto la{' '}
+                    <Link to="/politica-cancelacion" target="_blank" className="text-primary hover:underline font-medium">
+                      Política de Cancelación y Reembolsos
+                    </Link>
+                  </span>
+                </label>
+                {errors.acceptedCancellation && (
+                  <p className="text-xs text-destructive">{errors.acceptedCancellation}</p>
+                )}
+              </div>
+            )}
+
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading
                 ? 'Cargando...'
