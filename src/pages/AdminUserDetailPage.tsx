@@ -672,7 +672,118 @@ const AdminUserDetailPage = () => {
             )}
           </TabsContent>
 
-          {/* Activity */}
+          {/* Renter verification */}
+          {verification && (
+            <TabsContent value="verification" className="space-y-4">
+              <div className="rounded-xl border bg-card p-6">
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                  <div>
+                    <h3 className="font-semibold">Verificación de Arrendatario</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Enviada el {new Date(verification.created_at).toLocaleString("es-VE")}
+                    </p>
+                  </div>
+                  <Badge
+                    className={
+                      verification.status === 'approved'
+                        ? 'bg-primary text-primary-foreground'
+                        : verification.status === 'rejected'
+                        ? 'bg-destructive text-destructive-foreground'
+                        : ''
+                    }
+                    variant={verification.status === 'pending' ? 'secondary' : 'default'}
+                  >
+                    {verification.status === 'approved' ? 'Aprobada'
+                      : verification.status === 'rejected' ? 'Rechazada' : 'Pendiente'}
+                  </Badge>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <Info label="Nombre completo" value={verification.full_name} />
+                  <Info label={`Documento (${verification.document_type})`} value={verification.document_number} />
+                  <Info label="Fecha de nacimiento" value={new Date(verification.birth_date).toLocaleDateString("es-VE")} />
+                  <Info label="Nacionalidad" value={verification.nationality} />
+                  <Info label="Género" value={verification.gender} />
+                  <Info label="Ocupación" value={verification.occupation} />
+                  <Info label="Empleador" value={verification.employer} />
+                  <Info label="Teléfono principal" value={verification.phone} />
+                  <Info label="Teléfono secundario" value={verification.phone_secondary} />
+                  <Info label="Email contacto" value={verification.contact_email} />
+                  <Info label="Dirección" value={`${verification.address}, ${verification.city}${verification.state ? ', ' + verification.state : ''}, ${verification.country}`} />
+                  <Info label="Licencia N°" value={verification.driving_license_number} />
+                  <Info label="Vence licencia" value={new Date(verification.driving_license_expiry).toLocaleDateString("es-VE")} />
+                  <Info label="Condición médica" value={verification.has_medical_condition ? 'Sí' : 'No'} />
+                </div>
+              </div>
+
+              <div className="rounded-xl border bg-card p-6">
+                <h3 className="font-semibold mb-3">Contacto de emergencia</h3>
+                <div className="grid sm:grid-cols-3 gap-4 text-sm">
+                  <Info label="Nombre" value={verification.emergency_contact_name} />
+                  <Info label="Parentesco" value={verification.emergency_contact_relationship} />
+                  <Info label="Teléfono" value={verification.emergency_contact_phone} />
+                </div>
+              </div>
+
+              <div className="rounded-xl border bg-card p-6">
+                <h3 className="font-semibold mb-3">Redes sociales y referencia</h3>
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <Info label="Su red social" value={`${verification.own_social_platform} · ${verification.own_social_age_months} meses`} />
+                  <div>
+                    <p className="text-xs text-muted-foreground">URL del perfil</p>
+                    <a href={verification.own_social_url} target="_blank" rel="noreferrer"
+                      className="text-primary hover:underline text-sm break-all">
+                      {verification.own_social_url}
+                    </a>
+                  </div>
+                  <Info label="Referencia personal" value={`${verification.reference_name} (${verification.reference_relationship})`} />
+                  <Info label="Teléfono referencia" value={verification.reference_phone} />
+                  <Info label="Red social referencia" value={`${verification.reference_social_platform} · ${verification.reference_social_age_months} meses`} />
+                  <div>
+                    <p className="text-xs text-muted-foreground">URL referencia</p>
+                    <a href={verification.reference_social_url} target="_blank" rel="noreferrer"
+                      className="text-primary hover:underline text-sm break-all">
+                      {verification.reference_social_url}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {(verificationDocs.identity || verificationDocs.license || verificationDocs.selfie || verificationDocs.medical) && (
+                <div className="rounded-xl border bg-card p-6">
+                  <h3 className="font-semibold mb-4">Documentos cargados</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {verificationDocs.identity && <DocPreview label="Identidad" url={verificationDocs.identity} />}
+                    {verificationDocs.license && <DocPreview label="Licencia" url={verificationDocs.license} />}
+                    {verificationDocs.selfie && <DocPreview label="Selfie" url={verificationDocs.selfie} />}
+                    {verificationDocs.medical && <DocPreview label="Certificado médico" url={verificationDocs.medical} />}
+                  </div>
+                </div>
+              )}
+
+              {verification.admin_notes && (
+                <div className="rounded-xl border bg-card p-4 text-sm">
+                  <p className="text-xs text-muted-foreground mb-1">Notas del administrador</p>
+                  <p>{verification.admin_notes}</p>
+                </div>
+              )}
+
+              {verification.status === 'pending' && (
+                <div className="rounded-xl border bg-card p-4 flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => setVerificationStatus('approved')}>
+                    <ShieldCheck className="w-4 h-4 mr-1" /> Aprobar verificación
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => setVerificationStatus('rejected')}>
+                    <Ban className="w-4 h-4 mr-1" /> Rechazar
+                  </Button>
+                  <p className="text-xs text-muted-foreground w-full mt-2">
+                    Tip: agrega una nota interna antes de rechazar para registrar el motivo.
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          )}
+
           <TabsContent value="activity">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="rounded-xl border bg-card p-6">
