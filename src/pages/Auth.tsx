@@ -40,9 +40,34 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (loading || !user) return;
+    let cancelled = false;
+    (async () => {
+      // Determine where to send the user based on their roles + verification state
+      const { supabase } = await import('@/integrations/supabase/client');
+      const [{ data: rolesData }, { data: verif }, { data: ownerApp }] = await Promise.all([
+        supabase.from('user_roles').select('role').eq('user_id', user.id),
+        supabase.from('renter_verifications').select('status').eq('user_id', user.id).maybeSingle(),
+        supabase.from('owner_applications').select('status').eq('user_id', user.id).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const userRoles = (rolesData ?? []).map((r) => r.role as string);
+      const isOwner = userRoles.includes('owner');
+      const isRenter = userRoles.includes('renter');
+
+      // Owner pending application
+      if (isRenter && !isOwner && ownerApp && ownerApp.status === 'pending') {
+        navigate('/aliado/solicitud');
+        return;
+      }
+      // Renter without verification submitted yet
+      if (isRenter && !verif) {
+        navigate('/arrendatario/verificacion');
+        return;
+      }
       navigate('/');
-    }
+    })();
+    return () => { cancelled = true; };
   }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
