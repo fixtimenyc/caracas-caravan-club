@@ -54,6 +54,16 @@ import ReviewsSection from "@/components/ReviewsSection";
 import ReviewDialog from "@/components/ReviewDialog";
 import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 
+type HouseRules = {
+  noSmoking?: boolean;
+  smokingFine?: number;
+  noPets?: boolean;
+  returnSameFuel?: boolean;
+  noOffRoad?: boolean;
+  maxKmPerDay?: number | null;
+  additional?: string;
+};
+
 type VehicleRow = {
   id: string;
   brand: string;
@@ -66,6 +76,7 @@ type VehicleRow = {
   owner_id: string;
   available: boolean;
   active: boolean;
+  house_rules?: HouseRules | null;
 };
 
 type OwnerProfile = {
