@@ -55,6 +55,7 @@ const MessagesPage = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
