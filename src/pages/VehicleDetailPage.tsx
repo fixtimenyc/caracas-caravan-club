@@ -22,6 +22,11 @@ import {
   Car as CarIcon,
   Mail,
   Phone,
+  Cigarette,
+  PawPrint,
+  Mountain,
+  Droplet,
+  AlertCircle,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
