@@ -667,7 +667,9 @@ export type Database = {
           available: boolean
           brand: string
           created_at: string
+          custom_features: string[]
           description: string | null
+          features: string[]
           house_rules: Json
           id: string
           location: string
@@ -683,7 +685,9 @@ export type Database = {
           available?: boolean
           brand: string
           created_at?: string
+          custom_features?: string[]
           description?: string | null
+          features?: string[]
           house_rules?: Json
           id?: string
           location: string
@@ -699,7 +703,9 @@ export type Database = {
           available?: boolean
           brand?: string
           created_at?: string
+          custom_features?: string[]
           description?: string | null
+          features?: string[]
           house_rules?: Json
           id?: string
           location?: string
