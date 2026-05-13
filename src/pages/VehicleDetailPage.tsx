@@ -27,13 +27,6 @@ import {
   Mountain,
   Droplet,
   AlertCircle,
-  Bluetooth,
-  Usb,
-  Navigation,
-  Camera,
-  Baby,
-  Snowflake,
-  Sparkles,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -84,8 +77,6 @@ type VehicleRow = {
   available: boolean;
   active: boolean;
   house_rules?: HouseRules | null;
-  features?: string[] | null;
-  custom_features?: string[] | null;
 };
 
 type OwnerProfile = {
@@ -474,75 +465,14 @@ const VehicleDetailPage = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* Description */}
-            {(() => {
-              const FEATURE_ICONS: Record<string, any> = {
-                "Bluetooth": Bluetooth,
-                "USB": Usb,
-                "GPS": Navigation,
-                "Cámara reversa": Camera,
-                "Sillón de bebé": Baby,
-                "Aire acondicionado": Snowflake,
-              };
-              const features = vehicle.features ?? [];
-              const customFeatures = vehicle.custom_features ?? [];
-              const allFeatures = [...features, ...customFeatures];
-              return (
-                <section>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="h-8 w-1 rounded-full bg-gradient-to-b from-primary to-accent" />
-                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-                      Acerca de este vehículo
-                    </h2>
-                  </div>
-
-                  <Card className="overflow-hidden border-border/60 shadow-sm">
-                    <div className="p-6 md:p-7 bg-gradient-to-br from-card via-card to-primary/[0.03]">
-                      <p className="text-base md:text-[17px] text-foreground/85 leading-relaxed whitespace-pre-line">
-                        {vehicle.description?.trim() || "Sin descripción adicional."}
-                      </p>
-                    </div>
-
-                    {allFeatures.length > 0 && (
-                      <div className="border-t border-border/60 p-6 md:p-7 bg-muted/20">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Sparkles className="w-4 h-4 text-primary" />
-                          <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground/80">
-                            Características y extras
-                          </h3>
-                        </div>
-                        <ul className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
-                          {features.map((f) => {
-                            const Icon = FEATURE_ICONS[f] ?? CheckCircle2;
-                            return (
-                              <li
-                                key={f}
-                                className="flex items-center gap-2.5 text-sm text-foreground"
-                              >
-                                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
-                                  <Icon className="w-4 h-4" />
-                                </span>
-                                <span className="font-medium">{f}</span>
-                              </li>
-                            );
-                          })}
-                          {customFeatures.map((f) => (
-                            <li
-                              key={`c-${f}`}
-                              className="flex items-center gap-2.5 text-sm text-foreground"
-                            >
-                              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent/15 text-accent-foreground">
-                                <Sparkles className="w-4 h-4" />
-                              </span>
-                              <span className="font-medium">{f}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </Card>
-                </section>
-              );
-            })()}
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-3">
+                Acerca de este vehículo
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                {vehicle.description || "Sin descripción adicional."}
+              </p>
+            </section>
 
             {/* Owner */}
             <section>
