@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Send, Loader2, MessagesSquare, ArrowLeft, Car as CarIcon } from "lucide-react";
+import { Send, Loader2, MessagesSquare, ArrowLeft, Car as CarIcon, UserRound } from "lucide-react";
+import RenterProfileDialog from "@/components/RenterProfileDialog";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ const MessagesPage = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -325,6 +327,17 @@ const MessagesPage = () => {
                         </button>
                       )}
                     </div>
+                    {user?.id === activeConv.owner_id && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setProfileOpen(true)}
+                      >
+                        <UserRound className="w-4 h-4" />
+                        <span className="hidden sm:inline">Ver perfil</span>
+                      </Button>
+                    )}
                   </div>
 
                   <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
@@ -384,6 +397,11 @@ const MessagesPage = () => {
         </Card>
       </main>
       <Footer />
+      <RenterProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        renterId={activeConv && user?.id === activeConv.owner_id ? activeConv.renter_id : null}
+      />
     </div>
   );
 };
