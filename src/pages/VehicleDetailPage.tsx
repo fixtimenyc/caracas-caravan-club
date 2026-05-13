@@ -20,6 +20,8 @@ import {
   Clock,
   Loader2,
   Car as CarIcon,
+  Mail,
+  Phone,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -489,6 +491,31 @@ const VehicleDetailPage = () => {
                       <Clock className="w-4 h-4 text-primary" />
                       Responde típicamente en 24 horas
                     </div>
+
+                    {owner?.verified && (
+                      <div className="mt-4 pt-4 border-t">
+                        <h4 className="text-sm font-semibold text-foreground mb-2">
+                          Información verificada
+                        </h4>
+                        <ul className="space-y-1.5 text-sm text-muted-foreground">
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                            Aprobado para conducir
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-primary" />
+                            Correo electrónico
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-primary" />
+                            Número de teléfono
+                          </li>
+                        </ul>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Genera confianza con otros usuarios en RuedaVe verificando tu información de contacto.
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <Button
                     variant="outline"
