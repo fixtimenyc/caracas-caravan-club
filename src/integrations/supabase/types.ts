@@ -742,6 +742,10 @@ export type Database = {
           verified: boolean
         }[]
       }
+      get_renter_profile_for_owner: {
+        Args: { _renter_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
