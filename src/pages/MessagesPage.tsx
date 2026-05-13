@@ -397,6 +397,11 @@ const MessagesPage = () => {
         </Card>
       </main>
       <Footer />
+      <RenterProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        renterId={activeConv && user?.id === activeConv.owner_id ? activeConv.renter_id : null}
+      />
     </div>
   );
 };
