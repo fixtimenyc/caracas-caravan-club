@@ -491,31 +491,6 @@ const VehicleDetailPage = () => {
                       <Clock className="w-4 h-4 text-primary" />
                       Responde típicamente en 24 horas
                     </div>
-
-                    {owner?.verified && (
-                      <div className="mt-4 pt-4 border-t">
-                        <h4 className="text-sm font-semibold text-foreground mb-2">
-                          Información verificada
-                        </h4>
-                        <ul className="space-y-1.5 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-primary" />
-                            Aprobado para conducir
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-primary" />
-                            Correo electrónico
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-primary" />
-                            Número de teléfono
-                          </li>
-                        </ul>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Genera confianza con otros usuarios en RuedaVe verificando tu información de contacto.
-                        </p>
-                      </div>
-                    )}
                   </div>
                   <Button
                     variant="outline"
@@ -544,6 +519,31 @@ const VehicleDetailPage = () => {
                     Contactar
                   </Button>
                 </div>
+
+                {owner?.verified && (
+                  <div className="mt-6 pt-6 border-t">
+                    <h4 className="text-base font-semibold text-foreground mb-3">
+                      Información verificada
+                    </h4>
+                    <ul className="grid sm:grid-cols-3 gap-2 text-sm text-foreground">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                        Aprobado para conducir
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-primary" />
+                        Correo electrónico
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-primary" />
+                        Número de teléfono
+                      </li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      Genera confianza con otros usuarios en RuedaVe verificando tu información de contacto.
+                    </p>
+                  </div>
+                )}
               </Card>
             </section>
 
