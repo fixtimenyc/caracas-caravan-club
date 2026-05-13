@@ -400,6 +400,24 @@ const VehicleDetailPage = () => {
                 </Badge>
               )}
             </div>
+
+            {/* Spec chips */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {[
+                { icon: Users, label: "5 asientos" },
+                { icon: Fuel, label: "Gasolina" },
+                { icon: Gauge, label: "28 millas por galón" },
+                { icon: Cog, label: "Transmisión automática" },
+              ].map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-2 rounded-full bg-secondary text-secondary-foreground px-3.5 py-1.5 text-sm font-medium"
+                >
+                  <Icon className="w-4 h-4 text-primary" />
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
           <div className="flex gap-2">
             <Button
