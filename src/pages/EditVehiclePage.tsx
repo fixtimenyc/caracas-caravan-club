@@ -102,6 +102,13 @@ const SAMPLE: FormState = {
   homeDelivery: true,
   homeDeliveryFee: 15,
   active: true,
+  noSmoking: true,
+  smokingFine: 50,
+  noPets: true,
+  returnSameFuel: true,
+  noOffRoad: true,
+  maxKmPerDay: null,
+  additionalRules: "",
 };
 
 const EditVehiclePage = () => {
