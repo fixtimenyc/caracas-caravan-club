@@ -179,6 +179,13 @@ const EditVehiclePage = () => {
         homeDelivery: false,
         homeDeliveryFee: 0,
         active: data.active ?? true,
+        noSmoking: (data as any).house_rules?.noSmoking ?? true,
+        smokingFine: Number((data as any).house_rules?.smokingFine ?? 50),
+        noPets: (data as any).house_rules?.noPets ?? true,
+        returnSameFuel: (data as any).house_rules?.returnSameFuel ?? true,
+        noOffRoad: (data as any).house_rules?.noOffRoad ?? true,
+        maxKmPerDay: (data as any).house_rules?.maxKmPerDay ?? null,
+        additionalRules: (data as any).house_rules?.additional ?? "",
       });
       setLoading(false);
     };
