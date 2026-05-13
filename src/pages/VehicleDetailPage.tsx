@@ -20,6 +20,8 @@ import {
   Clock,
   Loader2,
   Car as CarIcon,
+  Mail,
+  Phone,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
