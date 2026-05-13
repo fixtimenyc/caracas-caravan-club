@@ -362,6 +362,18 @@ const EditVehiclePage = () => {
         price_per_day: form.pricePerDay,
         photos: form.photos,
         active: form.active,
+        house_rules: {
+          noSmoking: form.noSmoking,
+          smokingFine: Number(form.smokingFine) || 0,
+          noPets: form.noPets,
+          returnSameFuel: form.returnSameFuel,
+          noOffRoad: form.noOffRoad,
+          maxKmPerDay:
+            form.maxKmPerDay && Number(form.maxKmPerDay) > 0
+              ? Number(form.maxKmPerDay)
+              : null,
+          additional: form.additionalRules.trim(),
+        } as any,
       })
       .eq("id", id);
     setSaving(false);
