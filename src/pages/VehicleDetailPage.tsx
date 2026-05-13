@@ -474,6 +474,32 @@ const VehicleDetailPage = () => {
               <p className="text-muted-foreground leading-relaxed">
                 {vehicle.description || "Sin descripción adicional."}
               </p>
+
+              {(() => {
+                const allFeatures = [
+                  ...(vehicle.features || []),
+                  ...(vehicle.custom_features || []),
+                ].filter(Boolean);
+                if (allFeatures.length === 0) return null;
+                return (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-3">
+                      Características extras
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {allFeatures.map((f) => (
+                        <span
+                          key={f}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-secondary text-secondary-foreground px-3 py-1.5 text-sm font-medium"
+                        >
+                          <Check className="w-4 h-4 text-primary" />
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </section>
 
             {/* Owner */}
