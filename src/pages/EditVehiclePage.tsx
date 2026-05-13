@@ -74,6 +74,13 @@ type FormState = {
   homeDelivery: boolean;
   homeDeliveryFee: number;
   active: boolean;
+  noSmoking: boolean;
+  smokingFine: number;
+  noPets: boolean;
+  returnSameFuel: boolean;
+  noOffRoad: boolean;
+  maxKmPerDay: number | null;
+  additionalRules: string;
 };
 
 const SAMPLE: FormState = {
@@ -95,6 +102,13 @@ const SAMPLE: FormState = {
   homeDelivery: true,
   homeDeliveryFee: 15,
   active: true,
+  noSmoking: true,
+  smokingFine: 50,
+  noPets: true,
+  returnSameFuel: true,
+  noOffRoad: true,
+  maxKmPerDay: null,
+  additionalRules: "",
 };
 
 const EditVehiclePage = () => {
@@ -165,6 +179,13 @@ const EditVehiclePage = () => {
         homeDelivery: false,
         homeDeliveryFee: 0,
         active: data.active ?? true,
+        noSmoking: (data as any).house_rules?.noSmoking ?? true,
+        smokingFine: Number((data as any).house_rules?.smokingFine ?? 50),
+        noPets: (data as any).house_rules?.noPets ?? true,
+        returnSameFuel: (data as any).house_rules?.returnSameFuel ?? true,
+        noOffRoad: (data as any).house_rules?.noOffRoad ?? true,
+        maxKmPerDay: (data as any).house_rules?.maxKmPerDay ?? null,
+        additionalRules: (data as any).house_rules?.additional ?? "",
       });
       setLoading(false);
     };
@@ -341,6 +362,18 @@ const EditVehiclePage = () => {
         price_per_day: form.pricePerDay,
         photos: form.photos,
         active: form.active,
+        house_rules: {
+          noSmoking: form.noSmoking,
+          smokingFine: Number(form.smokingFine) || 0,
+          noPets: form.noPets,
+          returnSameFuel: form.returnSameFuel,
+          noOffRoad: form.noOffRoad,
+          maxKmPerDay:
+            form.maxKmPerDay && Number(form.maxKmPerDay) > 0
+              ? Number(form.maxKmPerDay)
+              : null,
+          additional: form.additionalRules.trim(),
+        } as any,
       })
       .eq("id", id);
     setSaving(false);
@@ -778,6 +811,113 @@ const EditVehiclePage = () => {
                     >
                       Entre 0 y 168 horas (máx. 7 días)
                     </p>
+                  </div>
+                </div>
+
+                {/* Normas de la casa */}
+                <div className="space-y-4 p-4 rounded-lg border">
+                  <div>
+                    <Label className="text-base">Normas para el huésped</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Estas normas se mostrarán en el catálogo de tu vehículo.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="pr-4">
+                      <Label className="text-sm">Prohibido fumar</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Se aplicará una multa si el huésped fuma dentro del vehículo.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={form.noSmoking}
+                      onCheckedChange={(v) => update("noSmoking", v)}
+                    />
+                  </div>
+                  {form.noSmoking && (
+                    <div className="space-y-2 pl-2 border-l-2 border-primary/30">
+                      <Label htmlFor="smokingFine" className="text-sm">
+                        Monto de la multa por fumar (USD)
+                      </Label>
+                      <Input
+                        id="smokingFine"
+                        type="number"
+                        min={0}
+                        step="1"
+                        value={form.smokingFine}
+                        onChange={(e) =>
+                          update("smokingFine", Math.max(0, Number(e.target.value) || 0))
+                        }
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <div className="pr-4">
+                      <Label className="text-sm">No se permiten mascotas</Label>
+                    </div>
+                    <Switch
+                      checked={form.noPets}
+                      onCheckedChange={(v) => update("noPets", v)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="pr-4">
+                      <Label className="text-sm">
+                        Devolver con el mismo nivel de combustible
+                      </Label>
+                    </div>
+                    <Switch
+                      checked={form.returnSameFuel}
+                      onCheckedChange={(v) => update("returnSameFuel", v)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="pr-4">
+                      <Label className="text-sm">
+                        No circular fuera de carretera (off-road)
+                      </Label>
+                    </div>
+                    <Switch
+                      checked={form.noOffRoad}
+                      onCheckedChange={(v) => update("noOffRoad", v)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="maxKmPerDay" className="text-sm">
+                      Máximo de kilómetros por día (opcional)
+                    </Label>
+                    <Input
+                      id="maxKmPerDay"
+                      type="number"
+                      min={0}
+                      step="10"
+                      placeholder="Sin límite"
+                      value={form.maxKmPerDay ?? ""}
+                      onChange={(e) =>
+                        update(
+                          "maxKmPerDay",
+                          e.target.value === "" ? null : Math.max(0, Number(e.target.value) || 0)
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="additionalRules" className="text-sm">
+                      Normas adicionales (opcional)
+                    </Label>
+                    <Textarea
+                      id="additionalRules"
+                      rows={3}
+                      placeholder="Ej. Devolver el vehículo limpio. Prohibido el uso comercial."
+                      value={form.additionalRules}
+                      onChange={(e) => update("additionalRules", e.target.value)}
+                    />
                   </div>
                 </div>
 

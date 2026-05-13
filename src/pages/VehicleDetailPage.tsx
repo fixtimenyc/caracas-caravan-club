@@ -22,6 +22,11 @@ import {
   Car as CarIcon,
   Mail,
   Phone,
+  Cigarette,
+  PawPrint,
+  Mountain,
+  Droplet,
+  AlertCircle,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -49,6 +54,16 @@ import ReviewsSection from "@/components/ReviewsSection";
 import ReviewDialog from "@/components/ReviewDialog";
 import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 
+type HouseRules = {
+  noSmoking?: boolean;
+  smokingFine?: number;
+  noPets?: boolean;
+  returnSameFuel?: boolean;
+  noOffRoad?: boolean;
+  maxKmPerDay?: number | null;
+  additional?: string;
+};
+
 type VehicleRow = {
   id: string;
   brand: string;
@@ -61,6 +76,7 @@ type VehicleRow = {
   owner_id: string;
   available: boolean;
   active: boolean;
+  house_rules?: HouseRules | null;
 };
 
 type OwnerProfile = {
@@ -547,6 +563,67 @@ const VehicleDetailPage = () => {
               </Card>
             </section>
 
+            {/* House Rules */}
+            {(() => {
+              const r: HouseRules = vehicle.house_rules || {};
+              const items: { icon: any; label: string }[] = [];
+              if (r.noSmoking !== false)
+                items.push({
+                  icon: Cigarette,
+                  label: `Prohibido fumar (multa de $${Number(r.smokingFine ?? 50)} si se incumple)`,
+                });
+              if (r.noPets !== false)
+                items.push({ icon: PawPrint, label: "No se permiten mascotas" });
+              if (r.returnSameFuel !== false)
+                items.push({
+                  icon: Droplet,
+                  label: "Devolver con el mismo nivel de combustible",
+                });
+              if (r.noOffRoad !== false)
+                items.push({
+                  icon: Mountain,
+                  label: "No circular fuera de carretera (off-road)",
+                });
+              if (r.maxKmPerDay && r.maxKmPerDay > 0)
+                items.push({
+                  icon: Gauge,
+                  label: `Máximo ${r.maxKmPerDay} km por día`,
+                });
+              return (
+                <section>
+                  <h2 className="text-2xl font-bold text-foreground mb-4">
+                    Normas del anfitrión
+                  </h2>
+                  <Card className="p-6">
+                    {items.length === 0 && !r.additional ? (
+                      <p className="text-sm text-muted-foreground">
+                        Este anfitrión no ha definido normas adicionales.
+                      </p>
+                    ) : (
+                      <ul className="grid sm:grid-cols-2 gap-3">
+                        {items.map(({ icon: Icon, label }, i) => (
+                          <li key={i} className="flex items-start gap-3 text-sm text-foreground">
+                            <Icon className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                            <span>{label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {r.additional && r.additional.trim().length > 0 && (
+                      <div className="mt-4 pt-4 border-t flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <p className="text-sm text-foreground whitespace-pre-line">
+                          {r.additional}
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-4">
+                      Al reservar aceptas cumplir las normas del anfitrión. El incumplimiento puede generar cargos adicionales.
+                    </p>
+                  </Card>
+                </section>
+              );
+            })()}
             {/* Calendar */}
             <section>
               <h2 className="text-2xl font-bold text-foreground mb-3">

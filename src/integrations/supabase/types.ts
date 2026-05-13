@@ -668,6 +668,7 @@ export type Database = {
           brand: string
           created_at: string
           description: string | null
+          house_rules: Json
           id: string
           location: string
           model: string
@@ -683,6 +684,7 @@ export type Database = {
           brand: string
           created_at?: string
           description?: string | null
+          house_rules?: Json
           id?: string
           location: string
           model: string
@@ -698,6 +700,7 @@ export type Database = {
           brand?: string
           created_at?: string
           description?: string | null
+          house_rules?: Json
           id?: string
           location?: string
           model?: string
