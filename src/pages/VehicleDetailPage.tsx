@@ -27,6 +27,13 @@ import {
   Mountain,
   Droplet,
   AlertCircle,
+  Bluetooth,
+  Usb,
+  Navigation,
+  Camera,
+  Baby,
+  Snowflake,
+  Sparkles,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
