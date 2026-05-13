@@ -74,6 +74,13 @@ type FormState = {
   homeDelivery: boolean;
   homeDeliveryFee: number;
   active: boolean;
+  noSmoking: boolean;
+  smokingFine: number;
+  noPets: boolean;
+  returnSameFuel: boolean;
+  noOffRoad: boolean;
+  maxKmPerDay: number | null;
+  additionalRules: string;
 };
 
 const SAMPLE: FormState = {
