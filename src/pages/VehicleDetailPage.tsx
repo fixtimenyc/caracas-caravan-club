@@ -401,23 +401,6 @@ const VehicleDetailPage = () => {
               )}
             </div>
 
-            {/* Spec chips */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              {[
-                { icon: Users, label: "5 asientos" },
-                { icon: Fuel, label: "Gasolina" },
-                { icon: Gauge, label: "28 millas por galón" },
-                { icon: Cog, label: "Transmisión automática" },
-              ].map(({ icon: Icon, label }) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-2 rounded-full bg-secondary text-secondary-foreground px-3.5 py-1.5 text-sm font-medium"
-                >
-                  <Icon className="w-4 h-4 text-primary" />
-                  {label}
-                </span>
-              ))}
-            </div>
           </div>
           <div className="flex gap-2">
             <Button
@@ -494,26 +477,47 @@ const VehicleDetailPage = () => {
                 {vehicle.description || "Sin descripción adicional."}
               </p>
 
+              {/* Specs */}
+              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { icon: Users, label: "5 asientos" },
+                  { icon: Fuel, label: "Gasolina" },
+                  { icon: Cog, label: "Transmisión automática" },
+                ].map(({ icon: Icon, label }) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm font-medium text-foreground"
+                  >
+                    <Icon className="w-4 h-4 text-primary shrink-0" />
+                    <span className="truncate">{label}</span>
+                  </div>
+                ))}
+              </div>
+
               {(() => {
-                const allFeatures = [
-                  ...(vehicle.features || []),
-                  ...(vehicle.custom_features || []),
-                ].filter(Boolean);
+                const allFeatures = Array.from(
+                  new Set(
+                    [
+                      ...(vehicle.features || []),
+                      ...(vehicle.custom_features || []),
+                    ].filter(Boolean)
+                  )
+                );
                 if (allFeatures.length === 0) return null;
                 return (
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold text-foreground mb-3">
                       Características extras
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {allFeatures.map((f) => (
-                        <span
+                        <div
                           key={f}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-secondary text-secondary-foreground px-3 py-1.5 text-sm font-medium"
+                          className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm font-medium text-foreground"
                         >
-                          <Check className="w-4 h-4 text-primary" />
-                          {f}
-                        </span>
+                          <Check className="w-4 h-4 text-primary shrink-0" />
+                          <span className="truncate">{f}</span>
+                        </div>
                       ))}
                     </div>
                   </div>
