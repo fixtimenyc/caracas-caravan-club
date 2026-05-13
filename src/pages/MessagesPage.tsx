@@ -327,6 +327,17 @@ const MessagesPage = () => {
                         </button>
                       )}
                     </div>
+                    {user?.id === activeConv.owner_id && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setProfileOpen(true)}
+                      >
+                        <UserRound className="w-4 h-4" />
+                        <span className="hidden sm:inline">Ver perfil</span>
+                      </Button>
+                    )}
                   </div>
 
                   <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
