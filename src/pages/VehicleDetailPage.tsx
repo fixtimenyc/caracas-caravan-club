@@ -77,6 +77,8 @@ type VehicleRow = {
   available: boolean;
   active: boolean;
   house_rules?: HouseRules | null;
+  features?: string[] | null;
+  custom_features?: string[] | null;
 };
 
 type OwnerProfile = {
