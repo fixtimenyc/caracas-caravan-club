@@ -722,24 +722,20 @@ export type Database = {
           user_id: string | null
           verified: boolean | null
         }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
         Relationships: []
       }
     }
     Functions: {
+      _safe_public_profiles: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          created_at: string
+          full_name: string
+          user_id: string
+          verified: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
