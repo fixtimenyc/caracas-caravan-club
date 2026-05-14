@@ -540,6 +540,7 @@ function ResultDialog({
   const [result, setResult] = useState(row.result || "Sin problemas");
   const [signature, setSignature] = useState(row.signature || "");
   const [cost, setCost] = useState(row.cost?.toString() || "");
+  const [mileage, setMileage] = useState(row.mileage?.toString() || "");
   const [saving, setSaving] = useState(false);
 
   async function submit() {
@@ -551,6 +552,7 @@ function ResultDialog({
       result,
       signature: signature || null,
       cost: cost ? Number(cost) : null,
+      mileage: mileage ? Number(mileage) : null,
     } as any);
     setSaving(false);
   }
@@ -593,7 +595,7 @@ function ResultDialog({
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Resultado</Label>
               <Input value={result} onChange={(e) => setResult(e.target.value)} />
@@ -601,6 +603,10 @@ function ResultDialog({
             <div>
               <Label>Costo (USD)</Label>
               <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} />
+            </div>
+            <div>
+              <Label>Kilometraje (km)</Label>
+              <Input type="number" inputMode="numeric" value={mileage} onChange={(e) => setMileage(e.target.value)} placeholder="0" />
             </div>
           </div>
           <div>
