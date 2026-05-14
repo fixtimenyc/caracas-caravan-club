@@ -708,37 +708,73 @@ export type Database = {
       }
       vehicle_maintenance: {
         Row: {
+          category: string
+          checklist: Json
           completed_at: string | null
+          cost: number | null
           created_at: string
           id: string
+          inspection_type: string | null
+          inspector_name: string | null
+          next_date: string | null
           notes: string | null
+          photos: string[]
+          problems: string | null
+          result: string | null
           scheduled_date: string
+          severity: string | null
+          signature: string | null
           status: string
           type: string
           updated_at: string
           vehicle_id: string
+          workshop: string | null
         }
         Insert: {
+          category?: string
+          checklist?: Json
           completed_at?: string | null
+          cost?: number | null
           created_at?: string
           id?: string
+          inspection_type?: string | null
+          inspector_name?: string | null
+          next_date?: string | null
           notes?: string | null
+          photos?: string[]
+          problems?: string | null
+          result?: string | null
           scheduled_date: string
+          severity?: string | null
+          signature?: string | null
           status?: string
           type: string
           updated_at?: string
           vehicle_id: string
+          workshop?: string | null
         }
         Update: {
+          category?: string
+          checklist?: Json
           completed_at?: string | null
+          cost?: number | null
           created_at?: string
           id?: string
+          inspection_type?: string | null
+          inspector_name?: string | null
+          next_date?: string | null
           notes?: string | null
+          photos?: string[]
+          problems?: string | null
+          result?: string | null
           scheduled_date?: string
+          severity?: string | null
+          signature?: string | null
           status?: string
           type?: string
           updated_at?: string
           vehicle_id?: string
+          workshop?: string | null
         }
         Relationships: []
       }
