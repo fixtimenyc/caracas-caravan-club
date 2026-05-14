@@ -431,6 +431,31 @@ const AdminUsersPage = () => {
                               : "—"}
                           </TableCell>
                         </>
+                      ) : renterView ? (
+                        <>
+                          <TableCell className="text-right text-sm">
+                            {u.bookings_count > 0 ? `${u.bookings_count} ${u.bookings_count === 1 ? "reserva" : "reservas"}` : "—"}
+                          </TableCell>
+                          <TableCell className="text-right text-sm font-medium">
+                            {u.total_spent > 0 ? fmtMoney(u.total_spent) : "—"}
+                          </TableCell>
+                          <TableCell>
+                            {u.rating_given != null ? (
+                              <span className="inline-flex items-center gap-1 text-sm">
+                                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                {u.rating_given}
+                                <span className="text-xs text-muted-foreground">({u.rating_given_count})</span>
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Sin reseñas</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {u.last_reservation_at
+                              ? format(new Date(u.last_reservation_at), "dd MMM yyyy", { locale: es })
+                              : "—"}
+                          </TableCell>
+                        </>
                       ) : (
                         <>
                           <TableCell>{roleLabel(u.roles)}</TableCell>
