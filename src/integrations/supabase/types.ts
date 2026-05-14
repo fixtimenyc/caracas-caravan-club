@@ -520,11 +520,13 @@ export type Database = {
           cancelled_by: string | null
           created_at: string
           end_date: string
+          end_mileage: number | null
           id: string
           refund_amount: number | null
           refund_percent: number | null
           renter_id: string
           start_date: string
+          start_mileage: number | null
           status: Database["public"]["Enums"]["reservation_status"]
           total_price: number
           updated_at: string
@@ -536,11 +538,13 @@ export type Database = {
           cancelled_by?: string | null
           created_at?: string
           end_date: string
+          end_mileage?: number | null
           id?: string
           refund_amount?: number | null
           refund_percent?: number | null
           renter_id: string
           start_date: string
+          start_mileage?: number | null
           status?: Database["public"]["Enums"]["reservation_status"]
           total_price: number
           updated_at?: string
@@ -552,11 +556,13 @@ export type Database = {
           cancelled_by?: string | null
           created_at?: string
           end_date?: string
+          end_mileage?: number | null
           id?: string
           refund_amount?: number | null
           refund_percent?: number | null
           renter_id?: string
           start_date?: string
+          start_mileage?: number | null
           status?: Database["public"]["Enums"]["reservation_status"]
           total_price?: number
           updated_at?: string
@@ -716,6 +722,7 @@ export type Database = {
           id: string
           inspection_type: string | null
           inspector_name: string | null
+          mileage: number | null
           next_date: string | null
           notes: string | null
           photos: string[]
@@ -739,6 +746,7 @@ export type Database = {
           id?: string
           inspection_type?: string | null
           inspector_name?: string | null
+          mileage?: number | null
           next_date?: string | null
           notes?: string | null
           photos?: string[]
@@ -762,6 +770,7 @@ export type Database = {
           id?: string
           inspection_type?: string | null
           inspector_name?: string | null
+          mileage?: number | null
           next_date?: string | null
           notes?: string | null
           photos?: string[]
