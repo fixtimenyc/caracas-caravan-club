@@ -320,6 +320,9 @@ export default function AdminReservationDetailPage() {
               </CardContent>
             </Card>
 
+            {/* Mileage */}
+            <MileageCard reservation={reservation} onSaved={load} />
+
             {/* Event log */}
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><Clock className="h-4 w-4" /> Historial</CardTitle></CardHeader>
