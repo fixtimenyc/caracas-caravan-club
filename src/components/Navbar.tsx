@@ -93,27 +93,50 @@ const Navbar = () => {
                     <p className="text-xs text-muted-foreground">{getRoleLabel()}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <User className="w-4 h-4 mr-2" />
-                    Mi perfil
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/mensajes')}>
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Mensajes
                   </DropdownMenuItem>
-                  {roles.includes('owner') || roles.includes('admin') ? (
-                    <DropdownMenuItem onClick={() => navigate('/my-vehicles')}>
-                      <Car className="w-4 h-4 mr-2" />
-                      Mis vehículos
+                  {(roles.includes('owner') || roles.includes('admin')) && (
+                    <>
+                      <DropdownMenuItem onClick={() => navigate('/mis-reservas')}>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Mis reservas
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/mis-ganancias')}>
+                        <DollarSign className="w-4 h-4 mr-2" />
+                        Mis ganancias
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/my-vehicles')}>
+                        <Car className="w-4 h-4 mr-2" />
+                        Mis vehículos
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="w-4 h-4 mr-2" />
+                    Perfil
+                  </DropdownMenuItem>
+                  {(roles.includes('owner') || roles.includes('admin')) && (
+                    <DropdownMenuItem onClick={() => navigate('/aliado/solicitud')}>
+                      <ShieldCheck className="w-4 h-4 mr-2" />
+                      Verificación aliado
                     </DropdownMenuItem>
-                  ) : null}
+                  )}
+                  {!roles.includes('owner') && !roles.includes('admin') && (
+                    <DropdownMenuItem onClick={() => navigate('/arrendatario/verificacion')}>
+                      <ShieldCheck className="w-4 h-4 mr-2" />
+                      Verificación arrendatario
+                    </DropdownMenuItem>
+                  )}
                   {roles.includes('admin') && (
                     <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate('/admin/solicitudes')}>
                         <ShieldCheck className="w-4 h-4 mr-2" />
                         Solicitudes de aliados
                       </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/admin/usuarios')}>
+                      <DropdownMenuItem onClick={() => navigate('/admin/usuarios')}>
                         <User className="w-4 h-4 mr-2" />
                         Administrar usuarios
                       </DropdownMenuItem>
