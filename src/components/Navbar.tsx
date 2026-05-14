@@ -202,16 +202,39 @@ const Navbar = () => {
                         </span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/profile'); setIsMenuOpen(false); }}>
-                      Mi perfil
-                    </Button>
                     <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mensajes'); setIsMenuOpen(false); }}>
                       <MessageSquare className="w-4 h-4 mr-2" />
                       Mensajes
                     </Button>
                     {(roles.includes('owner') || roles.includes('admin')) && (
-                      <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate('/my-vehicles')}>
-                        Mis vehículos
+                      <>
+                        <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-reservas'); setIsMenuOpen(false); }}>
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Mis reservas
+                        </Button>
+                        <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-ganancias'); setIsMenuOpen(false); }}>
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          Mis ganancias
+                        </Button>
+                        <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/my-vehicles'); setIsMenuOpen(false); }}>
+                          <Car className="w-4 h-4 mr-2" />
+                          Mis vehículos
+                        </Button>
+                      </>
+                    )}
+                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/profile'); setIsMenuOpen(false); }}>
+                      <User className="w-4 h-4 mr-2" />
+                      Perfil
+                    </Button>
+                    {(roles.includes('owner') || roles.includes('admin')) ? (
+                      <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/aliado/solicitud'); setIsMenuOpen(false); }}>
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Verificación aliado
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/arrendatario/verificacion'); setIsMenuOpen(false); }}>
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Verificación arrendatario
                       </Button>
                     )}
                     {roles.includes('admin') && (
