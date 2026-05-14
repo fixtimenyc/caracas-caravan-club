@@ -281,6 +281,52 @@ const loadSettings = (): Settings => {
   }
 };
 
+function renderContractPreview(settings: Settings): string {
+  const sample: Record<string, string> = {
+    reserva_id: "RV-2026-00123",
+    arrendatario_nombre: "Carlos Pérez",
+    arrendatario_cedula: "V-12.345.678",
+    arrendatario_licencia: "12345678",
+    arrendatario_direccion: "Av. Francisco de Miranda, Los Palos Grandes, Caracas",
+    propietario_nombre: "María González",
+    propietario_cedula: "V-9.876.543",
+    vehiculo_marca: "Toyota",
+    vehiculo_modelo: "Corolla",
+    vehiculo_anio: "2022",
+    vehiculo_color: "Plata",
+    vehiculo_placa: "AB123CD",
+    vehiculo_vin: "JTDBL40E099012345",
+    km_inicio: "45.230",
+    km_max_dia: "200",
+    inicio: "2026-05-20",
+    fin: "2026-05-25",
+    dias: "5",
+    lugar_entrega: "Chacao, Caracas",
+    lugar_devolucion: "Chacao, Caracas",
+    tarifa_dia: "$45",
+    subtotal: "$225",
+    comision: "$22.50",
+    seguro: "$40",
+    deposito: "$150",
+    total: "$287.50",
+    moneda: "USD",
+    metodo_pago: "Zelle",
+    referencia_pago: "ZL-998877",
+    fecha_pago: "2026-05-14 10:32",
+    multa_fumar: "$50",
+    empresa_razon_social: settings.contract.company_legal_name,
+    empresa_rif: settings.contract.company_rif,
+    empresa_direccion: settings.contract.company_address,
+    empresa_sitio: settings.business.website,
+    jurisdiccion: settings.contract.jurisdiction,
+    contrato_version: settings.contract.version,
+    fecha_aceptacion: "2026-05-14 10:35",
+    ip_aceptacion: "190.202.10.45",
+    dispositivo: "Chrome 124 / iPhone 15",
+  };
+  return settings.contract.body.replace(/\{\{(\w+)\}\}/g, (_, k) => sample[k] ?? `{{${k}}}`);
+}
+
 export default function AdminSettingsPage() {
   const [rawSettings, setRawSettings] = useState<Settings>(loadSettings);
   const settings = useMemo(() => normalizeSettings(rawSettings), [rawSettings]);
@@ -864,50 +910,4 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
       <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );
-}
-
-function renderContractPreview(settings: Settings): string {
-  const sample: Record<string, string> = {
-    reserva_id: "RV-2026-00123",
-    arrendatario_nombre: "Carlos Pérez",
-    arrendatario_cedula: "V-12.345.678",
-    arrendatario_licencia: "12345678",
-    arrendatario_direccion: "Av. Francisco de Miranda, Los Palos Grandes, Caracas",
-    propietario_nombre: "María González",
-    propietario_cedula: "V-9.876.543",
-    vehiculo_marca: "Toyota",
-    vehiculo_modelo: "Corolla",
-    vehiculo_anio: "2022",
-    vehiculo_color: "Plata",
-    vehiculo_placa: "AB123CD",
-    vehiculo_vin: "JTDBL40E099012345",
-    km_inicio: "45.230",
-    km_max_dia: "200",
-    inicio: "2026-05-20",
-    fin: "2026-05-25",
-    dias: "5",
-    lugar_entrega: "Chacao, Caracas",
-    lugar_devolucion: "Chacao, Caracas",
-    tarifa_dia: "$45",
-    subtotal: "$225",
-    comision: "$22.50",
-    seguro: "$40",
-    deposito: "$150",
-    total: "$287.50",
-    moneda: "USD",
-    metodo_pago: "Zelle",
-    referencia_pago: "ZL-998877",
-    fecha_pago: "2026-05-14 10:32",
-    multa_fumar: "$50",
-    empresa_razon_social: settings.contract.company_legal_name,
-    empresa_rif: settings.contract.company_rif,
-    empresa_direccion: settings.contract.company_address,
-    empresa_sitio: settings.business.website,
-    jurisdiccion: settings.contract.jurisdiction,
-    contrato_version: settings.contract.version,
-    fecha_aceptacion: "2026-05-14 10:35",
-    ip_aceptacion: "190.202.10.45",
-    dispositivo: "Chrome 124 / iPhone 15",
-  };
-  return settings.contract.body.replace(/\{\{(\w+)\}\}/g, (_, k) => sample[k] ?? `{{${k}}}`);
 }
