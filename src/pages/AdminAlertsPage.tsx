@@ -500,15 +500,33 @@ const SEVERITY_STYLES: Record<Severity, { badge: string; ring: string; iconBg: s
 
 export default function AdminAlertsPage() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [stateMap, setStateMap] = useState<StateMap>({});
+  const [loading, setLoading] = useState(true);
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [tab, setTab] = useState<"all" | Category>("all");
   const [severityFilter, setSeverityFilter] = useState<"all" | Severity>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "unread" | "resolved">("unread");
   const [query, setQuery] = useState("");
 
+  async function refresh(currentState: StateMap = stateMap) {
+    setLoading(true);
+    try {
+      const items = await deriveAlerts(currentState);
+      setAlerts(items);
+    } catch (e) {
+      console.error("deriveAlerts failed", e);
+      toast.error("No se pudieron cargar las alertas");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    setAlerts(loadAlerts());
+    const s = loadState();
+    setStateMap(s);
     setPrefs(loadPrefs());
+    refresh(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = useMemo(() => {
@@ -540,29 +558,47 @@ export default function AdminAlertsPage() {
     return { unread, critical, warning, today };
   }, [alerts]);
 
-  function update(items: AlertItem[]) {
-    setAlerts(items);
-    saveAlerts(items);
+  function patchState(patch: (m: StateMap) => StateMap) {
+    setStateMap((prev) => {
+      const next = patch(prev);
+      saveState(next);
+      return next;
+    });
   }
 
   function markRead(id: string) {
-    update(alerts.map((a) => (a.id === id ? { ...a, read: true } : a)));
+    patchState((m) => ({ ...m, [id]: { ...(m[id] || {}), read: true } }));
+    setAlerts((cur) => cur.map((a) => (a.id === id ? { ...a, read: true } : a)));
   }
   function markAllRead() {
-    update(alerts.map((a) => ({ ...a, read: true })));
+    patchState((m) => {
+      const next = { ...m };
+      for (const a of alerts) next[a.id] = { ...(next[a.id] || {}), read: true };
+      return next;
+    });
+    setAlerts((cur) => cur.map((a) => ({ ...a, read: true })));
     toast.success("Todas las alertas marcadas como leídas");
   }
   function resolve(id: string) {
-    update(alerts.map((a) => (a.id === id ? { ...a, resolved: true, read: true } : a)));
+    patchState((m) => ({ ...m, [id]: { ...(m[id] || {}), resolved: true, read: true } }));
+    setAlerts((cur) => cur.map((a) => (a.id === id ? { ...a, resolved: true, read: true } : a)));
     toast.success("Alerta resuelta");
   }
   function remove(id: string) {
-    update(alerts.filter((a) => a.id !== id));
+    patchState((m) => ({ ...m, [id]: { ...(m[id] || {}), dismissed: true } }));
+    setAlerts((cur) => cur.filter((a) => a.id !== id));
   }
   function clearResolved() {
-    update(alerts.filter((a) => !a.resolved));
+    const ids = alerts.filter((a) => a.resolved).map((a) => a.id);
+    patchState((m) => {
+      const next = { ...m };
+      for (const id of ids) next[id] = { ...(next[id] || {}), dismissed: true };
+      return next;
+    });
+    setAlerts((cur) => cur.filter((a) => !a.resolved));
     toast.success("Alertas resueltas eliminadas");
   }
+
 
   function savePrefs(next: Prefs) {
     setPrefs(next);
