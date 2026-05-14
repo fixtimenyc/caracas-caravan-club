@@ -60,6 +60,7 @@ const AdminUsersPage = () => {
   const filterStatus = (searchParams.get("status") || "all") as "all" | AccountStatus;
 
   const ownerView = filterRole === "owner";
+  const renterView = filterRole === "renter";
 
   const updateParam = (key: string, val: string) => {
     const next = new URLSearchParams(searchParams);
