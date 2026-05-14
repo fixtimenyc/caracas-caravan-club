@@ -52,6 +52,7 @@ export default function VehicleInspectionForm({
   const [notes, setNotes] = useState("");
   const [damageNotes, setDamageNotes] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [signatureName, setSignatureName] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [uploading, setUploading] = useState(false);
