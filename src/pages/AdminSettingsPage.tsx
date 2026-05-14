@@ -777,6 +777,65 @@ export default function AdminSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* CONTRATO */}
+        <TabsContent value="contract" className="mt-6">
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contrato modelo de alquiler</CardTitle>
+                <CardDescription>
+                  Plantilla legal que se envía por correo al arrendatario al confirmar la reserva con pago. Incluye políticas, deberes, derechos y aceptación digital con plena validez legal (Decreto-Ley sobre Mensajes de Datos y Firmas Electrónicas).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <ToggleRow label="Contrato habilitado" checked={settings.contract.enabled} onChange={(v) => save({ ...settings, contract: { ...settings.contract, enabled: v } })} />
+                  <ToggleRow label="Enviar al confirmar pago" checked={settings.contract.send_on_payment_confirmed} onChange={(v) => save({ ...settings, contract: { ...settings.contract, send_on_payment_confirmed: v } })} />
+                  <ToggleRow label="Copia al propietario" checked={settings.contract.cc_owner} onChange={(v) => save({ ...settings, contract: { ...settings.contract, cc_owner: v } })} />
+                  <ToggleRow label="Requerir aceptación digital" checked={settings.contract.require_digital_acceptance} onChange={(v) => save({ ...settings, contract: { ...settings.contract, require_digital_acceptance: v } })} />
+                  <Field label="Versión del contrato" value={settings.contract.version} onChange={(v) => save({ ...settings, contract: { ...settings.contract, version: v } })} />
+                  <Field label="Asunto del correo" value={settings.contract.subject} onChange={(v) => save({ ...settings, contract: { ...settings.contract, subject: v } })} />
+                </div>
+
+                <Separator />
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Field label="Razón social" value={settings.contract.company_legal_name} onChange={(v) => save({ ...settings, contract: { ...settings.contract, company_legal_name: v } })} />
+                  <Field label="RIF" value={settings.contract.company_rif} onChange={(v) => save({ ...settings, contract: { ...settings.contract, company_rif: v } })} />
+                  <Field label="Domicilio fiscal" value={settings.contract.company_address} onChange={(v) => save({ ...settings, contract: { ...settings.contract, company_address: v } })} />
+                  <Field label="Jurisdicción" value={settings.contract.jurisdiction} onChange={(v) => save({ ...settings, contract: { ...settings.contract, jurisdiction: v } })} />
+                </div>
+
+                <div className="grid gap-1.5">
+                  <Label>Cuerpo del contrato</Label>
+                  <Textarea
+                    className="min-h-[480px] font-mono text-xs"
+                    value={settings.contract.body}
+                    onChange={(e) => save({ ...settings, contract: { ...settings.contract, body: e.target.value } })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Variables disponibles: <code>{`{{reserva_id}}`}</code>, <code>{`{{arrendatario_nombre}}`}</code>, <code>{`{{arrendatario_cedula}}`}</code>, <code>{`{{arrendatario_licencia}}`}</code>, <code>{`{{arrendatario_direccion}}`}</code>, <code>{`{{propietario_nombre}}`}</code>, <code>{`{{propietario_cedula}}`}</code>, <code>{`{{vehiculo_marca}}`}</code>, <code>{`{{vehiculo_modelo}}`}</code>, <code>{`{{vehiculo_anio}}`}</code>, <code>{`{{vehiculo_color}}`}</code>, <code>{`{{vehiculo_placa}}`}</code>, <code>{`{{vehiculo_vin}}`}</code>, <code>{`{{km_inicio}}`}</code>, <code>{`{{km_max_dia}}`}</code>, <code>{`{{inicio}}`}</code>, <code>{`{{fin}}`}</code>, <code>{`{{dias}}`}</code>, <code>{`{{lugar_entrega}}`}</code>, <code>{`{{lugar_devolucion}}`}</code>, <code>{`{{tarifa_dia}}`}</code>, <code>{`{{subtotal}}`}</code>, <code>{`{{comision}}`}</code>, <code>{`{{seguro}}`}</code>, <code>{`{{deposito}}`}</code>, <code>{`{{total}}`}</code>, <code>{`{{moneda}}`}</code>, <code>{`{{metodo_pago}}`}</code>, <code>{`{{referencia_pago}}`}</code>, <code>{`{{fecha_pago}}`}</code>, <code>{`{{multa_fumar}}`}</code>, <code>{`{{empresa_razon_social}}`}</code>, <code>{`{{empresa_rif}}`}</code>, <code>{`{{empresa_direccion}}`}</code>, <code>{`{{empresa_sitio}}`}</code>, <code>{`{{jurisdiccion}}`}</code>, <code>{`{{contrato_version}}`}</code>, <code>{`{{fecha_aceptacion}}`}</code>, <code>{`{{ip_aceptacion}}`}</code>, <code>{`{{dispositivo}}`}</code>.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Vista previa</CardTitle>
+                <CardDescription>Render con datos de ejemplo. Así verá el arrendatario el contrato adjunto al correo de confirmación.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border bg-muted/30 p-4 max-h-[420px] overflow-auto">
+                  <pre className="text-xs whitespace-pre-wrap font-sans leading-relaxed">
+                    {renderContractPreview(settings)}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
     </AdminLayout>
   );
