@@ -229,7 +229,7 @@ export default function AdminSettingsPage() {
             <CardHeader><CardTitle>Políticas y reglas</CardTitle><CardDescription>Comisión, cancelación y verificación.</CardDescription></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
               <NumField label="Comisión RUEDAVE (%)" value={settings.policies.commission_pct} onChange={(v) => save({ ...settings, policies: { ...settings.policies, commission_pct: v } })} />
-              <NumField label="Depósito de seguridad ($)" value={settings.policies.security_deposit} onChange={(v) => save({ ...settings, policies: { ...settings.policies, security_deposit: v } })} />
+              
               <NumField label="Reembolso < 24h (%)" value={settings.policies.cancel_lt_24h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_lt_24h_refund: v } })} />
               <NumField label="Reembolso 24-48h (%)" value={settings.policies.cancel_24_48h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_24_48h_refund: v } })} />
               <NumField label="Reembolso > 48h (%)" value={settings.policies.cancel_gt_48h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_gt_48h_refund: v } })} />
