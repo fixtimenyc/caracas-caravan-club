@@ -12,6 +12,7 @@ import OwnerApplicationPage from "./pages/OwnerApplicationPage";
 import AdminApplicationsPage from "./pages/AdminApplicationsPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminFleetPage from "./pages/AdminFleetPage";
+import AdminVehicleDetailPage from "./pages/AdminVehicleDetailPage";
 import AdminReservationsPage from "./pages/AdminReservationsPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminUserDetailPage from "./pages/AdminUserDetailPage";
