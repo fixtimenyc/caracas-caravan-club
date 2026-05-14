@@ -1,0 +1,497 @@
+import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import {
+  Settings, Building2, Shield, CreditCard, Plug, Mail, MessageSquare,
+  Users as UsersIcon, ScrollText, Save, Search,
+} from "lucide-react";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+
+const STORAGE_KEY = "ruedave_system_settings_v1";
+
+type Settings = {
+  business: {
+    name: string; logo_url: string; favicon_url: string; description: string;
+    operation_zone: string; additional_zones: string;
+    support_phone: string; support_email: string; website: string;
+  };
+  policies: {
+    commission_pct: number;
+    cancel_lt_24h_refund: number;
+    cancel_24_48h_refund: number;
+    cancel_gt_48h_refund: number;
+    security_deposit: number;
+    auto_cancel_minutes: number;
+    min_renter_age: number;
+    require_id: boolean;
+    require_license: boolean;
+    require_selfie: boolean;
+    require_social: boolean;
+  };
+  payments: {
+    stripe_enabled: boolean;
+    stripe_public_key: string;
+    paypal_enabled: boolean;
+    paypal_email: string;
+    bank_enabled: boolean;
+    bank_name: string;
+    bank_account_holder: string;
+    bank_account_number: string;
+    bank_rif: string;
+    cash_enabled: boolean;
+    bcv_rate: number;
+    bcv_auto_update: boolean;
+  };
+  integrations: {
+    google_maps_key: string;
+    twilio_sid: string;
+    twilio_token: string;
+    twilio_whatsapp_from: string;
+    email_provider: string;
+    email_api_key: string;
+    auditcar_endpoint: string;
+    auditcar_token: string;
+    slack_webhook: string;
+  };
+  email_templates: Record<string, { subject: string; body: string }>;
+  sms_templates: Record<string, string>;
+};
+
+const DEFAULTS: Settings = {
+  business: {
+    name: "RUEDAVE", logo_url: "", favicon_url: "",
+    description: "Marketplace de alquiler de vehículos en Caracas, Venezuela.",
+    operation_zone: "Caracas", additional_zones: "Miranda, La Guaira",
+    support_phone: "+58 412 000 0000", support_email: "soporte@ruedave.com", website: "https://ruedave.com",
+  },
+  policies: {
+    commission_pct: 20,
+    cancel_lt_24h_refund: 0, cancel_24_48h_refund: 50, cancel_gt_48h_refund: 100,
+    security_deposit: 100, auto_cancel_minutes: 30, min_renter_age: 21,
+    require_id: true, require_license: true, require_selfie: true, require_social: false,
+  },
+  payments: {
+    stripe_enabled: false, stripe_public_key: "",
+    paypal_enabled: false, paypal_email: "",
+    bank_enabled: true, bank_name: "Banesco", bank_account_holder: "RUEDAVE C.A.",
+    bank_account_number: "0134-XXXX-XX-XXXXXXXXXX", bank_rif: "J-XXXXXXXX-X",
+    cash_enabled: true, bcv_rate: 36.5, bcv_auto_update: false,
+  },
+  integrations: {
+    google_maps_key: "", twilio_sid: "", twilio_token: "", twilio_whatsapp_from: "",
+    email_provider: "sendgrid", email_api_key: "",
+    auditcar_endpoint: "", auditcar_token: "", slack_webhook: "",
+  },
+  email_templates: {
+    booking_confirmation: { subject: "Tu reserva está confirmada", body: "Hola {{nombre}}, tu reserva del {{auto}} fue confirmada del {{inicio}} al {{fin}}." },
+    reminder_24h: { subject: "Recordatorio: tu alquiler comienza mañana", body: "Hola {{nombre}}, te recordamos que mañana comienza tu alquiler del {{auto}}." },
+    payment_confirmation: { subject: "Pago recibido", body: "Hemos recibido tu pago de {{monto}}. ¡Gracias!" },
+    review_request: { subject: "¿Cómo fue tu experiencia?", body: "Hola {{nombre}}, déjanos tu reseña sobre el {{auto}}." },
+    issue_notification: { subject: "Reporte de problema", body: "Se ha reportado un problema en tu reserva. Nuestro equipo te contactará." },
+  },
+  sms_templates: {
+    booking_confirmation: "RUEDAVE: Tu reserva del {{auto}} está confirmada. Inicio: {{inicio}}.",
+    reminder_1h: "RUEDAVE: Tu alquiler del {{auto}} comienza en 1h. ¡Prepárate!",
+    access_code: "RUEDAVE: Tu código de acceso al vehículo es {{codigo}}.",
+    payment_notification: "RUEDAVE: Pago recibido por {{monto}}. ¡Gracias!",
+  },
+};
+
+const loadSettings = (): Settings => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULTS;
+    return { ...DEFAULTS, ...JSON.parse(raw) };
+  } catch { return DEFAULTS; }
+};
+
+export default function AdminSettingsPage() {
+  const [settings, setSettings] = useState<Settings>(loadSettings);
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [logFilter, setLogFilter] = useState({ admin: "all", action: "all", q: "" });
+  const [loadingAdmins, setLoadingAdmins] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+
+  const save = (next: Settings) => {
+    setSettings(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  };
+  const saveAll = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    toast({ title: "Configuración guardada", description: "Los cambios se aplicaron correctamente." });
+  };
+
+  const loadAdminsAndLogs = async () => {
+    setLoadingAdmins(true);
+    const { data: roleRows } = await supabase.from("user_roles").select("*").in("role", ["admin"]).limit(500);
+    const adminIds = (roleRows || []).map((r: any) => r.user_id);
+    let profilesMap: Record<string, any> = {};
+    if (adminIds.length) {
+      const { data: profs } = await supabase.from("profiles").select("user_id,full_name,phone,last_login_at,account_status,avatar_url").in("user_id", adminIds);
+      (profs || []).forEach((p: any) => (profilesMap[p.user_id] = p));
+    }
+    setAdmins(adminIds.map((id: string) => ({ user_id: id, ...(profilesMap[id] || {}) })));
+
+    const { data: actions } = await supabase
+      .from("admin_user_actions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    const actorIds = Array.from(new Set((actions || []).map((a: any) => a.admin_id).filter(Boolean)));
+    let actorMap: Record<string, string> = {};
+    if (actorIds.length) {
+      const { data: aprofs } = await supabase.from("profiles").select("user_id,full_name").in("user_id", actorIds);
+      (aprofs || []).forEach((p: any) => (actorMap[p.user_id] = p.full_name || p.user_id));
+    }
+    setLogs((actions || []).map((a: any) => ({ ...a, admin_name: actorMap[a.admin_id] || a.admin_id })));
+    setLoadingAdmins(false);
+  };
+
+  useEffect(() => { loadAdminsAndLogs(); }, []);
+
+  const filteredLogs = useMemo(() => {
+    return logs.filter((l) => {
+      if (logFilter.admin !== "all" && l.admin_id !== logFilter.admin) return false;
+      if (logFilter.action !== "all" && l.action_type !== logFilter.action) return false;
+      if (logFilter.q && !JSON.stringify(l).toLowerCase().includes(logFilter.q.toLowerCase())) return false;
+      return true;
+    });
+  }, [logs, logFilter]);
+
+  const actionTypes = useMemo(() => Array.from(new Set(logs.map((l) => l.action_type))), [logs]);
+
+  return (
+    <AdminLayout title="Configuración">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10"><Settings className="h-6 w-6 text-primary" /></div>
+          <div>
+            <h1 className="text-2xl font-bold">Configuración del Sistema</h1>
+            <p className="text-sm text-muted-foreground">Ajustes generales, políticas, integraciones y administradores.</p>
+          </div>
+        </div>
+        <Button onClick={saveAll}><Save className="h-4 w-4 mr-2" /> Guardar cambios</Button>
+      </div>
+
+      <Tabs defaultValue="business">
+        <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="business"><Building2 className="h-4 w-4 mr-2" />Negocio</TabsTrigger>
+          <TabsTrigger value="policies"><Shield className="h-4 w-4 mr-2" />Políticas</TabsTrigger>
+          <TabsTrigger value="payments"><CreditCard className="h-4 w-4 mr-2" />Pagos</TabsTrigger>
+          <TabsTrigger value="integrations"><Plug className="h-4 w-4 mr-2" />Integraciones</TabsTrigger>
+          <TabsTrigger value="emails"><Mail className="h-4 w-4 mr-2" />Emails</TabsTrigger>
+          <TabsTrigger value="sms"><MessageSquare className="h-4 w-4 mr-2" />SMS/WhatsApp</TabsTrigger>
+          <TabsTrigger value="admins"><UsersIcon className="h-4 w-4 mr-2" />Admins</TabsTrigger>
+          <TabsTrigger value="logs"><ScrollText className="h-4 w-4 mr-2" />Logs</TabsTrigger>
+        </TabsList>
+
+        {/* BUSINESS */}
+        <TabsContent value="business" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Información de negocio</CardTitle><CardDescription>Datos públicos de la empresa.</CardDescription></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <Field label="Nombre empresa" value={settings.business.name} onChange={(v) => save({ ...settings, business: { ...settings.business, name: v } })} />
+              <Field label="Website" value={settings.business.website} onChange={(v) => save({ ...settings, business: { ...settings.business, website: v } })} />
+              <Field label="Logo (URL)" value={settings.business.logo_url} onChange={(v) => save({ ...settings, business: { ...settings.business, logo_url: v } })} />
+              <Field label="Favicon (URL)" value={settings.business.favicon_url} onChange={(v) => save({ ...settings, business: { ...settings.business, favicon_url: v } })} />
+              <Field label="Teléfono soporte" value={settings.business.support_phone} onChange={(v) => save({ ...settings, business: { ...settings.business, support_phone: v } })} />
+              <Field label="Email soporte" value={settings.business.support_email} onChange={(v) => save({ ...settings, business: { ...settings.business, support_email: v } })} />
+              <Field label="Zona principal" value={settings.business.operation_zone} onChange={(v) => save({ ...settings, business: { ...settings.business, operation_zone: v } })} />
+              <Field label="Zonas adicionales" value={settings.business.additional_zones} onChange={(v) => save({ ...settings, business: { ...settings.business, additional_zones: v } })} />
+              <div className="md:col-span-2">
+                <Label>Descripción</Label>
+                <Textarea rows={3} value={settings.business.description} onChange={(e) => save({ ...settings, business: { ...settings.business, description: e.target.value } })} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* POLICIES */}
+        <TabsContent value="policies" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Políticas y reglas</CardTitle><CardDescription>Comisión, cancelación y verificación.</CardDescription></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <NumField label="Comisión RUEDAVE (%)" value={settings.policies.commission_pct} onChange={(v) => save({ ...settings, policies: { ...settings.policies, commission_pct: v } })} />
+              <NumField label="Depósito de seguridad ($)" value={settings.policies.security_deposit} onChange={(v) => save({ ...settings, policies: { ...settings.policies, security_deposit: v } })} />
+              <NumField label="Reembolso < 24h (%)" value={settings.policies.cancel_lt_24h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_lt_24h_refund: v } })} />
+              <NumField label="Reembolso 24-48h (%)" value={settings.policies.cancel_24_48h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_24_48h_refund: v } })} />
+              <NumField label="Reembolso > 48h (%)" value={settings.policies.cancel_gt_48h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_gt_48h_refund: v } })} />
+              <NumField label="Cancelación auto (min)" value={settings.policies.auto_cancel_minutes} onChange={(v) => save({ ...settings, policies: { ...settings.policies, auto_cancel_minutes: v } })} />
+              <NumField label="Edad mínima rentador" value={settings.policies.min_renter_age} onChange={(v) => save({ ...settings, policies: { ...settings.policies, min_renter_age: v } })} />
+              <Separator className="md:col-span-2" />
+              <div className="md:col-span-2">
+                <p className="font-medium mb-3">Requisitos de verificación</p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <ToggleRow label="Documento de identidad" checked={settings.policies.require_id} onChange={(v) => save({ ...settings, policies: { ...settings.policies, require_id: v } })} />
+                  <ToggleRow label="Licencia de conducir" checked={settings.policies.require_license} onChange={(v) => save({ ...settings, policies: { ...settings.policies, require_license: v } })} />
+                  <ToggleRow label="Selfie" checked={settings.policies.require_selfie} onChange={(v) => save({ ...settings, policies: { ...settings.policies, require_selfie: v } })} />
+                  <ToggleRow label="Verificación de redes sociales" checked={settings.policies.require_social} onChange={(v) => save({ ...settings, policies: { ...settings.policies, require_social: v } })} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* PAYMENTS */}
+        <TabsContent value="payments" className="mt-6">
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader><CardTitle>Stripe</CardTitle></CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4">
+                <ToggleRow label="Habilitar Stripe" checked={settings.payments.stripe_enabled} onChange={(v) => save({ ...settings, payments: { ...settings.payments, stripe_enabled: v } })} />
+                <Field label="Public Key" value={settings.payments.stripe_public_key} onChange={(v) => save({ ...settings, payments: { ...settings.payments, stripe_public_key: v } })} />
+                <p className="text-xs text-muted-foreground md:col-span-2">La Secret Key debe configurarse como secreto del backend, no en este formulario.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>PayPal</CardTitle></CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4">
+                <ToggleRow label="Habilitar PayPal" checked={settings.payments.paypal_enabled} onChange={(v) => save({ ...settings, payments: { ...settings.payments, paypal_enabled: v } })} />
+                <Field label="Email PayPal" value={settings.payments.paypal_email} onChange={(v) => save({ ...settings, payments: { ...settings.payments, paypal_email: v } })} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Transferencia bancaria</CardTitle></CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4">
+                <ToggleRow label="Habilitar transferencia" checked={settings.payments.bank_enabled} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bank_enabled: v } })} />
+                <Field label="Banco" value={settings.payments.bank_name} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bank_name: v } })} />
+                <Field label="Titular" value={settings.payments.bank_account_holder} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bank_account_holder: v } })} />
+                <Field label="Cuenta" value={settings.payments.bank_account_number} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bank_account_number: v } })} />
+                <Field label="RIF" value={settings.payments.bank_rif} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bank_rif: v } })} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Efectivo y BCV</CardTitle></CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4">
+                <ToggleRow label="Aceptar efectivo en recolección" checked={settings.payments.cash_enabled} onChange={(v) => save({ ...settings, payments: { ...settings.payments, cash_enabled: v } })} />
+                <NumField label="Tasa BCV (Bs/USD)" step={0.01} value={settings.payments.bcv_rate} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bcv_rate: v } })} />
+                <ToggleRow label="Actualizar tasa BCV automáticamente" checked={settings.payments.bcv_auto_update} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bcv_auto_update: v } })} />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* INTEGRATIONS */}
+        <TabsContent value="integrations" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Integraciones externas</CardTitle><CardDescription>API keys y endpoints de servicios de terceros.</CardDescription></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <Field label="Google Maps API Key" value={settings.integrations.google_maps_key} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, google_maps_key: v } })} />
+              <Field label="Slack Webhook URL" value={settings.integrations.slack_webhook} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, slack_webhook: v } })} />
+              <Field label="Twilio SID" value={settings.integrations.twilio_sid} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, twilio_sid: v } })} />
+              <Field label="Twilio Token" value={settings.integrations.twilio_token} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, twilio_token: v } })} />
+              <Field label="Twilio WhatsApp From" value={settings.integrations.twilio_whatsapp_from} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, twilio_whatsapp_from: v } })} />
+              <div>
+                <Label>Email provider</Label>
+                <Select value={settings.integrations.email_provider} onValueChange={(v) => save({ ...settings, integrations: { ...settings.integrations, email_provider: v } })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sendgrid">SendGrid</SelectItem>
+                    <SelectItem value="mailchimp">Mailchimp</SelectItem>
+                    <SelectItem value="resend">Resend</SelectItem>
+                    <SelectItem value="ses">Amazon SES</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Field label="Email API Key" value={settings.integrations.email_api_key} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, email_api_key: v } })} />
+              <Field label="AuditCar Endpoint" value={settings.integrations.auditcar_endpoint} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, auditcar_endpoint: v } })} />
+              <Field label="AuditCar Token" value={settings.integrations.auditcar_token} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, auditcar_token: v } })} />
+              <p className="text-xs text-muted-foreground md:col-span-2">Recomendamos almacenar tokens y secretos sensibles como secretos del backend.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* EMAIL TEMPLATES */}
+        <TabsContent value="emails" className="mt-6">
+          <div className="grid gap-4">
+            {Object.entries(settings.email_templates).map(([key, tpl]) => (
+              <Card key={key}>
+                <CardHeader><CardTitle className="capitalize">{key.replace(/_/g, " ")}</CardTitle></CardHeader>
+                <CardContent className="grid gap-3">
+                  <div>
+                    <Label>Asunto</Label>
+                    <Input value={tpl.subject} onChange={(e) => save({ ...settings, email_templates: { ...settings.email_templates, [key]: { ...tpl, subject: e.target.value } } })} />
+                  </div>
+                  <div>
+                    <Label>Cuerpo</Label>
+                    <Textarea rows={4} value={tpl.body} onChange={(e) => save({ ...settings, email_templates: { ...settings.email_templates, [key]: { ...tpl, body: e.target.value } } })} />
+                    <p className="text-xs text-muted-foreground mt-1">Variables: {"{{nombre}}, {{auto}}, {{inicio}}, {{fin}}, {{monto}}"}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* SMS */}
+        <TabsContent value="sms" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Plantillas SMS / WhatsApp</CardTitle><CardDescription>Mensajes cortos enviados automáticamente.</CardDescription></CardHeader>
+            <CardContent className="grid gap-4">
+              {Object.entries(settings.sms_templates).map(([key, body]) => (
+                <div key={key}>
+                  <Label className="capitalize">{key.replace(/_/g, " ")}</Label>
+                  <Textarea rows={2} value={body} onChange={(e) => save({ ...settings, sms_templates: { ...settings.sms_templates, [key]: e.target.value } })} />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ADMINS */}
+        <TabsContent value="admins" className="mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Administradores</CardTitle>
+                  <CardDescription>Usuarios con rol admin en la plataforma.</CardDescription>
+                </div>
+                <Badge variant="secondary">{admins.length} admins</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2 mb-4">
+                <Input placeholder="Email del usuario a promover a admin" value={newAdminEmail} onChange={(e) => setNewAdminEmail(e.target.value)} />
+                <Button variant="outline" onClick={async () => {
+                  if (!newAdminEmail) return;
+                  toast({ title: "Acción manual requerida", description: "Por seguridad, los roles deben asignarse vía base de datos. Contacta al super admin." });
+                }}>Invitar admin</Button>
+              </div>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Nombre</TableHead><TableHead>Teléfono</TableHead><TableHead>Rol</TableHead>
+                  <TableHead>Estado</TableHead><TableHead>Último login</TableHead><TableHead>Acciones</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {loadingAdmins ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Cargando…</TableCell></TableRow>
+                  ) : admins.length === 0 ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Sin administradores</TableCell></TableRow>
+                  ) : admins.map((a) => (
+                    <TableRow key={a.user_id}>
+                      <TableCell className="font-medium">{a.full_name || a.user_id.slice(0, 8)}</TableCell>
+                      <TableCell>{a.phone || "—"}</TableCell>
+                      <TableCell><Badge>Admin</Badge></TableCell>
+                      <TableCell><Badge variant={a.account_status === "active" ? "default" : "secondary"}>{a.account_status || "active"}</Badge></TableCell>
+                      <TableCell>{a.last_login_at ? format(new Date(a.last_login_at), "PP", { locale: es }) : "—"}</TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="ghost" onClick={() => toast({ title: "Acción registrada", description: "Función disponible próximamente." })}>Editar</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <Separator className="my-4" />
+              <div>
+                <p className="font-medium mb-2">Permisos por rol</p>
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                  {[
+                    "Ver dashboard", "Gestionar autos", "Gestionar reservas", "Gestionar usuarios",
+                    "Gestionar finanzas", "Ver reportes", "Contactar usuarios", "Editar configuración", "Ver logs",
+                  ].map((p) => (
+                    <div key={p} className="flex items-center gap-2 p-2 rounded-md border">
+                      <Switch defaultChecked /> <span>{p}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">La asignación granular por usuario se aplicará en la próxima iteración con tablas de permisos.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* LOGS */}
+        <TabsContent value="logs" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Logs y auditoría</CardTitle>
+              <CardDescription>Acciones realizadas por administradores sobre usuarios.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-3 mb-4">
+                <div className="relative">
+                  <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Buscar…" value={logFilter.q} onChange={(e) => setLogFilter({ ...logFilter, q: e.target.value })} />
+                </div>
+                <Select value={logFilter.admin} onValueChange={(v) => setLogFilter({ ...logFilter, admin: v })}>
+                  <SelectTrigger><SelectValue placeholder="Admin" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los admins</SelectItem>
+                    {admins.map((a) => <SelectItem key={a.user_id} value={a.user_id}>{a.full_name || a.user_id.slice(0, 8)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={logFilter.action} onValueChange={(v) => setLogFilter({ ...logFilter, action: v })}>
+                  <SelectTrigger><SelectValue placeholder="Acción" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las acciones</SelectItem>
+                    {actionTypes.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Fecha</TableHead><TableHead>Admin</TableHead><TableHead>Acción</TableHead>
+                  <TableHead>Objeto</TableHead><TableHead>Detalles</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {filteredLogs.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Sin registros</TableCell></TableRow>
+                  ) : filteredLogs.map((l) => (
+                    <TableRow key={l.id}>
+                      <TableCell className="text-sm">{format(new Date(l.created_at), "PPp", { locale: es })}</TableCell>
+                      <TableCell className="text-sm">{l.admin_name}</TableCell>
+                      <TableCell><Badge variant="outline">{l.action_type}</Badge></TableCell>
+                      <TableCell className="text-xs font-mono">{(l.target_user_id || "").slice(0, 8)}</TableCell>
+                      <TableCell className="text-sm max-w-md truncate">{l.details || "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <p className="text-xs text-muted-foreground mt-2">Mostrando los últimos 200 eventos.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </AdminLayout>
+  );
+}
+
+function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      <Input value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+function NumField({ label, value, onChange, step = 1 }: { label: string; value: number; onChange: (v: number) => void; step?: number }) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      <Input type="number" step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </div>
+  );
+}
+function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-center justify-between p-3 border rounded-md">
+      <span className="text-sm">{label}</span>
+      <Switch checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
