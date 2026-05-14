@@ -483,11 +483,46 @@ export type Database = {
         }
         Relationships: []
       }
+      reservation_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          message: string | null
+          metadata: Json
+          reservation_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          reservation_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          reservation_id?: string
+        }
+        Relationships: []
+      }
       reservations: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           end_date: string
           id: string
+          refund_amount: number | null
+          refund_percent: number | null
           renter_id: string
           start_date: string
           status: Database["public"]["Enums"]["reservation_status"]
@@ -496,9 +531,14 @@ export type Database = {
           vehicle_id: string
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           end_date: string
           id?: string
+          refund_amount?: number | null
+          refund_percent?: number | null
           renter_id: string
           start_date: string
           status?: Database["public"]["Enums"]["reservation_status"]
@@ -507,9 +547,14 @@ export type Database = {
           vehicle_id: string
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           end_date?: string
           id?: string
+          refund_amount?: number | null
+          refund_percent?: number | null
           renter_id?: string
           start_date?: string
           status?: Database["public"]["Enums"]["reservation_status"]
