@@ -24,6 +24,7 @@ import RenterVerificationPage from "./pages/RenterVerificationPage";
 import ProfilePage from "./pages/ProfilePage";
 import HelpPage from "./pages/HelpPage";
 import AdminSupportPage from "./pages/AdminSupportPage";
+import AdminFinancePage from "./pages/AdminFinancePage";
 import MessagesPage from "./pages/MessagesPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import MyEarningsPage from "./pages/MyEarningsPage";
