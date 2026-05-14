@@ -138,63 +138,344 @@ const CATEGORY_LABEL: Record<Category, string> = {
   technical: "Técnicas",
 };
 
-function seedAlerts(): AlertItem[] {
-  const now = Date.now();
-  const samples: Array<Partial<AlertItem> & { typeKey: string; offsetMin: number; description: string; link?: AlertItem["link"] }> = [
-    { typeKey: "soat_expired", offsetMin: 30, description: "Toyota Corolla 2020 (placa AB123CD) — SOAT venció hace 3 días.", link: { label: "Ver vehículo", href: "/admin/flota" } },
-    { typeKey: "return_late", offsetMin: 90, description: "Reserva #R-1042 lleva 4 horas de retraso en la devolución.", link: { label: "Ver reserva", href: "/admin/reservas" } },
-    { typeKey: "payment_failed", offsetMin: 120, description: "Pago de USD 240 rechazado para reserva #R-1051.", link: { label: "Ver finanzas", href: "/admin/finanzas" } },
-    { typeKey: "critical_ticket", offsetMin: 200, description: "Ticket #T-318: 'Auto no enciende, estoy varado'.", link: { label: "Ver soporte", href: "/admin/soporte" } },
-    { typeKey: "payout_pending", offsetMin: 60 * 8, description: "3 dueños con payouts pendientes hace más de 7 días.", link: { label: "Procesar payouts", href: "/admin/finanzas" } },
-    { typeKey: "reservation_unconfirmed", offsetMin: 60 * 26, description: "5 reservas sin confirmar hace más de 24h.", link: { label: "Ver reservas", href: "/admin/reservas" } },
-    { typeKey: "maintenance_overdue", offsetMin: 60 * 48, description: "2 vehículos con mantenimiento vencido.", link: { label: "Ver flota", href: "/admin/flota" } },
-    { typeKey: "multiple_cancellations", offsetMin: 60 * 12, description: "Usuario @rcardenas canceló 4 reservas en los últimos 7 días.", link: { label: "Ver usuario", href: "/admin/usuarios" } },
-    { typeKey: "bad_review", offsetMin: 60 * 4, description: "Review de 1★ recibida en Ford Escape 2019.", link: { label: "Ver review", href: "/admin/flota" } },
-    { typeKey: "user_verified", offsetMin: 60 * 1, description: "Carlos Pérez completó la verificación KYC.", link: { label: "Ver usuario", href: "/admin/usuarios" } },
-    { typeKey: "api_timeout", offsetMin: 60 * 2, description: "Pasarela de pagos: 3 timeouts en los últimos 15 min." },
-    { typeKey: "storage_low", offsetMin: 60 * 36, description: "Almacenamiento al 87% de capacidad." },
-    { typeKey: "backup_complete", offsetMin: 60 * 6, description: "Backup automático nocturno completado correctamente." },
-    { typeKey: "suspicious_transaction", offsetMin: 60 * 3, description: "5 intentos de pago fallidos en 2 minutos desde la misma IP.", link: { label: "Investigar", href: "/admin/finanzas" } },
-  ];
-  return samples.map((s, i) => {
-    const t = ALERT_TYPES.find((x) => x.key === s.typeKey)!;
-    return {
-      id: `seed-${i}`,
-      category: t.category,
-      type: t.key,
-      title: t.label,
-      description: s.description,
-      severity: t.severity,
-      createdAt: new Date(now - s.offsetMin * 60 * 1000).toISOString(),
-      read: false,
-      resolved: false,
-      link: s.link,
-      icon: t.icon,
-    };
-  });
-}
+// ---------- Local state map (read/resolved/dismissed) ----------
+type AlertState = { read?: boolean; resolved?: boolean; dismissed?: boolean };
+type StateMap = Record<string, AlertState>;
 
-function loadAlerts(): AlertItem[] {
+function loadState(): StateMap {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      const seed = seedAlerts();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(seed.map(({ icon, ...rest }) => rest)));
-      return seed;
-    }
-    const parsed = JSON.parse(raw) as Omit<AlertItem, "icon">[];
-    return parsed.map((a) => {
-      const t = ALERT_TYPES.find((x) => x.key === a.type);
-      return { ...a, icon: t?.icon ?? Bell };
-    });
+    const raw = localStorage.getItem(STATE_KEY);
+    return raw ? (JSON.parse(raw) as StateMap) : {};
   } catch {
-    return seedAlerts();
+    return {};
   }
 }
 
-function saveAlerts(items: AlertItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items.map(({ icon, ...rest }) => rest)));
+function saveState(map: StateMap) {
+  localStorage.setItem(STATE_KEY, JSON.stringify(map));
 }
+
+function build(
+  state: StateMap,
+  typeKey: string,
+  entityId: string,
+  description: string,
+  createdAt: string,
+  link?: AlertItem["link"]
+): AlertItem | null {
+  const t = ALERT_TYPES.find((x) => x.key === typeKey)!;
+  const id = `${typeKey}:${entityId}`;
+  const s = state[id] || {};
+  if (s.dismissed) return null;
+  return {
+    id,
+    category: t.category,
+    type: t.key,
+    title: t.label,
+    description,
+    severity: t.severity,
+    createdAt,
+    read: !!s.read,
+    resolved: !!s.resolved,
+    link,
+    icon: t.icon,
+  };
+}
+
+// ---------- Real-data derivation from Supabase ----------
+async function deriveAlerts(state: StateMap): Promise<AlertItem[]> {
+  const out: AlertItem[] = [];
+  const today = new Date();
+  const todayISO = today.toISOString().slice(0, 10);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
+  const oneDayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
+
+  const push = (item: AlertItem | null) => {
+    if (item) out.push(item);
+  };
+
+  // ---- Vehicles: SOAT / insurance / circulation expiry ----
+  const { data: vehicles } = await supabase
+    .from("vehicles")
+    .select("id, brand, model, plate, soat_expiry, insurance_expiry, circulation_expiry, active")
+    .eq("active", true);
+
+  for (const v of vehicles || []) {
+    const label = `${v.brand} ${v.model}${v.plate ? ` (${v.plate})` : ""}`;
+    const link = { label: "Ver vehículo", href: `/admin/flota/${v.id}` };
+    if (v.soat_expiry && v.soat_expiry < todayISO) {
+      push(
+        build(
+          state,
+          "soat_expired",
+          `veh-${v.id}`,
+          `${label} — SOAT venció el ${v.soat_expiry}.`,
+          new Date(v.soat_expiry).toISOString(),
+          link
+        )
+      );
+    }
+    if (v.insurance_expiry && v.insurance_expiry < todayISO) {
+      push(
+        build(
+          state,
+          "soat_expired",
+          `ins-${v.id}`,
+          `${label} — Seguro venció el ${v.insurance_expiry}.`,
+          new Date(v.insurance_expiry).toISOString(),
+          link
+        )
+      );
+    }
+  }
+
+  // ---- Maintenance overdue ----
+  const { data: maint } = await supabase
+    .from("vehicle_maintenance")
+    .select("id, vehicle_id, type, scheduled_date, status, vehicles(brand, model, plate)")
+    .eq("status", "scheduled")
+    .lt("scheduled_date", todayISO);
+
+  for (const m of (maint as any[]) || []) {
+    const v = m.vehicles;
+    const label = v ? `${v.brand} ${v.model}${v.plate ? ` (${v.plate})` : ""}` : "Vehículo";
+    push(
+      build(
+        state,
+        "maintenance_overdue",
+        m.id,
+        `${label} — Mantenimiento "${m.type}" programado para ${m.scheduled_date} sigue pendiente.`,
+        new Date(m.scheduled_date).toISOString(),
+        { label: "Ver vehículo", href: `/admin/flota/${m.vehicle_id}` }
+      )
+    );
+  }
+
+  // ---- Reservations: unconfirmed >24h ----
+  const { data: pendingRes } = await supabase
+    .from("reservations")
+    .select("id, total_price, created_at, vehicle_id, vehicles(brand, model)")
+    .eq("status", "pending")
+    .lt("created_at", oneDayAgo);
+
+  for (const r of (pendingRes as any[]) || []) {
+    const v = r.vehicles;
+    push(
+      build(
+        state,
+        "reservation_unconfirmed",
+        r.id,
+        `Reserva de ${v ? `${v.brand} ${v.model}` : "vehículo"} sin confirmar hace más de 24h.`,
+        r.created_at,
+        { label: "Ver reserva", href: `/admin/reservas/${r.id}` }
+      )
+    );
+  }
+
+  // ---- Reservations: late returns (active past end_date) ----
+  const { data: lateRes } = await supabase
+    .from("reservations")
+    .select("id, end_date, vehicle_id, vehicles(brand, model)")
+    .eq("status", "active")
+    .lt("end_date", todayISO);
+
+  for (const r of (lateRes as any[]) || []) {
+    const v = r.vehicles;
+    push(
+      build(
+        state,
+        "return_late",
+        r.id,
+        `${v ? `${v.brand} ${v.model}` : "Vehículo"} debió devolverse el ${r.end_date}.`,
+        new Date(r.end_date).toISOString(),
+        { label: "Ver reserva", href: `/admin/reservas/${r.id}` }
+      )
+    );
+  }
+
+  // ---- Payments: failed and pending payouts ----
+  const { data: failedPayments } = await supabase
+    .from("payments")
+    .select("id, amount, reservation_id, created_at, status")
+    .eq("status", "failed")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  for (const p of failedPayments || []) {
+    push(
+      build(
+        state,
+        "payment_failed",
+        p.id,
+        `Pago de USD ${Number(p.amount).toFixed(2)} rechazado para reserva ${p.reservation_id.slice(0, 8)}.`,
+        p.created_at,
+        { label: "Ver finanzas", href: "/admin/finanzas" }
+      )
+    );
+  }
+
+  const { data: oldPending } = await supabase
+    .from("payments")
+    .select("id, amount, reservation_id, created_at, status")
+    .eq("status", "pending")
+    .lt("created_at", sevenDaysAgo);
+
+  for (const p of oldPending || []) {
+    push(
+      build(
+        state,
+        "payout_pending",
+        p.id,
+        `Pago de USD ${Number(p.amount).toFixed(2)} sigue pendiente desde hace más de 7 días.`,
+        p.created_at,
+        { label: "Procesar pago", href: "/admin/finanzas" }
+      )
+    );
+  }
+
+  // ---- Discrepancy: completed reservation without payment ----
+  const { data: completedRes } = await supabase
+    .from("reservations")
+    .select("id, total_price, end_date, payments(id, status)")
+    .eq("status", "completed")
+    .order("end_date", { ascending: false })
+    .limit(100);
+
+  for (const r of (completedRes as any[]) || []) {
+    const hasCompleted = (r.payments || []).some((p: any) => p.status === "completed");
+    if (!hasCompleted) {
+      push(
+        build(
+          state,
+          "payment_discrepancy",
+          r.id,
+          `Reserva ${r.id.slice(0, 8)} completada el ${r.end_date} sin pago confirmado (USD ${Number(r.total_price).toFixed(2)}).`,
+          new Date(r.end_date).toISOString(),
+          { label: "Ver reserva", href: `/admin/reservas/${r.id}` }
+        )
+      );
+    }
+  }
+
+  // ---- Tickets: open / in_progress critical-ish ----
+  const { data: tickets } = await supabase
+    .from("support_tickets")
+    .select("id, subject, category, status, created_at")
+    .in("status", ["open", "in_progress"])
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  for (const t of tickets || []) {
+    const isCritical = t.category === "seguridad" || t.category === "pagos";
+    if (isCritical) {
+      push(
+        build(
+          state,
+          "critical_ticket",
+          t.id,
+          `Ticket ${t.category}: "${t.subject}".`,
+          t.created_at,
+          { label: "Ver soporte", href: "/admin/soporte" }
+        )
+      );
+    }
+  }
+
+  // ---- Reviews: bad reviews (rating <= 2) in last 30 days ----
+  const { data: badReviews } = await supabase
+    .from("reviews")
+    .select("id, rating, comment, vehicle_id, created_at")
+    .lte("rating", 2)
+    .gte("created_at", thirtyDaysAgo)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  for (const r of badReviews || []) {
+    push(
+      build(
+        state,
+        "bad_review",
+        r.id,
+        `Review de ${r.rating}★${r.comment ? `: "${(r.comment || "").slice(0, 80)}"` : ""}.`,
+        r.created_at,
+        r.vehicle_id ? { label: "Ver vehículo", href: `/admin/flota/${r.vehicle_id}` } : undefined
+      )
+    );
+  }
+
+  // ---- Users: newly verified (last 7d) and suspended ----
+  const { data: verified } = await supabase
+    .from("profiles")
+    .select("user_id, full_name, verified, account_status, updated_at, created_at")
+    .eq("verified", true)
+    .gte("updated_at", sevenDaysAgo)
+    .order("updated_at", { ascending: false })
+    .limit(20);
+
+  for (const u of verified || []) {
+    push(
+      build(
+        state,
+        "user_verified",
+        u.user_id,
+        `${u.full_name || "Usuario"} completó la verificación.`,
+        u.updated_at,
+        { label: "Ver usuario", href: `/admin/usuarios/${u.user_id}` }
+      )
+    );
+  }
+
+  const { data: suspended } = await supabase
+    .from("profiles")
+    .select("user_id, full_name, account_status, updated_at")
+    .in("account_status", ["suspended", "banned"])
+    .order("updated_at", { ascending: false })
+    .limit(20);
+
+  for (const u of suspended || []) {
+    push(
+      build(
+        state,
+        "user_suspended",
+        u.user_id,
+        `${u.full_name || "Usuario"} con estado: ${u.account_status}.`,
+        u.updated_at,
+        { label: "Ver usuario", href: `/admin/usuarios/${u.user_id}` }
+      )
+    );
+  }
+
+  // ---- Multiple cancellations by same renter (>=3 in 7d) ----
+  const { data: cancellations } = await supabase
+    .from("reservations")
+    .select("id, renter_id, cancelled_at")
+    .eq("status", "cancelled")
+    .gte("cancelled_at", sevenDaysAgo);
+
+  const cancelByUser = new Map<string, number>();
+  for (const r of cancellations || []) {
+    if (!r.renter_id) continue;
+    cancelByUser.set(r.renter_id, (cancelByUser.get(r.renter_id) || 0) + 1);
+  }
+  for (const [userId, count] of cancelByUser.entries()) {
+    if (count >= 3) {
+      push(
+        build(
+          state,
+          "multiple_cancellations",
+          userId,
+          `Usuario canceló ${count} reservas en los últimos 7 días (posible fraude).`,
+          new Date().toISOString(),
+          { label: "Ver usuario", href: `/admin/usuarios/${userId}` }
+        )
+      );
+    }
+  }
+
+  return out;
+}
+
 
 function loadPrefs(): Prefs {
   try {
