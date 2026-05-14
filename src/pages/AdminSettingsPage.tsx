@@ -113,28 +113,41 @@ const DEFAULTS: Settings = {
   },
 };
 
+const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
+  const source = (input && typeof input === "object" ? input : {}) as Partial<Settings>;
+  const policies = (source.policies ?? {}) as Partial<Settings["policies"]>;
+  const securityDeposits = (policies.security_deposits ?? {}) as Partial<Settings["policies"]["security_deposits"]>;
+
+  return {
+    business: { ...DEFAULTS.business, ...(source.business ?? {}) },
+    policies: {
+      ...DEFAULTS.policies,
+      ...policies,
+      security_deposits: {
+        ...DEFAULTS.policies.security_deposits,
+        ...securityDeposits,
+      },
+    },
+    payments: { ...DEFAULTS.payments, ...(source.payments ?? {}) },
+    integrations: { ...DEFAULTS.integrations, ...(source.integrations ?? {}) },
+    email_templates: { ...DEFAULTS.email_templates, ...(source.email_templates ?? {}) },
+    sms_templates: { ...DEFAULTS.sms_templates, ...(source.sms_templates ?? {}) },
+  };
+};
+
 const loadSettings = (): Settings => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS;
-    const parsed = JSON.parse(raw);
-    return {
-      business: { ...DEFAULTS.business, ...(parsed.business || {}) },
-      policies: {
-        ...DEFAULTS.policies,
-        ...(parsed.policies || {}),
-        security_deposits: { ...DEFAULTS.policies.security_deposits, ...((parsed.policies || {}).security_deposits || {}) },
-      },
-      payments: { ...DEFAULTS.payments, ...(parsed.payments || {}) },
-      integrations: { ...DEFAULTS.integrations, ...(parsed.integrations || {}) },
-      email_templates: { ...DEFAULTS.email_templates, ...(parsed.email_templates || {}) },
-      sms_templates: { ...DEFAULTS.sms_templates, ...(parsed.sms_templates || {}) },
-    };
-  } catch { return DEFAULTS; }
+    return normalizeSettings(JSON.parse(raw));
+  } catch {
+    return DEFAULTS;
+  }
 };
 
 export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState<Settings>(loadSettings);
+  const [rawSettings, setRawSettings] = useState<Settings>(loadSettings);
+  const settings = useMemo(() => normalizeSettings(rawSettings), [rawSettings]);
   const [admins, setAdmins] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [logFilter, setLogFilter] = useState({ admin: "all", action: "all", q: "" });
@@ -142,8 +155,9 @@ export default function AdminSettingsPage() {
   const [newAdminEmail, setNewAdminEmail] = useState("");
 
   const save = (next: Settings) => {
-    setSettings(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    const normalized = normalizeSettings(next);
+    setRawSettings(normalized);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
   };
   const saveAll = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
