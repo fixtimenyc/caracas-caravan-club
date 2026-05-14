@@ -59,11 +59,11 @@ const Navbar = () => {
             </button>
             {roles.includes('admin') && (
               <button
-                onClick={() => navigate('/admin/solicitudes')}
+                onClick={() => navigate('/admin')}
                 className="flex items-center gap-1.5 text-primary hover:text-primary/80 transition-smooth text-sm font-medium"
               >
                 <ShieldCheck className="w-4 h-4" />
-                Solicitudes
+                Panel Admin
               </button>
             )}
           </div>
@@ -132,6 +132,14 @@ const Navbar = () => {
                   {roles.includes('admin') && (
                     <>
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate('/admin')}>
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Dashboard admin
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/admin/flota')}>
+                        <Car className="w-4 h-4 mr-2" />
+                        Gestión de flota
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/admin/solicitudes')}>
                         <ShieldCheck className="w-4 h-4 mr-2" />
                         Solicitudes de aliados
@@ -239,6 +247,14 @@ const Navbar = () => {
                     )}
                     {roles.includes('admin') && (
                       <>
+                        <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin'); setIsMenuOpen(false); }}>
+                          <ShieldCheck className="w-4 h-4 mr-2" />
+                          Dashboard admin
+                        </Button>
+                        <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/flota'); setIsMenuOpen(false); }}>
+                          <Car className="w-4 h-4 mr-2" />
+                          Gestión de flota
+                        </Button>
                         <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/solicitudes'); setIsMenuOpen(false); }}>
                           <ShieldCheck className="w-4 h-4 mr-2" />
                           Solicitudes de aliados
