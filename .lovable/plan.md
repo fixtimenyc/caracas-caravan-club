@@ -1,61 +1,69 @@
-# Fase 4 — Detalle de Auto y Wizard de Alta/Edición (Admin)
+# Fase 5 — Reservas & Calendario (Admin)
 
-Esta fase amplía `/admin/flota` con dos piezas mayores. Por volumen, propongo dividirla en **dos sub-fases** entregables por separado.
-
----
-
-## Sub-fase 4A — Página de Detalle de Auto (`/admin/flota/:vehicleId`)
-
-### Layout
-- Header: carrusel de fotos (con miniaturas), info básica (marca/modelo/año/placa/VIN), badge de estado actual y rating resumido.
-- 7 tabs según especificación.
-
-### Tabs y origen de datos
-1. **Información General** — datos del dueño (`profiles` + `owner_applications`), specs (color/combustible/transmisión desde `owner_applications`), ubicación (`vehicles.location`), notas internas.
-2. **Tarifas & Financiero** — tarifa diaria (`vehicles.price_per_day`), revenue mensual (agregado de `reservations`), comisión 10%, payout estimado, gráfico de revenue (Recharts ya en uso).
-3. **Calendario de Reservas** — vista mensual con bloques por estado, click en día → detalle con acciones (aprobar/rechazar/activar/completar/cancelar) reutilizando el patrón de `AdminReservationsPage`.
-4. **Inspecciones & Mantenimiento** — tabla de `vehicle_maintenance` + botones “Programar mantenimiento” y “Solicitar inspección urgente” (crea registro tipo `inspection`).
-5. **Calificaciones & Reviews** — promedio, conteo y distribución 1–5★ desde `reviews`, últimos 5 comentarios, destacados con rating ≤ 2.
-6. **Documentación & Permisos** — SOAT/permiso/seguro desde `owner_applications` (signed URLs en `owner-documents`), alertas de vencimiento (campo nuevo `documents_meta` opcional, ver más abajo).
-7. **Acciones** — editar (link a wizard), cambiar estado, contactar dueño (WhatsApp/email/tel), desactivar permanentemente, exportar reporte PDF/print.
-
-### Cambios de datos
-Para soportar vencimientos de documentos sin romper lo existente, agrego columnas opcionales a `vehicles`:
-- `vin TEXT`
-- `plate TEXT`
-- `color TEXT`, `fuel_type TEXT`, `transmission TEXT`, `seats INT`
-- `soat_doc_url TEXT`, `soat_expiry DATE`
-- `circulation_doc_url TEXT`, `circulation_expiry DATE`
-- `insurance_doc_url TEXT`, `insurance_expiry DATE`
-- `weekend_price NUMERIC`, `weekly_price NUMERIC`, `monthly_price NUMERIC`
-- `zone TEXT`, `gps_lat NUMERIC`, `gps_lng NUMERIC`
-- `internal_notes TEXT` (solo admin)
-
-Todos `NULL` por defecto; se rellenan desde `owner_applications` para los autos existentes mediante un backfill.
-
-### Routing
-- Añadir `/admin/flota/:vehicleId` en `App.tsx`.
-- En `AdminFleetPage`, click en fila → navegar al detalle.
+Mejora `/admin/reservas` y agrega `/admin/reservas/:id` para gestión profesional.
 
 ---
 
-## Sub-fase 4B — Wizard “Agregar/Editar Auto” (`/admin/flota/nuevo` y `/admin/flota/:id/editar`)
+## Sub-fase 5A — Calendario y Listado mejorados (`/admin/reservas`)
 
-Wizard de 6 pasos con estado local y validación zod por paso:
+### Header
+- Selector mes/año + flechas.
+- Toggle de vista: **Mes / Semana / Día**.
+- Filtros: por auto (autocomplete), por zona (Caracas), por estado.
+- Búsqueda rápida por ID corto de reserva o nombre del rentador.
+- KPIs (mantener los actuales por estado).
 
-1. **Información Básica** — marca, modelo, año, VIN, placa, color, combustible, transmisión, asientos.
-2. **Documentación** — upload SOAT, permiso, póliza (bucket `owner-documents`, prefijo `vehicles/{id}/`), fechas de vencimiento, notas.
-3. **Ubicación & Disponibilidad** — zona (dropdown Caracas), dirección, GPS (pin en mapa simple — usaremos input lat/lng + Leaflet ligero o por ahora link a Google Maps; dejaré pin con Leaflet si caben créditos), disponibilidad inmediata/1-2 semanas/1 mes, horario.
-4. **Tarificación** — diaria, fin de semana, semanal, mensual, comisión (10% calculada), payout estimado.
-5. **Fotos** — hasta 20 fotos al bucket `vehicle-photos`, drag&drop reorden, marcar principal.
-6. **Revisión & Activación** — resumen + checklist + botón “Activar Auto”.
+### Vista Calendario
+- **Mes**: grid 7 columnas con bloques de color por estado (verde=aprobada/activa, amarillo=pendiente, rojo=cancelada/rechazada, azul=mantenimiento del auto), hover muestra tooltip con rentador/auto/precio, click abre detalle.
+- **Semana**: filas = días, columna por reserva con barra horizontal según duración.
+- **Día**: lista cronológica de reservas activas ese día.
+- Leyenda de colores siempre visible.
 
-Reutilizable para edición (precarga datos existentes).
+### Listado (tab "Lista")
+Columnas: ID corto, Rentador (nombre+tel), Auto (modelo + thumbnail), Fechas (rango+días), Tarifa diaria, Total, Estado (badge), Última actualización, Acciones (Ver, Confirmar, Cancelar, Contactar).
+
+Filtros: estado, fecha (esta semana/este mes/próximos 30/personalizado), auto, rentador, rango de precio.
+
+Acciones masivas: seleccionar múltiples → Confirmar lote, Enviar recordatorio (notificación), Exportar CSV.
 
 ---
 
-## Entregable propuesto ahora
+## Sub-fase 5B — Detalle de Reserva (`/admin/reservas/:id`)
 
-Para que cada cambio sea revisable, **empiezo por Sub-fase 4A** (detalle + migración de columnas + backfill desde `owner_applications`). Cuando lo apruebes, sigo con 4B (wizard).
+Página con:
+- **Header**: ID, badge de estado, timeline visual (Creada → Aprobada → Activa → Completada), fecha de creación.
+- **Rentador**: nombre, tel, rating promedio, # reservas previas, link al perfil admin.
+- **Auto**: foto, marca/modelo/año/placa, link al detalle de flota.
+- **Fechas & duración**: inicio/fin, total días, botones extender/acortar (modal con fechas).
+- **Financiero**: tarifa diaria, días, subtotal, seguro ($8/día), depósito (info), total, comisión 10%, payout estimado, estado de pago (`payments`).
+- **Documentos**: lista de archivos asociados (placeholder si no existen).
+- **Historial de cambios**: timeline desde un nuevo log table.
+- **Acciones**: Confirmar, Cancelar (modal con política de reembolso), Extender, Recordatorio, Contactar rentador (WA/email), Contactar dueño, Marcar completada.
 
-¿Procedo con 4A?
+### Modal de Cancelación
+- Motivo (dropdown), notas, cálculo automático de reembolso según horas hasta inicio (<24h: 0%, 24–48h: 50%, >48h: 100%), monto sugerido editable, confirmar.
+- Registra en `reservation_events` y actualiza `reservations.status='cancelled'` con metadatos.
+
+---
+
+## Cambios en BD
+
+Tablas nuevas:
+- `reservation_events`: id, reservation_id, type ('created'|'approved'|'rejected'|'activated'|'completed'|'cancelled'|'note'|'reminder_sent'|'extended'), actor_id, message, metadata jsonb, created_at. RLS: admins manage; participantes (renter/owner) view.
+
+Columnas opcionales en `reservations`:
+- `cancellation_reason TEXT`
+- `refund_percent INT`
+- `refund_amount NUMERIC`
+- `cancelled_at TIMESTAMPTZ`
+- `cancelled_by UUID`
+
+Trigger: al insertar/actualizar status, auto-loggear en `reservation_events`.
+
+---
+
+## Entregable propuesto
+
+Empiezo por **5A** (calendario mes/semana/día + listado mejorado + filtros + bulk). Cuando lo apruebes, sigo con 5B (detalle + cancelación + eventos + migración).
+
+¿Procedo con 5A?
