@@ -616,6 +616,7 @@ const AdminUserDetailPage = () => {
             <TabsTrigger value="activity">Actividad</TabsTrigger>
             <TabsTrigger value="bookings">Reservas</TabsTrigger>
             {isOwner && <TabsTrigger value="vehicles">Vehículos</TabsTrigger>}
+            {isOwner && <TabsTrigger value="financial">Financiero</TabsTrigger>}
             <TabsTrigger value="reviews">Reseñas</TabsTrigger>
             <TabsTrigger value="notes">Notas internas</TabsTrigger>
             <TabsTrigger value="log">Sanciones</TabsTrigger>
