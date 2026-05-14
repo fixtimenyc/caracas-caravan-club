@@ -15,6 +15,7 @@ import AdminFleetPage from "./pages/AdminFleetPage";
 import AdminVehicleDetailPage from "./pages/AdminVehicleDetailPage";
 import AdminReservationsPage from "./pages/AdminReservationsPage";
 import AdminReservationDetailPage from "./pages/AdminReservationDetailPage";
+import AdminReservationContractPage from "./pages/AdminReservationContractPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminUserDetailPage from "./pages/AdminUserDetailPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
