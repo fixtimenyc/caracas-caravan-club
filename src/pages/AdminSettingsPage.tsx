@@ -55,6 +55,28 @@ type Settings = {
     cash_enabled: boolean;
     bcv_rate: number;
     bcv_auto_update: boolean;
+    fx: {
+      default_currency: "USD" | "VES" | "EUR" | "USDT";
+      accepted_currencies: { USD: boolean; VES: boolean; EUR: boolean; USDT: boolean };
+      rates: { USD: number; EUR: number; USDT: number }; // unidades de Bs por 1 unidad
+      surcharge_pct: number; // sobrecargo % por pagar en divisa distinta a la default
+      show_dual_pricing: boolean; // mostrar precio en Bs y divisa
+      rate_source: "manual" | "bcv" | "binance" | "paralelo";
+      zelle_enabled: boolean;
+      zelle_email: string;
+      zelle_holder: string;
+      binance_enabled: boolean;
+      binance_pay_id: string;
+      binance_email: string;
+      wire_enabled: boolean;
+      wire_bank: string;
+      wire_account: string;
+      wire_routing: string;
+      wire_swift: string;
+      wire_beneficiary: string;
+      wire_address: string;
+      instructions: string;
+    };
   };
   integrations: {
     google_maps_key: string;
