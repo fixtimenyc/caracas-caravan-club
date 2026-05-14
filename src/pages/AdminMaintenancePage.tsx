@@ -250,6 +250,7 @@ export default function AdminMaintenancePage() {
                       <TableHead>Fecha</TableHead>
                       <TableHead>Taller</TableHead>
                       <TableHead>Costo</TableHead>
+                      <TableHead>Km</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Próximo</TableHead>
                     </TableRow>
@@ -268,6 +269,7 @@ export default function AdminMaintenancePage() {
                         <TableCell>{r.scheduled_date}</TableCell>
                         <TableCell>{r.workshop || "—"}</TableCell>
                         <TableCell>{r.cost ? `$${r.cost}` : "—"}</TableCell>
+                        <TableCell>{r.mileage != null ? `${r.mileage.toLocaleString()} km` : "—"}</TableCell>
                         <TableCell>
                           <StatusBadge status={r.status} />
                         </TableCell>
@@ -276,7 +278,7 @@ export default function AdminMaintenancePage() {
                     ))}
                     {rows.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                           Sin registros
                         </TableCell>
                       </TableRow>
