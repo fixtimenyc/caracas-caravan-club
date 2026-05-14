@@ -680,6 +680,9 @@ export default function AdminAlertsPage() {
                         <SelectItem value="resolved">Resueltas</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Button variant="outline" size="sm" onClick={() => refresh()} disabled={loading}>
+                      <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Actualizar
+                    </Button>
                     <Button variant="outline" size="sm" onClick={markAllRead}>
                       <Check className="h-4 w-4 mr-1" /> Marcar leídas
                     </Button>
