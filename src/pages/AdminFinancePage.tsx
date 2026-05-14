@@ -163,15 +163,15 @@ function DashboardTab({ loading, payments, reservations, vehicles, vMap, pMap }:
     // Alerts
     const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const pendingRenters = payments.filter((p: Payment) => p.status === "pending" && new Date(p.created_at) < sevenDaysAgo);
-    const rejectedTx = payments.filter((p: Payment) => p.status === "failed" || p.status === "rejected");
+    const rejectedTx = payments.filter((p: Payment) => p.status === "failed");
     // discrepancies: reservations completed/active without any payment row
     const paymentsByRes = new Set(payments.map((p: Payment) => p.reservation_id));
     const discrepancies = reservations.filter((r: Reservation) => ["completed", "active"].includes(r.status) && !paymentsByRes.has(r.id));
-    // owners with pending payouts: completed reservations with no "paid" payment
+    // owners with pending payouts: completed reservations with no "completed" payment
     const completedRes = reservations.filter((r: Reservation) => r.status === "completed");
     const ownerPending: Record<string, number> = {};
     completedRes.forEach((r: Reservation) => {
-      const hasPaid = payments.some((p: Payment) => p.reservation_id === r.id && p.status === "paid");
+      const hasPaid = payments.some((p: Payment) => p.reservation_id === r.id && p.status === "completed");
       if (!hasPaid) {
         const owner = vMap[r.vehicle_id]?.owner_id;
         if (owner) ownerPending[owner] = (ownerPending[owner] || 0) + Number(r.total_price || 0) * (1 - COMMISSION_RATE);
@@ -341,7 +341,7 @@ function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
 
   const markPaid = async () => {
     if (!markPaidOpen) return;
-    const { error } = await supabase.from("payments").update({ status: "paid" }).eq("id", markPaidOpen.id);
+    const { error } = await supabase.from("payments").update({ status: "completed" }).eq("id", markPaidOpen.id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Marcado como pagado" }); reload(); }
     setMarkPaidOpen(null);
@@ -393,7 +393,7 @@ function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
               <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="paid">Pagado</SelectItem>
+                <SelectItem value="completed">Pagado</SelectItem>
                 <SelectItem value="pending">Pendiente</SelectItem>
                 <SelectItem value="failed">Rechazado</SelectItem>
                 <SelectItem value="refunded">Reembolsado</SelectItem>
@@ -462,7 +462,7 @@ function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
                               </Button>
                             </>
                           )}
-                          {p.status === "paid" && (
+                          {p.status === "completed" && (
                             <Button size="sm" variant="ghost" title="Reembolsar" onClick={() => setRefundOpen(p)}>
                               <RefreshCw className="h-4 w-4" />
                             </Button>
@@ -619,7 +619,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
               <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="paid">Pagado</SelectItem>
+                <SelectItem value="completed">Pagado</SelectItem>
                 <SelectItem value="processing">En proceso</SelectItem>
                 <SelectItem value="pending">Pendiente</SelectItem>
               </SelectContent>
