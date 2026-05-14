@@ -267,6 +267,7 @@ const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
     integrations: { ...DEFAULTS.integrations, ...(source.integrations ?? {}) },
     email_templates: { ...DEFAULTS.email_templates, ...(source.email_templates ?? {}) },
     sms_templates: { ...DEFAULTS.sms_templates, ...(source.sms_templates ?? {}) },
+    contract: { ...DEFAULTS.contract, ...(source.contract ?? {}) },
   };
 };
 
