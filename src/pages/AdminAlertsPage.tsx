@@ -60,7 +60,7 @@ type AlertItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
-const STORAGE_KEY = "ruedave.admin.alerts.v1";
+const STATE_KEY = "ruedave.admin.alerts.state.v2";
 const PREFS_KEY = "ruedave.admin.alerts.prefs.v1";
 
 type ChannelPrefs = {
