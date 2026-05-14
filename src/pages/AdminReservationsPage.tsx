@@ -862,14 +862,22 @@ export default function AdminReservationsPage() {
                               <span className="text-xs text-muted-foreground self-center">Sin reservas</span>
                             ) : (
                               items.map((it) => (
-                                <button
-                                  key={it.id}
-                                  onClick={() => navigate(`/admin/reservas/${it.id}`)}
-                                  className={`px-2 py-1 rounded text-[11px] flex items-center gap-1 border ${STATUS_META[it.status].cls} hover:opacity-80`}
-                                >
-                                  <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[it.status]}`} />
-                                  {it.vehicle_name} · {it.renter_name}
-                                </button>
+                                <div key={it.id} className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => navigate(`/admin/reservas/${it.id}`)}
+                                    className={`px-2 py-1 rounded-l text-[11px] flex items-center gap-1 border ${STATUS_META[it.status].cls} hover:opacity-80`}
+                                  >
+                                    <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[it.status]}`} />
+                                    {it.vehicle_name} · {it.renter_name}
+                                  </button>
+                                  <button
+                                    onClick={() => navigate(`/admin/reservas/${it.id}/contrato`)}
+                                    title="Ver contrato"
+                                    className={`px-1.5 py-1 rounded-r text-[11px] border border-l-0 ${STATUS_META[it.status].cls} hover:opacity-80`}
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                  </button>
+                                </div>
                               ))
                             )}
                           </div>
