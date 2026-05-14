@@ -135,26 +135,14 @@ export default function AdminReservationsPage() {
     const vehicleIds = Array.from(new Set(list.map((r: any) => r.vehicle_id)));
     const userIds = Array.from(new Set(list.map((r: any) => r.renter_id)));
 
-    const [vehiclesRes, profilesRes] = await Promise.all([
-      supabase
-        .from("vehicles")
-        .select("id,brand,model,owner_id")
-        .in("id", vehicleIds.length ? vehicleIds : ["00000000-0000-0000-0000-000000000000"]),
-      supabase
-        .from("profiles")
-        .select("user_id,full_name")
-        .in(
-          "user_id",
-          [...userIds, ...(vehiclesRes => [])([])].length
-            ? userIds
-            : ["00000000-0000-0000-0000-000000000000"],
-        ),
-    ]);
+    const vehiclesRes = await supabase
+      .from("vehicles")
+      .select("id,brand,model,owner_id")
+      .in("id", vehicleIds.length ? vehicleIds : ["00000000-0000-0000-0000-000000000000"]);
 
     const vehicleMap = new Map<string, any>();
     (vehiclesRes.data || []).forEach((v: any) => vehicleMap.set(v.id, v));
 
-    // also need owner names
     const ownerIds = Array.from(
       new Set((vehiclesRes.data || []).map((v: any) => v.owner_id)),
     );
