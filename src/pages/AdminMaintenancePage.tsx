@@ -67,6 +67,7 @@ type MaintenanceRow = {
   signature: string | null;
   completed_at: string | null;
   created_at: string;
+  mileage: number | null;
 };
 
 const CHECKLIST_ITEMS = [
