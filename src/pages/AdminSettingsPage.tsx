@@ -866,7 +866,7 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
   );
 }
 
-function renderContractPreview(settings: Settings): string {
+function renderContractPreview(settings: SettingsType): string {
   const sample: Record<string, string> = {
     reserva_id: "RV-2026-00123",
     arrendatario_nombre: "Carlos Pérez",
