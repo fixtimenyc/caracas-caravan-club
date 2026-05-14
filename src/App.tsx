@@ -12,6 +12,7 @@ import OwnerApplicationPage from "./pages/OwnerApplicationPage";
 import AdminApplicationsPage from "./pages/AdminApplicationsPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminFleetPage from "./pages/AdminFleetPage";
+import AdminReservationsPage from "./pages/AdminReservationsPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminUserDetailPage from "./pages/AdminUserDetailPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/aliado/solicitud" element={<OwnerApplicationPage />} />
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/flota" element={<AdminFleetPage />} />
+            <Route path="/admin/reservas" element={<AdminReservationsPage />} />
             <Route path="/admin/solicitudes" element={<AdminApplicationsPage />} />
             <Route path="/admin/usuarios" element={<AdminUsersPage />} />
             <Route path="/admin/usuarios/:userId" element={<AdminUserDetailPage />} />
