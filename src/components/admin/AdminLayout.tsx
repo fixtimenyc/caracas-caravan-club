@@ -10,6 +10,7 @@ import {
   LifeBuoy,
   Settings,
   BarChart3,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
