@@ -91,6 +91,19 @@ type Settings = {
   };
   email_templates: Record<string, { subject: string; body: string }>;
   sms_templates: Record<string, string>;
+  contract: {
+    enabled: boolean;
+    version: string;
+    subject: string;
+    require_digital_acceptance: boolean;
+    send_on_payment_confirmed: boolean;
+    cc_owner: boolean;
+    company_legal_name: string;
+    company_rif: string;
+    company_address: string;
+    jurisdiction: string;
+    body: string;
+  };
 };
 
 const DEFAULTS: Settings = {
@@ -145,6 +158,81 @@ const DEFAULTS: Settings = {
     access_code: "RUEDAVE: Tu código de acceso al vehículo es {{codigo}}.",
     payment_notification: "RUEDAVE: Pago recibido por {{monto}}. ¡Gracias!",
   },
+  contract: {
+    enabled: true,
+    version: "1.0",
+    subject: "Contrato de alquiler — Reserva {{reserva_id}} — RUEDAVE",
+    require_digital_acceptance: true,
+    send_on_payment_confirmed: true,
+    cc_owner: true,
+    company_legal_name: "RUEDAVE C.A.",
+    company_rif: "J-XXXXXXXX-X",
+    company_address: "Caracas, Venezuela",
+    jurisdiction: "Tribunales de la República Bolivariana de Venezuela, con sede en Caracas",
+    body: `CONTRATO DE ARRENDAMIENTO DE VEHÍCULO AUTOMOTOR
+
+Entre {{empresa_razon_social}}, RIF {{empresa_rif}}, domiciliada en {{empresa_direccion}}, en lo sucesivo "LA PLATAFORMA", actuando como intermediaria entre el PROPIETARIO {{propietario_nombre}} (cédula {{propietario_cedula}}) y el ARRENDATARIO {{arrendatario_nombre}}, titular de la cédula de identidad N° {{arrendatario_cedula}}, con licencia de conducir N° {{arrendatario_licencia}}, domiciliado en {{arrendatario_direccion}}, en lo sucesivo "EL ARRENDATARIO", se ha convenido en celebrar el presente contrato bajo las siguientes cláusulas:
+
+PRIMERA — OBJETO
+EL ARRENDATARIO recibe en calidad de alquiler el vehículo: {{vehiculo_marca}} {{vehiculo_modelo}} {{vehiculo_anio}}, color {{vehiculo_color}}, placa {{vehiculo_placa}}, serial {{vehiculo_vin}}, con kilometraje inicial de {{km_inicio}} km.
+
+SEGUNDA — DURACIÓN Y ENTREGA
+El alquiler inicia el {{inicio}} y finaliza el {{fin}}, con un total de {{dias}} días. La entrega se realizará en {{lugar_entrega}} y la devolución en {{lugar_devolucion}}.
+
+TERCERA — PRECIO Y FORMA DE PAGO
+Tarifa diaria: {{tarifa_dia}}. Subtotal: {{subtotal}}. Comisión de servicio (10%): {{comision}}. Seguro: {{seguro}}. Depósito en garantía: {{deposito}}. TOTAL: {{total}} ({{moneda}}). Método de pago utilizado: {{metodo_pago}}. Referencia: {{referencia_pago}}. Pago confirmado el {{fecha_pago}}.
+
+CUARTA — DEPÓSITO EN GARANTÍA
+EL ARRENDATARIO entrega como garantía la suma de {{deposito}}, la cual será devuelta dentro de los 7 días posteriores a la entrega del vehículo, previa verificación del estado y kilometraje pactado.
+
+QUINTA — DEBERES DEL ARRENDATARIO
+1. Conducir el vehículo con la diligencia de un buen padre de familia y respetar las leyes de tránsito.
+2. No permitir que terceros no autorizados conduzcan el vehículo.
+3. Devolver el vehículo en las mismas condiciones de aseo, combustible y kilometraje pactado ({{km_max_dia}} km/día).
+4. No fumar dentro del vehículo (multa: {{multa_fumar}}). No transportar mascotas sin autorización.
+5. Reportar de inmediato cualquier siniestro, falla o robo a LA PLATAFORMA y a las autoridades.
+6. No utilizar el vehículo fuera del territorio nacional ni en zonas no permitidas (off-road, deportivos).
+7. Cubrir multas, peajes y sanciones generadas durante el período de alquiler.
+
+SEXTA — DERECHOS DEL ARRENDATARIO
+1. Recibir el vehículo en óptimas condiciones mecánicas, de aseo y con la documentación legal vigente (SOAT, circulación, seguro).
+2. Asistencia 24/7 a través de los canales de soporte de LA PLATAFORMA.
+3. Acceso a un proceso de reclamación claro y a la devolución del depósito conforme a la cláusula CUARTA.
+4. Confidencialidad y tratamiento adecuado de sus datos personales.
+
+SÉPTIMA — POLÍTICA DE CANCELACIÓN
+- Cancelación con más de 48 horas de anticipación: reembolso del 100%.
+- Cancelación entre 24 y 48 horas: reembolso del 50%.
+- Cancelación con menos de 24 horas: sin reembolso.
+
+OCTAVA — SEGURO Y RESPONSABILIDAD
+El vehículo cuenta con seguro de cobertura amplia. EL ARRENDATARIO responde por daños no cubiertos por la póliza, deducibles, y por los daños ocasionados por negligencia, dolo, conducción bajo efectos del alcohol o sustancias, o por incumplimiento de las leyes de tránsito.
+
+NOVENA — RESOLUCIÓN ANTICIPADA
+LA PLATAFORMA podrá resolver el contrato sin previo aviso si EL ARRENDATARIO incumple cualquiera de las cláusulas, recuperando el vehículo de inmediato sin perjuicio de las acciones legales aplicables.
+
+DÉCIMA — PROTECCIÓN DE DATOS
+EL ARRENDATARIO autoriza el tratamiento de sus datos personales conforme a la política de privacidad publicada en {{empresa_sitio}}.
+
+UNDÉCIMA — JURISDICCIÓN
+Las partes eligen como domicilio especial a la ciudad de Caracas y se someten a {{jurisdiccion}} para la resolución de cualquier controversia.
+
+DUODÉCIMA — ACEPTACIÓN DIGITAL
+EL ARRENDATARIO declara haber leído, comprendido y aceptado íntegramente las cláusulas del presente contrato, así como los Términos y Condiciones y la Política de Privacidad de LA PLATAFORMA. La aceptación se realiza de forma electrónica al confirmar la reserva y el pago, dejando constancia con los siguientes datos:
+
+- Reserva ID: {{reserva_id}}
+- Aceptado el: {{fecha_aceptacion}}
+- IP de aceptación: {{ip_aceptacion}}
+- Dispositivo: {{dispositivo}}
+- Versión del contrato: {{contrato_version}}
+
+Esta aceptación electrónica tiene plena validez legal conforme al Decreto-Ley sobre Mensajes de Datos y Firmas Electrónicas de la República Bolivariana de Venezuela.
+
+En Caracas, a la fecha de aceptación digital indicada.
+
+LA PLATAFORMA — {{empresa_razon_social}}
+EL ARRENDATARIO — {{arrendatario_nombre}} — C.I. {{arrendatario_cedula}}`,
+  },
 };
 
 const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
@@ -179,6 +267,7 @@ const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
     integrations: { ...DEFAULTS.integrations, ...(source.integrations ?? {}) },
     email_templates: { ...DEFAULTS.email_templates, ...(source.email_templates ?? {}) },
     sms_templates: { ...DEFAULTS.sms_templates, ...(source.sms_templates ?? {}) },
+    contract: { ...DEFAULTS.contract, ...(source.contract ?? {}) },
   };
 };
 
@@ -272,6 +361,7 @@ export default function AdminSettingsPage() {
           <TabsTrigger value="emails"><Mail className="h-4 w-4 mr-2" />Emails</TabsTrigger>
           <TabsTrigger value="sms"><MessageSquare className="h-4 w-4 mr-2" />SMS/WhatsApp</TabsTrigger>
           <TabsTrigger value="admins"><UsersIcon className="h-4 w-4 mr-2" />Admins</TabsTrigger>
+          <TabsTrigger value="contract"><ScrollText className="h-4 w-4 mr-2" />Contrato</TabsTrigger>
           <TabsTrigger value="logs"><ScrollText className="h-4 w-4 mr-2" />Logs</TabsTrigger>
         </TabsList>
 
@@ -687,6 +777,65 @@ export default function AdminSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* CONTRATO */}
+        <TabsContent value="contract" className="mt-6">
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contrato modelo de alquiler</CardTitle>
+                <CardDescription>
+                  Plantilla legal que se envía por correo al arrendatario al confirmar la reserva con pago. Incluye políticas, deberes, derechos y aceptación digital con plena validez legal (Decreto-Ley sobre Mensajes de Datos y Firmas Electrónicas).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <ToggleRow label="Contrato habilitado" checked={settings.contract.enabled} onChange={(v) => save({ ...settings, contract: { ...settings.contract, enabled: v } })} />
+                  <ToggleRow label="Enviar al confirmar pago" checked={settings.contract.send_on_payment_confirmed} onChange={(v) => save({ ...settings, contract: { ...settings.contract, send_on_payment_confirmed: v } })} />
+                  <ToggleRow label="Copia al propietario" checked={settings.contract.cc_owner} onChange={(v) => save({ ...settings, contract: { ...settings.contract, cc_owner: v } })} />
+                  <ToggleRow label="Requerir aceptación digital" checked={settings.contract.require_digital_acceptance} onChange={(v) => save({ ...settings, contract: { ...settings.contract, require_digital_acceptance: v } })} />
+                  <Field label="Versión del contrato" value={settings.contract.version} onChange={(v) => save({ ...settings, contract: { ...settings.contract, version: v } })} />
+                  <Field label="Asunto del correo" value={settings.contract.subject} onChange={(v) => save({ ...settings, contract: { ...settings.contract, subject: v } })} />
+                </div>
+
+                <Separator />
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Field label="Razón social" value={settings.contract.company_legal_name} onChange={(v) => save({ ...settings, contract: { ...settings.contract, company_legal_name: v } })} />
+                  <Field label="RIF" value={settings.contract.company_rif} onChange={(v) => save({ ...settings, contract: { ...settings.contract, company_rif: v } })} />
+                  <Field label="Domicilio fiscal" value={settings.contract.company_address} onChange={(v) => save({ ...settings, contract: { ...settings.contract, company_address: v } })} />
+                  <Field label="Jurisdicción" value={settings.contract.jurisdiction} onChange={(v) => save({ ...settings, contract: { ...settings.contract, jurisdiction: v } })} />
+                </div>
+
+                <div className="grid gap-1.5">
+                  <Label>Cuerpo del contrato</Label>
+                  <Textarea
+                    className="min-h-[480px] font-mono text-xs"
+                    value={settings.contract.body}
+                    onChange={(e) => save({ ...settings, contract: { ...settings.contract, body: e.target.value } })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Variables disponibles: <code>{`{{reserva_id}}`}</code>, <code>{`{{arrendatario_nombre}}`}</code>, <code>{`{{arrendatario_cedula}}`}</code>, <code>{`{{arrendatario_licencia}}`}</code>, <code>{`{{arrendatario_direccion}}`}</code>, <code>{`{{propietario_nombre}}`}</code>, <code>{`{{propietario_cedula}}`}</code>, <code>{`{{vehiculo_marca}}`}</code>, <code>{`{{vehiculo_modelo}}`}</code>, <code>{`{{vehiculo_anio}}`}</code>, <code>{`{{vehiculo_color}}`}</code>, <code>{`{{vehiculo_placa}}`}</code>, <code>{`{{vehiculo_vin}}`}</code>, <code>{`{{km_inicio}}`}</code>, <code>{`{{km_max_dia}}`}</code>, <code>{`{{inicio}}`}</code>, <code>{`{{fin}}`}</code>, <code>{`{{dias}}`}</code>, <code>{`{{lugar_entrega}}`}</code>, <code>{`{{lugar_devolucion}}`}</code>, <code>{`{{tarifa_dia}}`}</code>, <code>{`{{subtotal}}`}</code>, <code>{`{{comision}}`}</code>, <code>{`{{seguro}}`}</code>, <code>{`{{deposito}}`}</code>, <code>{`{{total}}`}</code>, <code>{`{{moneda}}`}</code>, <code>{`{{metodo_pago}}`}</code>, <code>{`{{referencia_pago}}`}</code>, <code>{`{{fecha_pago}}`}</code>, <code>{`{{multa_fumar}}`}</code>, <code>{`{{empresa_razon_social}}`}</code>, <code>{`{{empresa_rif}}`}</code>, <code>{`{{empresa_direccion}}`}</code>, <code>{`{{empresa_sitio}}`}</code>, <code>{`{{jurisdiccion}}`}</code>, <code>{`{{contrato_version}}`}</code>, <code>{`{{fecha_aceptacion}}`}</code>, <code>{`{{ip_aceptacion}}`}</code>, <code>{`{{dispositivo}}`}</code>.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Vista previa</CardTitle>
+                <CardDescription>Render con datos de ejemplo. Así verá el arrendatario el contrato adjunto al correo de confirmación.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border bg-muted/30 p-4 max-h-[420px] overflow-auto">
+                  <pre className="text-xs whitespace-pre-wrap font-sans leading-relaxed">
+                    {renderContractPreview(settings)}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
     </AdminLayout>
   );
@@ -715,4 +864,50 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
       <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );
+}
+
+function renderContractPreview(settings: Settings): string {
+  const sample: Record<string, string> = {
+    reserva_id: "RV-2026-00123",
+    arrendatario_nombre: "Carlos Pérez",
+    arrendatario_cedula: "V-12.345.678",
+    arrendatario_licencia: "12345678",
+    arrendatario_direccion: "Av. Francisco de Miranda, Los Palos Grandes, Caracas",
+    propietario_nombre: "María González",
+    propietario_cedula: "V-9.876.543",
+    vehiculo_marca: "Toyota",
+    vehiculo_modelo: "Corolla",
+    vehiculo_anio: "2022",
+    vehiculo_color: "Plata",
+    vehiculo_placa: "AB123CD",
+    vehiculo_vin: "JTDBL40E099012345",
+    km_inicio: "45.230",
+    km_max_dia: "200",
+    inicio: "2026-05-20",
+    fin: "2026-05-25",
+    dias: "5",
+    lugar_entrega: "Chacao, Caracas",
+    lugar_devolucion: "Chacao, Caracas",
+    tarifa_dia: "$45",
+    subtotal: "$225",
+    comision: "$22.50",
+    seguro: "$40",
+    deposito: "$150",
+    total: "$287.50",
+    moneda: "USD",
+    metodo_pago: "Zelle",
+    referencia_pago: "ZL-998877",
+    fecha_pago: "2026-05-14 10:32",
+    multa_fumar: "$50",
+    empresa_razon_social: settings.contract.company_legal_name,
+    empresa_rif: settings.contract.company_rif,
+    empresa_direccion: settings.contract.company_address,
+    empresa_sitio: settings.business.website,
+    jurisdiccion: settings.contract.jurisdiction,
+    contrato_version: settings.contract.version,
+    fecha_aceptacion: "2026-05-14 10:35",
+    ip_aceptacion: "190.202.10.45",
+    dispositivo: "Chrome 124 / iPhone 15",
+  };
+  return settings.contract.body.replace(/\{\{(\w+)\}\}/g, (_, k) => sample[k] ?? `{{${k}}}`);
 }
