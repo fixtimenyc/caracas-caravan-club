@@ -1,4 +1,4 @@
-import { Car, Menu, User, X, LogOut, ChevronDown, ShieldCheck, MessageSquare } from "lucide-react";
+import { Car, Menu, User, X, LogOut, ChevronDown, ShieldCheck, MessageSquare, Calendar, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -93,27 +93,50 @@ const Navbar = () => {
                     <p className="text-xs text-muted-foreground">{getRoleLabel()}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <User className="w-4 h-4 mr-2" />
-                    Mi perfil
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/mensajes')}>
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Mensajes
                   </DropdownMenuItem>
-                  {roles.includes('owner') || roles.includes('admin') ? (
-                    <DropdownMenuItem onClick={() => navigate('/my-vehicles')}>
-                      <Car className="w-4 h-4 mr-2" />
-                      Mis vehículos
+                  {(roles.includes('owner') || roles.includes('admin')) && (
+                    <>
+                      <DropdownMenuItem onClick={() => navigate('/mis-reservas')}>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Mis reservas
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/mis-ganancias')}>
+                        <DollarSign className="w-4 h-4 mr-2" />
+                        Mis ganancias
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/my-vehicles')}>
+                        <Car className="w-4 h-4 mr-2" />
+                        Mis vehículos
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="w-4 h-4 mr-2" />
+                    Perfil
+                  </DropdownMenuItem>
+                  {(roles.includes('owner') || roles.includes('admin')) && (
+                    <DropdownMenuItem onClick={() => navigate('/aliado/solicitud')}>
+                      <ShieldCheck className="w-4 h-4 mr-2" />
+                      Verificación aliado
                     </DropdownMenuItem>
-                  ) : null}
+                  )}
+                  {!roles.includes('owner') && !roles.includes('admin') && (
+                    <DropdownMenuItem onClick={() => navigate('/arrendatario/verificacion')}>
+                      <ShieldCheck className="w-4 h-4 mr-2" />
+                      Verificación arrendatario
+                    </DropdownMenuItem>
+                  )}
                   {roles.includes('admin') && (
                     <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate('/admin/solicitudes')}>
                         <ShieldCheck className="w-4 h-4 mr-2" />
                         Solicitudes de aliados
                       </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate('/admin/usuarios')}>
+                      <DropdownMenuItem onClick={() => navigate('/admin/usuarios')}>
                         <User className="w-4 h-4 mr-2" />
                         Administrar usuarios
                       </DropdownMenuItem>
@@ -179,16 +202,39 @@ const Navbar = () => {
                         </span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/profile'); setIsMenuOpen(false); }}>
-                      Mi perfil
-                    </Button>
                     <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mensajes'); setIsMenuOpen(false); }}>
                       <MessageSquare className="w-4 h-4 mr-2" />
                       Mensajes
                     </Button>
                     {(roles.includes('owner') || roles.includes('admin')) && (
-                      <Button variant="ghost" size="sm" className="justify-start" onClick={() => navigate('/my-vehicles')}>
-                        Mis vehículos
+                      <>
+                        <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-reservas'); setIsMenuOpen(false); }}>
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Mis reservas
+                        </Button>
+                        <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-ganancias'); setIsMenuOpen(false); }}>
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          Mis ganancias
+                        </Button>
+                        <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/my-vehicles'); setIsMenuOpen(false); }}>
+                          <Car className="w-4 h-4 mr-2" />
+                          Mis vehículos
+                        </Button>
+                      </>
+                    )}
+                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/profile'); setIsMenuOpen(false); }}>
+                      <User className="w-4 h-4 mr-2" />
+                      Perfil
+                    </Button>
+                    {(roles.includes('owner') || roles.includes('admin')) ? (
+                      <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/aliado/solicitud'); setIsMenuOpen(false); }}>
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Verificación aliado
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/arrendatario/verificacion'); setIsMenuOpen(false); }}>
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Verificación arrendatario
                       </Button>
                     )}
                     {roles.includes('admin') && (

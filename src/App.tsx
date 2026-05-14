@@ -20,6 +20,8 @@ import ProfilePage from "./pages/ProfilePage";
 import HelpPage from "./pages/HelpPage";
 import AdminSupportPage from "./pages/AdminSupportPage";
 import MessagesPage from "./pages/MessagesPage";
+import MyBookingsPage from "./pages/MyBookingsPage";
+import MyEarningsPage from "./pages/MyEarningsPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import CancellationPage from "./pages/CancellationPage";
@@ -53,6 +55,8 @@ const App = () => (
             <Route path="/ayuda" element={<HelpPage />} />
             <Route path="/admin/soporte" element={<AdminSupportPage />} />
             <Route path="/mensajes" element={<MessagesPage />} />
+            <Route path="/mis-reservas" element={<MyBookingsPage />} />
+            <Route path="/mis-ganancias" element={<MyEarningsPage />} />
             <Route path="/terminos" element={<TermsPage />} />
             <Route path="/politica-privacidad" element={<PrivacyPage />} />
             <Route path="/politica-cancelacion" element={<CancellationPage />} />
