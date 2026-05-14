@@ -702,55 +702,112 @@ export type Database = {
           active: boolean
           available: boolean
           brand: string
+          circulation_doc_url: string | null
+          circulation_expiry: string | null
+          color: string | null
           created_at: string
           custom_features: string[]
           description: string | null
           features: string[]
+          fuel_type: string | null
+          gps_lat: number | null
+          gps_lng: number | null
           house_rules: Json
           id: string
+          insurance_doc_url: string | null
+          insurance_expiry: string | null
+          internal_notes: string | null
           location: string
           model: string
+          monthly_price: number | null
           owner_id: string
           photos: string[] | null
+          plate: string | null
           price_per_day: number
+          seats: number | null
+          soat_doc_url: string | null
+          soat_expiry: string | null
+          transmission: string | null
           updated_at: string
+          vin: string | null
+          weekend_price: number | null
+          weekly_price: number | null
           year: number
+          zone: string | null
         }
         Insert: {
           active?: boolean
           available?: boolean
           brand: string
+          circulation_doc_url?: string | null
+          circulation_expiry?: string | null
+          color?: string | null
           created_at?: string
           custom_features?: string[]
           description?: string | null
           features?: string[]
+          fuel_type?: string | null
+          gps_lat?: number | null
+          gps_lng?: number | null
           house_rules?: Json
           id?: string
+          insurance_doc_url?: string | null
+          insurance_expiry?: string | null
+          internal_notes?: string | null
           location: string
           model: string
+          monthly_price?: number | null
           owner_id: string
           photos?: string[] | null
+          plate?: string | null
           price_per_day: number
+          seats?: number | null
+          soat_doc_url?: string | null
+          soat_expiry?: string | null
+          transmission?: string | null
           updated_at?: string
+          vin?: string | null
+          weekend_price?: number | null
+          weekly_price?: number | null
           year: number
+          zone?: string | null
         }
         Update: {
           active?: boolean
           available?: boolean
           brand?: string
+          circulation_doc_url?: string | null
+          circulation_expiry?: string | null
+          color?: string | null
           created_at?: string
           custom_features?: string[]
           description?: string | null
           features?: string[]
+          fuel_type?: string | null
+          gps_lat?: number | null
+          gps_lng?: number | null
           house_rules?: Json
           id?: string
+          insurance_doc_url?: string | null
+          insurance_expiry?: string | null
+          internal_notes?: string | null
           location?: string
           model?: string
+          monthly_price?: number | null
           owner_id?: string
           photos?: string[] | null
+          plate?: string | null
           price_per_day?: number
+          seats?: number | null
+          soat_doc_url?: string | null
+          soat_expiry?: string | null
+          transmission?: string | null
           updated_at?: string
+          vin?: string | null
+          weekend_price?: number | null
+          weekly_price?: number | null
           year?: number
+          zone?: string | null
         }
         Relationships: []
       }
