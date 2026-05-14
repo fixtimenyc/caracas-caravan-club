@@ -895,12 +895,14 @@ export default function AdminReservationsPage() {
                       </p>
                     ) : (
                       dayItems.map((it) => (
-                        <button
+                        <div
                           key={it.id}
-                          onClick={() => navigate(`/admin/reservas/${it.id}`)}
-                          className="w-full text-left border rounded-md p-3 hover:bg-accent/40 flex items-center justify-between gap-3"
+                          className="w-full border rounded-md p-3 hover:bg-accent/40 flex items-center justify-between gap-3"
                         >
-                          <div>
+                          <button
+                            onClick={() => navigate(`/admin/reservas/${it.id}`)}
+                            className="text-left flex-1 min-w-0"
+                          >
                             <div className="font-medium text-sm">
                               {it.vehicle_name} · {it.renter_name}
                             </div>
@@ -909,11 +911,20 @@ export default function AdminReservationsPage() {
                               {format(parseISO(it.end_date), "dd MMM", { locale: es })} · $
                               {it.total_price.toLocaleString()}
                             </div>
+                          </button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant="outline" className={STATUS_META[it.status].cls}>
+                              {STATUS_META[it.status].label}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/admin/reservas/${it.id}/contrato`)}
+                            >
+                              <FileText className="h-3.5 w-3.5" /> Contrato
+                            </Button>
                           </div>
-                          <Badge variant="outline" className={STATUS_META[it.status].cls}>
-                            {STATUS_META[it.status].label}
-                          </Badge>
-                        </button>
+                        </div>
                       ))
                     )}
                   </div>
