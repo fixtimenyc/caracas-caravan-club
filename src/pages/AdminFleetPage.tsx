@@ -688,8 +688,13 @@ export default function AdminFleetPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuItem asChild>
-                              <Link to={`/vehiculo/${r.id}`}>
+                              <Link to={`/admin/flota/${r.id}`}>
                                 <Eye className="h-4 w-4" /> Ver detalle
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link to={`/vehiculo/${r.id}`}>
+                                <Eye className="h-4 w-4" /> Vista pública
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
