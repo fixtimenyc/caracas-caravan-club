@@ -39,6 +39,11 @@ interface UserRow {
   avg_rating: number | null;
   review_count: number;
   last_payment_at: string | null;
+  // Renter-specific aggregates
+  total_spent: number;
+  rating_given: number | null;
+  rating_given_count: number;
+  last_reservation_at: string | null;
 }
 
 const AdminUsersPage = () => {
