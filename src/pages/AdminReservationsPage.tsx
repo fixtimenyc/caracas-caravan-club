@@ -586,6 +586,7 @@ export default function AdminReservationsPage() {
                       <TableHead>Rentador</TableHead>
                       <TableHead>Auto</TableHead>
                       <TableHead>Fechas</TableHead>
+                      <TableHead>Kilometraje</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead>Actualizada</TableHead>
@@ -596,12 +597,12 @@ export default function AdminReservationsPage() {
                     {loading ? (
                       Array.from({ length: 6 }).map((_, i) => (
                         <TableRow key={i}>
-                          <TableCell colSpan={9}><Skeleton className="h-10 w-full" /></TableCell>
+                          <TableCell colSpan={10}><Skeleton className="h-10 w-full" /></TableCell>
                         </TableRow>
                       ))
                     ) : filtered.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                           No hay reservas con los filtros aplicados.
                         </TableCell>
                       </TableRow>
@@ -660,6 +661,23 @@ export default function AdminReservationsPage() {
                               <div className="text-xs text-muted-foreground">
                                 {days} días · ${Math.round(daily)}/día
                               </div>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {r.start_mileage != null || r.end_mileage != null ? (
+                                <>
+                                  <div>
+                                    {r.start_mileage?.toLocaleString() ?? "—"} →{" "}
+                                    {r.end_mileage?.toLocaleString() ?? "—"} km
+                                  </div>
+                                  {r.start_mileage != null && r.end_mileage != null && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {(r.end_mileage - r.start_mileage).toLocaleString()} km recorridos
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
                             </TableCell>
                             <TableCell className="font-medium">
                               ${r.total_price.toLocaleString()}
