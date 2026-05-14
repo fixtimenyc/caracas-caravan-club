@@ -55,6 +55,8 @@ const App = () => (
             <Route path="/ayuda" element={<HelpPage />} />
             <Route path="/admin/soporte" element={<AdminSupportPage />} />
             <Route path="/mensajes" element={<MessagesPage />} />
+            <Route path="/mis-reservas" element={<MyBookingsPage />} />
+            <Route path="/mis-ganancias" element={<MyEarningsPage />} />
             <Route path="/terminos" element={<TermsPage />} />
             <Route path="/politica-privacidad" element={<PrivacyPage />} />
             <Route path="/politica-cancelacion" element={<CancellationPage />} />
