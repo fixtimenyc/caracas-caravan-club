@@ -37,6 +37,7 @@ import {
   Bell,
   Download,
   MessageSquare,
+  FileText,
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -702,6 +703,9 @@ export default function AdminReservationsPage() {
                                   <DropdownMenuItem onClick={() => navigate(`/admin/reservas/${r.id}`)}>
                                     <Eye className="h-4 w-4" /> Ver detalle
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => navigate(`/admin/reservas/${r.id}/contrato`)}>
+                                    <FileText className="h-4 w-4" /> Ver contrato
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   {r.status === "pending" && (
                                     <>
@@ -858,14 +862,22 @@ export default function AdminReservationsPage() {
                               <span className="text-xs text-muted-foreground self-center">Sin reservas</span>
                             ) : (
                               items.map((it) => (
-                                <button
-                                  key={it.id}
-                                  onClick={() => navigate(`/admin/reservas/${it.id}`)}
-                                  className={`px-2 py-1 rounded text-[11px] flex items-center gap-1 border ${STATUS_META[it.status].cls} hover:opacity-80`}
-                                >
-                                  <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[it.status]}`} />
-                                  {it.vehicle_name} · {it.renter_name}
-                                </button>
+                                <div key={it.id} className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => navigate(`/admin/reservas/${it.id}`)}
+                                    className={`px-2 py-1 rounded-l text-[11px] flex items-center gap-1 border ${STATUS_META[it.status].cls} hover:opacity-80`}
+                                  >
+                                    <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[it.status]}`} />
+                                    {it.vehicle_name} · {it.renter_name}
+                                  </button>
+                                  <button
+                                    onClick={() => navigate(`/admin/reservas/${it.id}/contrato`)}
+                                    title="Ver contrato"
+                                    className={`px-1.5 py-1 rounded-r text-[11px] border border-l-0 ${STATUS_META[it.status].cls} hover:opacity-80`}
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                  </button>
+                                </div>
                               ))
                             )}
                           </div>
@@ -883,12 +895,14 @@ export default function AdminReservationsPage() {
                       </p>
                     ) : (
                       dayItems.map((it) => (
-                        <button
+                        <div
                           key={it.id}
-                          onClick={() => navigate(`/admin/reservas/${it.id}`)}
-                          className="w-full text-left border rounded-md p-3 hover:bg-accent/40 flex items-center justify-between gap-3"
+                          className="w-full border rounded-md p-3 hover:bg-accent/40 flex items-center justify-between gap-3"
                         >
-                          <div>
+                          <button
+                            onClick={() => navigate(`/admin/reservas/${it.id}`)}
+                            className="text-left flex-1 min-w-0"
+                          >
                             <div className="font-medium text-sm">
                               {it.vehicle_name} · {it.renter_name}
                             </div>
@@ -897,11 +911,20 @@ export default function AdminReservationsPage() {
                               {format(parseISO(it.end_date), "dd MMM", { locale: es })} · $
                               {it.total_price.toLocaleString()}
                             </div>
+                          </button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant="outline" className={STATUS_META[it.status].cls}>
+                              {STATUS_META[it.status].label}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/admin/reservas/${it.id}/contrato`)}
+                            >
+                              <FileText className="h-3.5 w-3.5" /> Contrato
+                            </Button>
                           </div>
-                          <Badge variant="outline" className={STATUS_META[it.status].cls}>
-                            {STATUS_META[it.status].label}
-                          </Badge>
-                        </button>
+                        </div>
                       ))
                     )}
                   </div>
@@ -937,16 +960,20 @@ export default function AdminReservationsPage() {
             <div className="space-y-2">
               {dayDialog &&
                 (reservationsByDay.get(format(dayDialog, "yyyy-MM-dd")) || []).map((r) => (
-                  <button
+                  <div
                     key={r.id}
-                    onClick={() => {
-                      setDayDialog(null);
-                      navigate(`/admin/reservas/${r.id}`);
-                    }}
-                    className="w-full text-left rounded border p-3 space-y-1 hover:bg-accent/30"
+                    className="w-full rounded border p-3 space-y-2 hover:bg-accent/30"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="font-medium text-sm">{r.vehicle_name}</div>
+                      <button
+                        onClick={() => {
+                          setDayDialog(null);
+                          navigate(`/admin/reservas/${r.id}`);
+                        }}
+                        className="font-medium text-sm text-left hover:underline flex-1 min-w-0 truncate"
+                      >
+                        {r.vehicle_name}
+                      </button>
                       <Badge variant="outline" className={STATUS_META[r.status].cls}>
                         {STATUS_META[r.status].label}
                       </Badge>
@@ -959,7 +986,31 @@ export default function AdminReservationsPage() {
                         <> • {(r.end_mileage - r.start_mileage).toLocaleString()} km</>
                       )}
                     </div>
-                  </button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7"
+                        onClick={() => {
+                          setDayDialog(null);
+                          navigate(`/admin/reservas/${r.id}`);
+                        }}
+                      >
+                        <Eye className="h-3.5 w-3.5" /> Detalle
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7"
+                        onClick={() => {
+                          setDayDialog(null);
+                          navigate(`/admin/reservas/${r.id}/contrato`);
+                        }}
+                      >
+                        <FileText className="h-3.5 w-3.5" /> Contrato
+                      </Button>
+                    </div>
+                  </div>
                 ))}
             </div>
           </ScrollArea>
