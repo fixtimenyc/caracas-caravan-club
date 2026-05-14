@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/aliado/solicitud" element={<OwnerApplicationPage />} />
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/flota" element={<AdminFleetPage />} />
+            <Route path="/admin/flota/:vehicleId" element={<AdminVehicleDetailPage />} />
             <Route path="/admin/reservas" element={<AdminReservationsPage />} />
             <Route path="/admin/solicitudes" element={<AdminApplicationsPage />} />
             <Route path="/admin/usuarios" element={<AdminUsersPage />} />
