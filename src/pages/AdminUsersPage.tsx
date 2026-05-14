@@ -39,6 +39,11 @@ interface UserRow {
   avg_rating: number | null;
   review_count: number;
   last_payment_at: string | null;
+  // Renter-specific aggregates
+  total_spent: number;
+  rating_given: number | null;
+  rating_given_count: number;
+  last_reservation_at: string | null;
 }
 
 const AdminUsersPage = () => {
@@ -55,6 +60,7 @@ const AdminUsersPage = () => {
   const filterStatus = (searchParams.get("status") || "all") as "all" | AccountStatus;
 
   const ownerView = filterRole === "owner";
+  const renterView = filterRole === "renter";
 
   const updateParam = (key: string, val: string) => {
     const next = new URLSearchParams(searchParams);
@@ -80,8 +86,8 @@ const AdminUsersPage = () => {
           supabase.from("profiles").select("*").order("created_at", { ascending: false }),
           supabase.from("user_roles").select("user_id, role"),
           supabase.from("vehicles").select("id, owner_id, active"),
-          supabase.from("reservations").select("renter_id, vehicle_id, total_price, status, created_at"),
-          supabase.from("reviews").select("subject_user_id, rating"),
+          supabase.from("reservations").select("id, renter_id, vehicle_id, total_price, status, created_at"),
+          supabase.from("reviews").select("subject_user_id, author_id, reviewer_type, rating"),
           supabase.from("payments").select("reservation_id, amount, status, created_at"),
         ]);
 
@@ -103,9 +109,18 @@ const AdminUsersPage = () => {
 
       const bookingsByUser = new Map<string, number>();
       const revenueByOwner = new Map<string, number>();
-      const reservationOwner = new Map<string, string>();
+      const spentByRenter = new Map<string, number>();
+      const lastResByRenter = new Map<string, string>();
       (reservationsRes.data || []).forEach((r: any) => {
         bookingsByUser.set(r.renter_id, (bookingsByUser.get(r.renter_id) || 0) + 1);
+        // last reservation per renter
+        const cur = lastResByRenter.get(r.renter_id);
+        if (!cur || new Date(r.created_at) > new Date(cur)) {
+          lastResByRenter.set(r.renter_id, r.created_at);
+        }
+        if (["completed", "active"].includes(r.status)) {
+          spentByRenter.set(r.renter_id, (spentByRenter.get(r.renter_id) || 0) + Number(r.total_price || 0));
+        }
         const owner = vehicleOwner.get(r.vehicle_id);
         if (owner) {
           bookingsByUser.set(owner, (bookingsByUser.get(owner) || 0) + 1);
@@ -115,25 +130,27 @@ const AdminUsersPage = () => {
         }
       });
 
+      // Ratings received (subject) and ratings given by renter (author + type=renter)
       const ratingByUser = new Map<string, { sum: number; n: number }>();
+      const ratingGivenByRenter = new Map<string, { sum: number; n: number }>();
       (reviewsRes.data || []).forEach((rv: any) => {
-        if (!rv.subject_user_id) return;
-        const cur = ratingByUser.get(rv.subject_user_id) || { sum: 0, n: 0 };
-        cur.sum += rv.rating || 0;
-        cur.n += 1;
-        ratingByUser.set(rv.subject_user_id, cur);
+        if (rv.subject_user_id) {
+          const cur = ratingByUser.get(rv.subject_user_id) || { sum: 0, n: 0 };
+          cur.sum += rv.rating || 0;
+          cur.n += 1;
+          ratingByUser.set(rv.subject_user_id, cur);
+        }
+        if (rv.author_id && rv.reviewer_type === "renter") {
+          const cur = ratingGivenByRenter.get(rv.author_id) || { sum: 0, n: 0 };
+          cur.sum += rv.rating || 0;
+          cur.n += 1;
+          ratingGivenByRenter.set(rv.author_id, cur);
+        }
       });
 
       // Last payment per owner (via reservation -> vehicle owner)
       const lastPaymentByOwner = new Map<string, string>();
-      // Build reservation->owner map
       const allReservations = reservationsRes.data || [];
-      const resOwner = new Map<string, string>();
-      allReservations.forEach((r: any) => {
-        const o = vehicleOwner.get(r.vehicle_id);
-        if (o) resOwner.set((r as any).id || `${r.renter_id}-${r.vehicle_id}`, o);
-      });
-      // Use vehicle_id->owner via reservation_id mapping is missing; fallback: derive owner from payment via reservation lookup map keyed by id
       const resById = new Map<string, any>();
       (allReservations as any[]).forEach((r: any) => { if (r.id) resById.set(r.id, r); });
       (paymentsRes.data || []).forEach((p: any) => {
@@ -149,6 +166,7 @@ const AdminUsersPage = () => {
 
       const rows: UserRow[] = (profilesRes.data || []).map((p: any) => {
         const r = ratingByUser.get(p.user_id);
+        const rg = ratingGivenByRenter.get(p.user_id);
         return {
           user_id: p.user_id,
           full_name: p.full_name,
@@ -165,6 +183,10 @@ const AdminUsersPage = () => {
           avg_rating: r ? Math.round((r.sum / r.n) * 10) / 10 : null,
           review_count: r?.n || 0,
           last_payment_at: lastPaymentByOwner.get(p.user_id) || null,
+          total_spent: spentByRenter.get(p.user_id) || 0,
+          rating_given: rg ? Math.round((rg.sum / rg.n) * 10) / 10 : null,
+          rating_given_count: rg?.n || 0,
+          last_reservation_at: lastResByRenter.get(p.user_id) || null,
         };
       });
 
@@ -292,6 +314,11 @@ const AdminUsersPage = () => {
             Vista de dueños: muestra autos activos, ingresos acumulados, rating y último pago.
           </p>
         )}
+        {renterView && (
+          <p className="text-xs text-muted-foreground mb-2">
+            Vista de rentadores: muestra reservas, gasto total, rating dado y última reserva.
+          </p>
+        )}
 
         {/* Table */}
         <div className="rounded-xl border bg-card overflow-x-auto">
@@ -306,6 +333,13 @@ const AdminUsersPage = () => {
                     <TableHead className="text-right">Revenue</TableHead>
                     <TableHead>Rating</TableHead>
                     <TableHead>Último pago</TableHead>
+                  </>
+                ) : renterView ? (
+                  <>
+                    <TableHead className="text-right"># Reservas</TableHead>
+                    <TableHead className="text-right">Gasto total</TableHead>
+                    <TableHead>Rating dado</TableHead>
+                    <TableHead>Última reserva</TableHead>
                   </>
                 ) : (
                   <>
@@ -322,13 +356,13 @@ const AdminUsersPage = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={ownerView ? 9 : 8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={ownerView || renterView ? 9 : 8} className="text-center py-8 text-muted-foreground">
                     Cargando...
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={ownerView ? 9 : 8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={ownerView || renterView ? 9 : 8} className="text-center py-8 text-muted-foreground">
                     No se encontraron usuarios.
                   </TableCell>
                 </TableRow>
@@ -394,6 +428,31 @@ const AdminUsersPage = () => {
                           <TableCell className="text-xs text-muted-foreground">
                             {u.last_payment_at
                               ? format(new Date(u.last_payment_at), "dd MMM yyyy", { locale: es })
+                              : "—"}
+                          </TableCell>
+                        </>
+                      ) : renterView ? (
+                        <>
+                          <TableCell className="text-right text-sm">
+                            {u.bookings_count > 0 ? `${u.bookings_count} ${u.bookings_count === 1 ? "reserva" : "reservas"}` : "—"}
+                          </TableCell>
+                          <TableCell className="text-right text-sm font-medium">
+                            {u.total_spent > 0 ? fmtMoney(u.total_spent) : "—"}
+                          </TableCell>
+                          <TableCell>
+                            {u.rating_given != null ? (
+                              <span className="inline-flex items-center gap-1 text-sm">
+                                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                {u.rating_given}
+                                <span className="text-xs text-muted-foreground">({u.rating_given_count})</span>
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Sin reseñas</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {u.last_reservation_at
+                              ? format(new Date(u.last_reservation_at), "dd MMM yyyy", { locale: es })
                               : "—"}
                           </TableCell>
                         </>

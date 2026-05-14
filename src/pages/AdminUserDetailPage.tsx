@@ -617,6 +617,8 @@ const AdminUserDetailPage = () => {
             <TabsTrigger value="bookings">Reservas</TabsTrigger>
             {isOwner && <TabsTrigger value="vehicles">Vehículos</TabsTrigger>}
             {isOwner && <TabsTrigger value="financial">Financiero</TabsTrigger>}
+            <TabsTrigger value="payments">Métodos de pago</TabsTrigger>
+            <TabsTrigger value="alerts">Alertas</TabsTrigger>
             <TabsTrigger value="reviews">Reseñas</TabsTrigger>
             <TabsTrigger value="notes">Notas internas</TabsTrigger>
             <TabsTrigger value="log">Sanciones</TabsTrigger>
@@ -1058,6 +1060,108 @@ const AdminUserDetailPage = () => {
               })()}
             </TabsContent>
           )}
+
+          {/* Métodos de pago / Transacciones */}
+          <TabsContent value="payments" className="space-y-3">
+            <div className="rounded-xl border bg-card p-4">
+              <p className="text-sm text-muted-foreground">
+                Los métodos de pago tokenizados aún no están integrados. Mientras tanto, mostramos el historial de transacciones de las reservas del usuario.
+              </p>
+            </div>
+            <div className="rounded-xl border bg-card overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Reserva</TableHead>
+                    <TableHead>Vehículo</TableHead>
+                    <TableHead className="text-right">Monto</TableHead>
+                    <TableHead>Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {renterRes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
+                        Sin transacciones.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    renterRes.map((r: any) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="text-xs">
+                          {new Date(r.created_at).toLocaleDateString("es-VE")}
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">
+                          #{r.id.slice(0, 8).toUpperCase()}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {r.vehicles?.brand} {r.vehicles?.model}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium">
+                          ${Number(r.total_price || 0).toLocaleString("es-VE", { maximumFractionDigits: 0 })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {r.payments?.[0]?.status || (r.status === "cancelled" ? "rechazado" : "pendiente")}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          {/* Alertas & Problemas */}
+          <TabsContent value="alerts" className="space-y-3">
+            {(() => {
+              const cancellations = renterRes.filter((r: any) => r.status === "cancelled").length;
+              const totalRes = renterRes.length;
+              const cancelRate = totalRes > 0 ? Math.round((cancellations / totalRes) * 100) : 0;
+              const negativeReviews = reviews.filter(
+                (r: any) => r.subject_user_id === profile.user_id && (r.rating || 0) <= 2
+              );
+              const rejectedPayments = renterRes.filter(
+                (r: any) => r.payments?.[0]?.status === "failed" || r.payments?.[0]?.status === "rechazado"
+              );
+              const isSuspended = profile.account_status !== "active";
+              const alerts: { kind: string; title: string; detail: string; severity: "high" | "med" | "low" }[] = [];
+              if (cancellations >= 3) alerts.push({ kind: "Cancelaciones frecuentes", title: `${cancellations} reservas canceladas`, detail: `Tasa de cancelación: ${cancelRate}%`, severity: "high" });
+              if (negativeReviews.length > 0) alerts.push({ kind: "Reseñas negativas", title: `${negativeReviews.length} reseña(s) ≤ 2 estrellas`, detail: "Revisar comentarios de dueños", severity: "med" });
+              if (rejectedPayments.length > 0) alerts.push({ kind: "Pagos rechazados", title: `${rejectedPayments.length} transacción(es) fallida(s)`, detail: "Posible problema con método de pago", severity: "high" });
+              if (isSuspended) alerts.push({ kind: "Cuenta suspendida", title: profile.account_status === "banned" ? "Usuario baneado" : "Usuario suspendido", detail: "Revisar log de sanciones", severity: "high" });
+
+              return alerts.length === 0 ? (
+                <div className="rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground">
+                  ✓ Sin alertas activas. Usuario en buen estado.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {alerts.map((a, i) => (
+                    <div
+                      key={i}
+                      className={`rounded-xl border p-4 flex items-start gap-3 ${
+                        a.severity === "high"
+                          ? "border-destructive/30 bg-destructive/5"
+                          : a.severity === "med"
+                          ? "border-yellow-500/30 bg-yellow-500/5"
+                          : "bg-card"
+                      }`}
+                    >
+                      <AlertTriangle className={`w-5 h-5 mt-0.5 ${a.severity === "high" ? "text-destructive" : "text-yellow-600"}`} />
+                      <div className="flex-1">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">{a.kind}</p>
+                        <p className="font-medium">{a.title}</p>
+                        <p className="text-sm text-muted-foreground">{a.detail}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </TabsContent>
 
           {/* Reviews */}
           <TabsContent value="reviews">
