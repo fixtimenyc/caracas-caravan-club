@@ -327,6 +327,7 @@ function renderContractPreview(settings: Settings): string {
   return settings.contract.body.replace(/\{\{(\w+)\}\}/g, (_, k) => sample[k] ?? `{{${k}}}`);
 }
 
+export default function AdminSettingsPage() {
   const [rawSettings, setRawSettings] = useState<Settings>(loadSettings);
   const settings = useMemo(() => normalizeSettings(rawSettings), [rawSettings]);
   const [admins, setAdmins] = useState<any[]>([]);
