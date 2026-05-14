@@ -33,7 +33,8 @@ type Settings = {
     cancel_lt_24h_refund: number;
     cancel_24_48h_refund: number;
     cancel_gt_48h_refund: number;
-    security_deposit: number;
+    security_deposits: { economy: number; sedan: number; suv: number; pickup: number; luxury: number; sports: number; van: number };
+    deposit_pct_of_value: number;
     auto_cancel_minutes: number;
     min_renter_age: number;
     require_id: boolean;
@@ -80,7 +81,9 @@ const DEFAULTS: Settings = {
   policies: {
     commission_pct: 20,
     cancel_lt_24h_refund: 0, cancel_24_48h_refund: 50, cancel_gt_48h_refund: 100,
-    security_deposit: 100, auto_cancel_minutes: 30, min_renter_age: 21,
+    security_deposits: { economy: 100, sedan: 150, suv: 250, pickup: 250, luxury: 500, sports: 600, van: 300 },
+    deposit_pct_of_value: 5,
+    auto_cancel_minutes: 30, min_renter_age: 21,
     require_id: true, require_license: true, require_selfie: true, require_social: false,
   },
   payments: {
@@ -226,12 +229,48 @@ export default function AdminSettingsPage() {
             <CardHeader><CardTitle>Políticas y reglas</CardTitle><CardDescription>Comisión, cancelación y verificación.</CardDescription></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
               <NumField label="Comisión RUEDAVE (%)" value={settings.policies.commission_pct} onChange={(v) => save({ ...settings, policies: { ...settings.policies, commission_pct: v } })} />
-              <NumField label="Depósito de seguridad ($)" value={settings.policies.security_deposit} onChange={(v) => save({ ...settings, policies: { ...settings.policies, security_deposit: v } })} />
+              
               <NumField label="Reembolso < 24h (%)" value={settings.policies.cancel_lt_24h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_lt_24h_refund: v } })} />
               <NumField label="Reembolso 24-48h (%)" value={settings.policies.cancel_24_48h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_24_48h_refund: v } })} />
               <NumField label="Reembolso > 48h (%)" value={settings.policies.cancel_gt_48h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_gt_48h_refund: v } })} />
               <NumField label="Cancelación auto (min)" value={settings.policies.auto_cancel_minutes} onChange={(v) => save({ ...settings, policies: { ...settings.policies, auto_cancel_minutes: v } })} />
               <NumField label="Edad mínima rentador" value={settings.policies.min_renter_age} onChange={(v) => save({ ...settings, policies: { ...settings.policies, min_renter_age: v } })} />
+
+              <Separator className="md:col-span-2" />
+              <div className="md:col-span-2">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="font-medium">Depósito de seguridad por tipo de vehículo</p>
+                    <p className="text-xs text-muted-foreground">Monto retenido al inicio del alquiler. Se devuelve si no hay daños ni infracciones.</p>
+                  </div>
+                  <div className="w-56">
+                    <Label className="text-xs">% del valor del auto (alternativa)</Label>
+                    <Input type="number" step={0.5} value={settings.policies.deposit_pct_of_value}
+                      onChange={(e) => save({ ...settings, policies: { ...settings.policies, deposit_pct_of_value: Number(e.target.value) } })} />
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {([
+                    ["economy", "Económico", "Hatchback básico, compacto"],
+                    ["sedan", "Sedán", "Toyota Corolla, Honda Civic"],
+                    ["suv", "SUV", "Toyota RAV4, Hyundai Tucson"],
+                    ["pickup", "Pickup / 4x4", "Toyota Hilux, Ford Ranger"],
+                    ["van", "Van / Minivan", "Hyundai H1, Kia Carnival"],
+                    ["luxury", "Lujo", "Mercedes, BMW, Audi"],
+                    ["sports", "Deportivo", "Mustang, Camaro"],
+                  ] as const).map(([key, label, hint]) => (
+                    <div key={key} className="border rounded-md p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <Label className="text-sm">{label}</Label>
+                        <Badge variant="outline" className="text-xs">USD</Badge>
+                      </div>
+                      <Input type="number" min={0} value={settings.policies.security_deposits[key]}
+                        onChange={(e) => save({ ...settings, policies: { ...settings.policies, security_deposits: { ...settings.policies.security_deposits, [key]: Number(e.target.value) } } })} />
+                      <p className="text-[11px] text-muted-foreground mt-1">{hint}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <Separator className="md:col-span-2" />
               <div className="md:col-span-2">
                 <p className="font-medium mb-3">Requisitos de verificación</p>
