@@ -105,6 +105,8 @@ interface Row {
   status: Status;
   created_at: string;
   updated_at: string;
+  start_mileage: number | null;
+  end_mileage: number | null;
 }
 
 const STATUS_META: Record<Status, { label: string; cls: string }> = {
@@ -205,6 +207,8 @@ export default function AdminReservationsPage() {
         status: r.status as Status,
         created_at: r.created_at,
         updated_at: r.updated_at,
+        start_mileage: r.start_mileage ?? null,
+        end_mileage: r.end_mileage ?? null,
       };
     });
     setRows(next);
@@ -343,12 +347,17 @@ export default function AdminReservationsPage() {
       "inicio",
       "fin",
       "dias",
+      "km_inicio",
+      "km_fin",
+      "km_recorridos",
       "total",
       "estado",
       "creada",
     ];
     const rowsCsv = targets.map((r) => {
       const days = Math.max(1, differenceInCalendarDays(parseISO(r.end_date), parseISO(r.start_date)));
+      const kmDriven =
+        r.start_mileage != null && r.end_mileage != null ? r.end_mileage - r.start_mileage : "";
       return [
         r.id,
         r.vehicle_name,
@@ -358,6 +367,9 @@ export default function AdminReservationsPage() {
         r.start_date,
         r.end_date,
         days,
+        r.start_mileage ?? "",
+        r.end_mileage ?? "",
+        kmDriven,
         r.total_price,
         STATUS_META[r.status].label,
         r.created_at,
