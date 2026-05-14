@@ -73,7 +73,7 @@ export default function ReservationInspectionPage({ type }: Props) {
     );
   }
 
-  const back = type === "pickup" ? "/mis-reservas" : "/owner-dashboard";
+  const back = type === "pickup" ? "/mis-reservas" : "/my-vehicles";
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">
