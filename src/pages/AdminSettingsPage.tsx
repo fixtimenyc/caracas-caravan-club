@@ -158,6 +158,81 @@ const DEFAULTS: Settings = {
     access_code: "RUEDAVE: Tu código de acceso al vehículo es {{codigo}}.",
     payment_notification: "RUEDAVE: Pago recibido por {{monto}}. ¡Gracias!",
   },
+  contract: {
+    enabled: true,
+    version: "1.0",
+    subject: "Contrato de alquiler — Reserva {{reserva_id}} — RUEDAVE",
+    require_digital_acceptance: true,
+    send_on_payment_confirmed: true,
+    cc_owner: true,
+    company_legal_name: "RUEDAVE C.A.",
+    company_rif: "J-XXXXXXXX-X",
+    company_address: "Caracas, Venezuela",
+    jurisdiction: "Tribunales de la República Bolivariana de Venezuela, con sede en Caracas",
+    body: `CONTRATO DE ARRENDAMIENTO DE VEHÍCULO AUTOMOTOR
+
+Entre {{empresa_razon_social}}, RIF {{empresa_rif}}, domiciliada en {{empresa_direccion}}, en lo sucesivo "LA PLATAFORMA", actuando como intermediaria entre el PROPIETARIO {{propietario_nombre}} (cédula {{propietario_cedula}}) y el ARRENDATARIO {{arrendatario_nombre}}, titular de la cédula de identidad N° {{arrendatario_cedula}}, con licencia de conducir N° {{arrendatario_licencia}}, domiciliado en {{arrendatario_direccion}}, en lo sucesivo "EL ARRENDATARIO", se ha convenido en celebrar el presente contrato bajo las siguientes cláusulas:
+
+PRIMERA — OBJETO
+EL ARRENDATARIO recibe en calidad de alquiler el vehículo: {{vehiculo_marca}} {{vehiculo_modelo}} {{vehiculo_anio}}, color {{vehiculo_color}}, placa {{vehiculo_placa}}, serial {{vehiculo_vin}}, con kilometraje inicial de {{km_inicio}} km.
+
+SEGUNDA — DURACIÓN Y ENTREGA
+El alquiler inicia el {{inicio}} y finaliza el {{fin}}, con un total de {{dias}} días. La entrega se realizará en {{lugar_entrega}} y la devolución en {{lugar_devolucion}}.
+
+TERCERA — PRECIO Y FORMA DE PAGO
+Tarifa diaria: {{tarifa_dia}}. Subtotal: {{subtotal}}. Comisión de servicio (10%): {{comision}}. Seguro: {{seguro}}. Depósito en garantía: {{deposito}}. TOTAL: {{total}} ({{moneda}}). Método de pago utilizado: {{metodo_pago}}. Referencia: {{referencia_pago}}. Pago confirmado el {{fecha_pago}}.
+
+CUARTA — DEPÓSITO EN GARANTÍA
+EL ARRENDATARIO entrega como garantía la suma de {{deposito}}, la cual será devuelta dentro de los 7 días posteriores a la entrega del vehículo, previa verificación del estado y kilometraje pactado.
+
+QUINTA — DEBERES DEL ARRENDATARIO
+1. Conducir el vehículo con la diligencia de un buen padre de familia y respetar las leyes de tránsito.
+2. No permitir que terceros no autorizados conduzcan el vehículo.
+3. Devolver el vehículo en las mismas condiciones de aseo, combustible y kilometraje pactado ({{km_max_dia}} km/día).
+4. No fumar dentro del vehículo (multa: {{multa_fumar}}). No transportar mascotas sin autorización.
+5. Reportar de inmediato cualquier siniestro, falla o robo a LA PLATAFORMA y a las autoridades.
+6. No utilizar el vehículo fuera del territorio nacional ni en zonas no permitidas (off-road, deportivos).
+7. Cubrir multas, peajes y sanciones generadas durante el período de alquiler.
+
+SEXTA — DERECHOS DEL ARRENDATARIO
+1. Recibir el vehículo en óptimas condiciones mecánicas, de aseo y con la documentación legal vigente (SOAT, circulación, seguro).
+2. Asistencia 24/7 a través de los canales de soporte de LA PLATAFORMA.
+3. Acceso a un proceso de reclamación claro y a la devolución del depósito conforme a la cláusula CUARTA.
+4. Confidencialidad y tratamiento adecuado de sus datos personales.
+
+SÉPTIMA — POLÍTICA DE CANCELACIÓN
+- Cancelación con más de 48 horas de anticipación: reembolso del 100%.
+- Cancelación entre 24 y 48 horas: reembolso del 50%.
+- Cancelación con menos de 24 horas: sin reembolso.
+
+OCTAVA — SEGURO Y RESPONSABILIDAD
+El vehículo cuenta con seguro de cobertura amplia. EL ARRENDATARIO responde por daños no cubiertos por la póliza, deducibles, y por los daños ocasionados por negligencia, dolo, conducción bajo efectos del alcohol o sustancias, o por incumplimiento de las leyes de tránsito.
+
+NOVENA — RESOLUCIÓN ANTICIPADA
+LA PLATAFORMA podrá resolver el contrato sin previo aviso si EL ARRENDATARIO incumple cualquiera de las cláusulas, recuperando el vehículo de inmediato sin perjuicio de las acciones legales aplicables.
+
+DÉCIMA — PROTECCIÓN DE DATOS
+EL ARRENDATARIO autoriza el tratamiento de sus datos personales conforme a la política de privacidad publicada en {{empresa_sitio}}.
+
+UNDÉCIMA — JURISDICCIÓN
+Las partes eligen como domicilio especial a la ciudad de Caracas y se someten a {{jurisdiccion}} para la resolución de cualquier controversia.
+
+DUODÉCIMA — ACEPTACIÓN DIGITAL
+EL ARRENDATARIO declara haber leído, comprendido y aceptado íntegramente las cláusulas del presente contrato, así como los Términos y Condiciones y la Política de Privacidad de LA PLATAFORMA. La aceptación se realiza de forma electrónica al confirmar la reserva y el pago, dejando constancia con los siguientes datos:
+
+- Reserva ID: {{reserva_id}}
+- Aceptado el: {{fecha_aceptacion}}
+- IP de aceptación: {{ip_aceptacion}}
+- Dispositivo: {{dispositivo}}
+- Versión del contrato: {{contrato_version}}
+
+Esta aceptación electrónica tiene plena validez legal conforme al Decreto-Ley sobre Mensajes de Datos y Firmas Electrónicas de la República Bolivariana de Venezuela.
+
+En Caracas, a la fecha de aceptación digital indicada.
+
+LA PLATAFORMA — {{empresa_razon_social}}
+EL ARRENDATARIO — {{arrendatario_nombre}} — C.I. {{arrendatario_cedula}}`,
+  },
 };
 
 const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
