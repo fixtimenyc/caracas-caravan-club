@@ -703,6 +703,9 @@ export default function AdminReservationsPage() {
                                   <DropdownMenuItem onClick={() => navigate(`/admin/reservas/${r.id}`)}>
                                     <Eye className="h-4 w-4" /> Ver detalle
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => navigate(`/admin/reservas/${r.id}/contrato`)}>
+                                    <FileText className="h-4 w-4" /> Ver contrato
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   {r.status === "pending" && (
                                     <>
