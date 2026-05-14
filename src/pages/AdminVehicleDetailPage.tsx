@@ -241,7 +241,7 @@ export default function AdminVehicleDetailPage() {
   }
 
   async function setReservationStatus(id: string, newStatus: string) {
-    const { error } = await supabase.from("reservations").update({ status: newStatus }).eq("id", id);
+    const { error } = await supabase.from("reservations").update({ status: newStatus as any }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Reserva actualizada");
     setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r)));
