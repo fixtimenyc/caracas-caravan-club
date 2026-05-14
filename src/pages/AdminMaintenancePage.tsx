@@ -67,6 +67,7 @@ type MaintenanceRow = {
   signature: string | null;
   completed_at: string | null;
   created_at: string;
+  mileage: number | null;
 };
 
 const CHECKLIST_ITEMS = [
@@ -249,6 +250,7 @@ export default function AdminMaintenancePage() {
                       <TableHead>Fecha</TableHead>
                       <TableHead>Taller</TableHead>
                       <TableHead>Costo</TableHead>
+                      <TableHead>Km</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Próximo</TableHead>
                     </TableRow>
@@ -267,6 +269,7 @@ export default function AdminMaintenancePage() {
                         <TableCell>{r.scheduled_date}</TableCell>
                         <TableCell>{r.workshop || "—"}</TableCell>
                         <TableCell>{r.cost ? `$${r.cost}` : "—"}</TableCell>
+                        <TableCell>{r.mileage != null ? `${r.mileage.toLocaleString()} km` : "—"}</TableCell>
                         <TableCell>
                           <StatusBadge status={r.status} />
                         </TableCell>
@@ -275,7 +278,7 @@ export default function AdminMaintenancePage() {
                     ))}
                     {rows.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                           Sin registros
                         </TableCell>
                       </TableRow>
@@ -400,6 +403,7 @@ function CreateDialog({
     scheduled_date: format(new Date(), "yyyy-MM-dd"),
     next_date: "",
     cost: "",
+    mileage: "",
     notes: "",
   });
   const [saving, setSaving] = useState(false);
@@ -419,6 +423,7 @@ function CreateDialog({
       scheduled_date: form.scheduled_date,
       next_date: form.next_date || null,
       cost: form.cost ? Number(form.cost) : null,
+      mileage: form.mileage ? Number(form.mileage) : null,
       notes: form.notes || null,
       status: "scheduled",
     });
@@ -490,7 +495,7 @@ function CreateDialog({
               <Input value={form.workshop} onChange={(e) => setForm({ ...form, workshop: e.target.value })} />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Fecha</Label>
               <Input type="date" value={form.scheduled_date} onChange={(e) => setForm({ ...form, scheduled_date: e.target.value })} />
@@ -502,6 +507,10 @@ function CreateDialog({
             <div>
               <Label>Costo (USD)</Label>
               <Input type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
+            </div>
+            <div>
+              <Label>Kilometraje (km)</Label>
+              <Input type="number" inputMode="numeric" value={form.mileage} onChange={(e) => setForm({ ...form, mileage: e.target.value })} placeholder="0" />
             </div>
           </div>
           <div>
@@ -533,6 +542,7 @@ function ResultDialog({
   const [result, setResult] = useState(row.result || "Sin problemas");
   const [signature, setSignature] = useState(row.signature || "");
   const [cost, setCost] = useState(row.cost?.toString() || "");
+  const [mileage, setMileage] = useState(row.mileage?.toString() || "");
   const [saving, setSaving] = useState(false);
 
   async function submit() {
@@ -544,6 +554,7 @@ function ResultDialog({
       result,
       signature: signature || null,
       cost: cost ? Number(cost) : null,
+      mileage: mileage ? Number(mileage) : null,
     } as any);
     setSaving(false);
   }
@@ -586,7 +597,7 @@ function ResultDialog({
               </Select>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Resultado</Label>
               <Input value={result} onChange={(e) => setResult(e.target.value)} />
@@ -594,6 +605,10 @@ function ResultDialog({
             <div>
               <Label>Costo (USD)</Label>
               <Input type="number" value={cost} onChange={(e) => setCost(e.target.value)} />
+            </div>
+            <div>
+              <Label>Kilometraje (km)</Label>
+              <Input type="number" inputMode="numeric" value={mileage} onChange={(e) => setMileage(e.target.value)} placeholder="0" />
             </div>
           </div>
           <div>
