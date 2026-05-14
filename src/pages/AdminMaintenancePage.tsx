@@ -400,6 +400,7 @@ function CreateDialog({
     scheduled_date: format(new Date(), "yyyy-MM-dd"),
     next_date: "",
     cost: "",
+    mileage: "",
     notes: "",
   });
   const [saving, setSaving] = useState(false);
@@ -419,6 +420,7 @@ function CreateDialog({
       scheduled_date: form.scheduled_date,
       next_date: form.next_date || null,
       cost: form.cost ? Number(form.cost) : null,
+      mileage: form.mileage ? Number(form.mileage) : null,
       notes: form.notes || null,
       status: "scheduled",
     });
@@ -490,7 +492,7 @@ function CreateDialog({
               <Input value={form.workshop} onChange={(e) => setForm({ ...form, workshop: e.target.value })} />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Fecha</Label>
               <Input type="date" value={form.scheduled_date} onChange={(e) => setForm({ ...form, scheduled_date: e.target.value })} />
@@ -502,6 +504,10 @@ function CreateDialog({
             <div>
               <Label>Costo (USD)</Label>
               <Input type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
+            </div>
+            <div>
+              <Label>Kilometraje (km)</Label>
+              <Input type="number" inputMode="numeric" value={form.mileage} onChange={(e) => setForm({ ...form, mileage: e.target.value })} placeholder="0" />
             </div>
           </div>
           <div>
