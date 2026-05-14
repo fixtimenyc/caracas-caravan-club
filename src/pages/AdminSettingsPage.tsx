@@ -55,6 +55,28 @@ type Settings = {
     cash_enabled: boolean;
     bcv_rate: number;
     bcv_auto_update: boolean;
+    fx: {
+      default_currency: "USD" | "VES" | "EUR" | "USDT";
+      accepted_currencies: { USD: boolean; VES: boolean; EUR: boolean; USDT: boolean };
+      rates: { USD: number; EUR: number; USDT: number }; // unidades de Bs por 1 unidad
+      surcharge_pct: number; // sobrecargo % por pagar en divisa distinta a la default
+      show_dual_pricing: boolean; // mostrar precio en Bs y divisa
+      rate_source: "manual" | "bcv" | "binance" | "paralelo";
+      zelle_enabled: boolean;
+      zelle_email: string;
+      zelle_holder: string;
+      binance_enabled: boolean;
+      binance_pay_id: string;
+      binance_email: string;
+      wire_enabled: boolean;
+      wire_bank: string;
+      wire_account: string;
+      wire_routing: string;
+      wire_swift: string;
+      wire_beneficiary: string;
+      wire_address: string;
+      instructions: string;
+    };
   };
   integrations: {
     google_maps_key: string;
@@ -92,6 +114,18 @@ const DEFAULTS: Settings = {
     bank_enabled: true, bank_name: "Banesco", bank_account_holder: "RUEDAVE C.A.",
     bank_account_number: "0134-XXXX-XX-XXXXXXXXXX", bank_rif: "J-XXXXXXXX-X",
     cash_enabled: true, bcv_rate: 36.5, bcv_auto_update: false,
+    fx: {
+      default_currency: "USD",
+      accepted_currencies: { USD: true, VES: true, EUR: false, USDT: true },
+      rates: { USD: 36.5, EUR: 39.8, USDT: 36.6 },
+      surcharge_pct: 0,
+      show_dual_pricing: true,
+      rate_source: "bcv",
+      zelle_enabled: true, zelle_email: "pagos@ruedave.com", zelle_holder: "RUEDAVE LLC",
+      binance_enabled: true, binance_pay_id: "", binance_email: "binance@ruedave.com",
+      wire_enabled: false, wire_bank: "", wire_account: "", wire_routing: "", wire_swift: "", wire_beneficiary: "RUEDAVE LLC", wire_address: "",
+      instructions: "Envíe el comprobante al WhatsApp de soporte tras realizar el pago. Las reservas se confirman al verificar la transacción.",
+    },
   },
   integrations: {
     google_maps_key: "", twilio_sid: "", twilio_token: "", twilio_whatsapp_from: "",
@@ -128,7 +162,20 @@ const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
         ...securityDeposits,
       },
     },
-    payments: { ...DEFAULTS.payments, ...(source.payments ?? {}) },
+    payments: (() => {
+      const p = (source.payments ?? {}) as Partial<Settings["payments"]>;
+      const fx = (p.fx ?? {}) as Partial<Settings["payments"]["fx"]>;
+      return {
+        ...DEFAULTS.payments,
+        ...p,
+        fx: {
+          ...DEFAULTS.payments.fx,
+          ...fx,
+          accepted_currencies: { ...DEFAULTS.payments.fx.accepted_currencies, ...(fx.accepted_currencies ?? {}) },
+          rates: { ...DEFAULTS.payments.fx.rates, ...(fx.rates ?? {}) },
+        },
+      };
+    })(),
     integrations: { ...DEFAULTS.integrations, ...(source.integrations ?? {}) },
     email_templates: { ...DEFAULTS.email_templates, ...(source.email_templates ?? {}) },
     sms_templates: { ...DEFAULTS.sms_templates, ...(source.sms_templates ?? {}) },
@@ -345,6 +392,115 @@ export default function AdminSettingsPage() {
                 <ToggleRow label="Aceptar efectivo en recolección" checked={settings.payments.cash_enabled} onChange={(v) => save({ ...settings, payments: { ...settings.payments, cash_enabled: v } })} />
                 <NumField label="Tasa BCV (Bs/USD)" step={0.01} value={settings.payments.bcv_rate} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bcv_rate: v } })} />
                 <ToggleRow label="Actualizar tasa BCV automáticamente" checked={settings.payments.bcv_auto_update} onChange={(v) => save({ ...settings, payments: { ...settings.payments, bcv_auto_update: v } })} />
+              </CardContent>
+            </Card>
+
+            {/* PAGOS EN DIVISAS */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pagos en divisas</CardTitle>
+                <CardDescription>Configura las monedas aceptadas, tasas de cambio y métodos internacionales (Zelle, Binance/USDT, transferencia internacional).</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-6">
+                {/* Monedas aceptadas */}
+                <div className="grid gap-3">
+                  <div className="text-sm font-medium">Monedas aceptadas</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {(["USD", "VES", "EUR", "USDT"] as const).map((c) => (
+                      <ToggleRow
+                        key={c}
+                        label={c}
+                        checked={settings.payments.fx.accepted_currencies[c]}
+                        onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, accepted_currencies: { ...settings.payments.fx.accepted_currencies, [c]: v } } } })}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-1.5">
+                    <label className="text-sm font-medium">Moneda por defecto</label>
+                    <Select
+                      value={settings.payments.fx.default_currency}
+                      onValueChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, default_currency: v as any } } })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD - Dólar</SelectItem>
+                        <SelectItem value="VES">VES - Bolívar</SelectItem>
+                        <SelectItem value="EUR">EUR - Euro</SelectItem>
+                        <SelectItem value="USDT">USDT - Tether</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-sm font-medium">Fuente de tasa</label>
+                    <Select
+                      value={settings.payments.fx.rate_source}
+                      onValueChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, rate_source: v as any } } })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Manual</SelectItem>
+                        <SelectItem value="bcv">BCV</SelectItem>
+                        <SelectItem value="binance">Binance P2P</SelectItem>
+                        <SelectItem value="paralelo">Paralelo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Tasas */}
+                <div className="grid gap-3">
+                  <div className="text-sm font-medium">Tasas de cambio (Bs por 1 unidad)</div>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <NumField label="Bs / USD" step={0.01} value={settings.payments.fx.rates.USD} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, rates: { ...settings.payments.fx.rates, USD: v } } } })} />
+                    <NumField label="Bs / EUR" step={0.01} value={settings.payments.fx.rates.EUR} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, rates: { ...settings.payments.fx.rates, EUR: v } } } })} />
+                    <NumField label="Bs / USDT" step={0.01} value={settings.payments.fx.rates.USDT} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, rates: { ...settings.payments.fx.rates, USDT: v } } } })} />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <NumField label="Sobrecargo % por divisa alterna" step={0.1} value={settings.payments.fx.surcharge_pct} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, surcharge_pct: v } } })} />
+                  <ToggleRow label="Mostrar precio dual (Bs + divisa)" checked={settings.payments.fx.show_dual_pricing} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, show_dual_pricing: v } } })} />
+                </div>
+
+                {/* Zelle */}
+                <div className="border-t pt-4 grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2 text-sm font-medium">Zelle (USD)</div>
+                  <ToggleRow label="Habilitar Zelle" checked={settings.payments.fx.zelle_enabled} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, zelle_enabled: v } } })} />
+                  <Field label="Email Zelle" value={settings.payments.fx.zelle_email} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, zelle_email: v } } })} />
+                  <Field label="Titular" value={settings.payments.fx.zelle_holder} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, zelle_holder: v } } })} />
+                </div>
+
+                {/* Binance / USDT */}
+                <div className="border-t pt-4 grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2 text-sm font-medium">Binance Pay / USDT</div>
+                  <ToggleRow label="Habilitar Binance/USDT" checked={settings.payments.fx.binance_enabled} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, binance_enabled: v } } })} />
+                  <Field label="Binance Pay ID" value={settings.payments.fx.binance_pay_id} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, binance_pay_id: v } } })} />
+                  <Field label="Email Binance" value={settings.payments.fx.binance_email} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, binance_email: v } } })} />
+                </div>
+
+                {/* Wire transfer */}
+                <div className="border-t pt-4 grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2 text-sm font-medium">Transferencia internacional (Wire)</div>
+                  <ToggleRow label="Habilitar Wire" checked={settings.payments.fx.wire_enabled} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, wire_enabled: v } } })} />
+                  <Field label="Banco" value={settings.payments.fx.wire_bank} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, wire_bank: v } } })} />
+                  <Field label="Beneficiario" value={settings.payments.fx.wire_beneficiary} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, wire_beneficiary: v } } })} />
+                  <Field label="Cuenta" value={settings.payments.fx.wire_account} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, wire_account: v } } })} />
+                  <Field label="Routing / ABA" value={settings.payments.fx.wire_routing} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, wire_routing: v } } })} />
+                  <Field label="SWIFT / BIC" value={settings.payments.fx.wire_swift} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, wire_swift: v } } })} />
+                  <Field label="Dirección beneficiario" value={settings.payments.fx.wire_address} onChange={(v) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, wire_address: v } } })} />
+                </div>
+
+                <div className="border-t pt-4 grid gap-1.5">
+                  <label className="text-sm font-medium">Instrucciones para el usuario</label>
+                  <textarea
+                    className="min-h-[90px] rounded-md border bg-background px-3 py-2 text-sm"
+                    value={settings.payments.fx.instructions}
+                    onChange={(e) => save({ ...settings, payments: { ...settings.payments, fx: { ...settings.payments.fx, instructions: e.target.value } } })}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
