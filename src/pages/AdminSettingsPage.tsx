@@ -91,6 +91,19 @@ type Settings = {
   };
   email_templates: Record<string, { subject: string; body: string }>;
   sms_templates: Record<string, string>;
+  contract: {
+    enabled: boolean;
+    version: string;
+    subject: string;
+    require_digital_acceptance: boolean;
+    send_on_payment_confirmed: boolean;
+    cc_owner: boolean;
+    company_legal_name: string;
+    company_rif: string;
+    company_address: string;
+    jurisdiction: string;
+    body: string;
+  };
 };
 
 const DEFAULTS: Settings = {
