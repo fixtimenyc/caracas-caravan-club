@@ -247,6 +247,14 @@ const Navbar = () => {
                     )}
                     {roles.includes('admin') && (
                       <>
+                        <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin'); setIsMenuOpen(false); }}>
+                          <ShieldCheck className="w-4 h-4 mr-2" />
+                          Dashboard admin
+                        </Button>
+                        <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/flota'); setIsMenuOpen(false); }}>
+                          <Car className="w-4 h-4 mr-2" />
+                          Gestión de flota
+                        </Button>
                         <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin/solicitudes'); setIsMenuOpen(false); }}>
                           <ShieldCheck className="w-4 h-4 mr-2" />
                           Solicitudes de aliados
