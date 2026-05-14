@@ -97,6 +97,16 @@ export default function VehicleInspectionForm({
         }
         uploaded.push(path);
       }
+      if (uploaded.length) {
+        const { data: signed } = await supabase.storage
+          .from("inspection-photos")
+          .createSignedUrls(uploaded, 60 * 60);
+        const urlMap: Record<string, string> = {};
+        signed?.forEach((s, i) => {
+          if (s.signedUrl) urlMap[uploaded[i]] = s.signedUrl;
+        });
+        setPhotoUrls((prev) => ({ ...prev, ...urlMap }));
+      }
       setPhotos((p) => [...p, ...uploaded]);
     } finally {
       setUploading(false);
