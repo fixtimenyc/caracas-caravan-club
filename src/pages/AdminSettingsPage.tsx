@@ -117,7 +117,19 @@ const loadSettings = (): Settings => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS;
-    return { ...DEFAULTS, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    return {
+      business: { ...DEFAULTS.business, ...(parsed.business || {}) },
+      policies: {
+        ...DEFAULTS.policies,
+        ...(parsed.policies || {}),
+        security_deposits: { ...DEFAULTS.policies.security_deposits, ...((parsed.policies || {}).security_deposits || {}) },
+      },
+      payments: { ...DEFAULTS.payments, ...(parsed.payments || {}) },
+      integrations: { ...DEFAULTS.integrations, ...(parsed.integrations || {}) },
+      email_templates: { ...DEFAULTS.email_templates, ...(parsed.email_templates || {}) },
+      sms_templates: { ...DEFAULTS.sms_templates, ...(parsed.sms_templates || {}) },
+    };
   } catch { return DEFAULTS; }
 };
 
