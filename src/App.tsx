@@ -20,6 +20,8 @@ import ProfilePage from "./pages/ProfilePage";
 import HelpPage from "./pages/HelpPage";
 import AdminSupportPage from "./pages/AdminSupportPage";
 import MessagesPage from "./pages/MessagesPage";
+import MyBookingsPage from "./pages/MyBookingsPage";
+import MyEarningsPage from "./pages/MyEarningsPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import CancellationPage from "./pages/CancellationPage";
