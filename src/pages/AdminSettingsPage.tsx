@@ -503,6 +503,8 @@ export default function AdminSettingsPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </TabsContent>
 
         {/* INTEGRATIONS */}
         <TabsContent value="integrations" className="mt-6">
