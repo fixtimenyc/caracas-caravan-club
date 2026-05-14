@@ -168,6 +168,32 @@ export default function VehicleInspectionForm({
       metadata: { inspection_type: type, mileage: Number(mileage), fuel_level: fuel, summary },
     });
 
+    // Notify the other party (RLS allows insert when reservation_id is set and recipient is the counterpart)
+    const { data: resData } = await supabase
+      .from("reservations")
+      .select("renter_id, vehicle_id, vehicles(owner_id)")
+      .eq("id", reservationId)
+      .maybeSingle();
+    const renterId = (resData as any)?.renter_id;
+    const ownerId = (resData as any)?.vehicles?.owner_id;
+    const recipient = type === "pickup" ? ownerId : renterId;
+    if (recipient) {
+      await supabase.from("notifications").insert({
+        user_id: recipient,
+        type: type === "pickup" ? "inspection_pickup" : "inspection_return",
+        title:
+          type === "pickup"
+            ? "El arrendatario firmó la inspección de entrega"
+            : "El propietario firmó la inspección de devolución",
+        message: `${signatureName.trim()} confirmó el estado del vehículo (${Number(
+          mileage
+        ).toLocaleString()} km, combustible ${fuel}).`,
+        action_url: `/admin/reservas/${reservationId}`,
+        reservation_id: reservationId,
+        vehicle_id: vehicleId,
+      });
+    }
+
     toast.success("Inspección registrada");
     if (redirectTo) navigate(redirectTo);
     else window.location.reload();
