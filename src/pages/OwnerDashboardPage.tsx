@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { format, isPast, differenceInHours } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -18,6 +18,7 @@ import {
   X,
   PlayCircle,
   Flag,
+  ClipboardCheck,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -888,6 +889,13 @@ const BookingRow = ({
               <X className="w-4 h-4 mr-1" /> Rechazar
             </Button>
           </>
+        )}
+        {(reservation.status === "active" || reservation.status === "completed") && (
+          <Link to={`/reservas/${reservation.id}/inspeccion-devolucion`}>
+            <Button size="sm" variant="outline">
+              <ClipboardCheck className="w-4 h-4 mr-1" /> Devolución
+            </Button>
+          </Link>
         )}
         <Button size="sm" variant="ghost" onClick={onView}>
           <Eye className="w-4 h-4 mr-1" /> Ver
