@@ -60,6 +60,7 @@ const App = () => (
             <Route path="/admin/flota/:vehicleId" element={<AdminVehicleDetailPage />} />
             <Route path="/admin/reservas" element={<AdminReservationsPage />} />
             <Route path="/admin/reservas/:id" element={<AdminReservationDetailPage />} />
+            <Route path="/admin/reservas/:id/contrato" element={<AdminReservationContractPage />} />
             <Route path="/admin/solicitudes" element={<AdminApplicationsPage />} />
             <Route path="/admin/usuarios" element={<AdminUsersPage />} />
             <Route path="/admin/usuarios/:userId" element={<AdminUserDetailPage />} />
