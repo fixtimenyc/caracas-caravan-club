@@ -117,11 +117,6 @@ const MyBookingsPage = () => {
                 </Button>
               </Link>
             )}
-            <Link to={`/admin/reservas/${r.id}/contrato`}>
-              <Button size="sm" variant="outline">
-                <FileText className="h-4 w-4 mr-1" /> Contrato
-              </Button>
-            </Link>
           </div>
         </CardContent>
       </Card>
