@@ -162,7 +162,20 @@ const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
         ...securityDeposits,
       },
     },
-    payments: { ...DEFAULTS.payments, ...(source.payments ?? {}) },
+    payments: (() => {
+      const p = (source.payments ?? {}) as Partial<Settings["payments"]>;
+      const fx = (p.fx ?? {}) as Partial<Settings["payments"]["fx"]>;
+      return {
+        ...DEFAULTS.payments,
+        ...p,
+        fx: {
+          ...DEFAULTS.payments.fx,
+          ...fx,
+          accepted_currencies: { ...DEFAULTS.payments.fx.accepted_currencies, ...(fx.accepted_currencies ?? {}) },
+          rates: { ...DEFAULTS.payments.fx.rates, ...(fx.rates ?? {}) },
+        },
+      };
+    })(),
     integrations: { ...DEFAULTS.integrations, ...(source.integrations ?? {}) },
     email_templates: { ...DEFAULTS.email_templates, ...(source.email_templates ?? {}) },
     sms_templates: { ...DEFAULTS.sms_templates, ...(source.sms_templates ?? {}) },
