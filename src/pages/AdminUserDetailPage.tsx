@@ -950,6 +950,115 @@ const AdminUserDetailPage = () => {
             </TabsContent>
           )}
 
+          {/* Financiero (owner) */}
+          {isOwner && (
+            <TabsContent value="financial" className="space-y-4">
+              {(() => {
+                const owned = ownerRes;
+                const completed = owned.filter((r: any) => ["completed", "active"].includes(r.status));
+                const totalRevenue = completed.reduce((s: number, r: any) => s + Number(r.total_price || 0), 0);
+                const commissions = Math.round(totalRevenue * 0.10 * 100) / 100;
+                const payout = totalRevenue - commissions;
+                // 6-month series
+                const months: { label: string; revenue: number }[] = [];
+                const now = new Date();
+                for (let i = 5; i >= 0; i--) {
+                  const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                  const label = d.toLocaleDateString("es-VE", { month: "short", year: "2-digit" });
+                  const rev = completed
+                    .filter((r: any) => {
+                      const rd = new Date(r.created_at);
+                      return rd.getMonth() === d.getMonth() && rd.getFullYear() === d.getFullYear();
+                    })
+                    .reduce((s: number, r: any) => s + Number(r.total_price || 0), 0);
+                  months.push({ label, revenue: rev });
+                }
+                const maxRev = Math.max(1, ...months.map((m) => m.revenue));
+                const fmt = (n: number) =>
+                  `$${n.toLocaleString("es-VE", { maximumFractionDigits: 0 })}`;
+                return (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="rounded-xl border bg-card p-4">
+                        <p className="text-xs text-muted-foreground">Ingresos totales</p>
+                        <p className="text-2xl font-bold">{fmt(totalRevenue)}</p>
+                      </div>
+                      <div className="rounded-xl border bg-card p-4">
+                        <p className="text-xs text-muted-foreground">Comisión RUEDAVE (10%)</p>
+                        <p className="text-2xl font-bold text-destructive">−{fmt(commissions)}</p>
+                      </div>
+                      <div className="rounded-xl border bg-card p-4">
+                        <p className="text-xs text-muted-foreground">Payout neto</p>
+                        <p className="text-2xl font-bold text-primary">{fmt(payout)}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border bg-card p-4">
+                      <p className="text-sm font-medium mb-3">Ingresos últimos 6 meses</p>
+                      <div className="flex items-end gap-2 h-32">
+                        {months.map((m) => (
+                          <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
+                            <div className="text-[10px] text-muted-foreground">{fmt(m.revenue)}</div>
+                            <div
+                              className="w-full bg-primary rounded-t"
+                              style={{ height: `${(m.revenue / maxRev) * 100}%`, minHeight: m.revenue > 0 ? "4px" : "0" }}
+                            />
+                            <div className="text-[10px] text-muted-foreground">{m.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border bg-card overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Fecha</TableHead>
+                            <TableHead>Vehículo</TableHead>
+                            <TableHead className="text-right">Ingreso</TableHead>
+                            <TableHead className="text-right">Comisión</TableHead>
+                            <TableHead className="text-right">Payout</TableHead>
+                            <TableHead>Pago</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {owned.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                                Sin movimientos.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            owned.slice(0, 20).map((r: any) => {
+                              const rev = Number(r.total_price || 0);
+                              const com = Math.round(rev * 0.10 * 100) / 100;
+                              return (
+                                <TableRow key={r.id}>
+                                  <TableCell className="text-xs">
+                                    {new Date(r.created_at).toLocaleDateString("es-VE")}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    {r.vehicles?.brand} {r.vehicles?.model}
+                                  </TableCell>
+                                  <TableCell className="text-right text-sm">{fmt(rev)}</TableCell>
+                                  <TableCell className="text-right text-sm text-destructive">−{fmt(com)}</TableCell>
+                                  <TableCell className="text-right text-sm font-medium">{fmt(rev - com)}</TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline">{r.payments?.[0]?.status || "—"}</Badge>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
+                );
+              })()}
+            </TabsContent>
+          )}
+
           {/* Reviews */}
           <TabsContent value="reviews">
             <div className="space-y-3">
