@@ -4,7 +4,7 @@ import { format, differenceInCalendarDays } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   ArrowLeft, Phone, MessageSquare, Mail, Calendar, Car, User, DollarSign,
-  Clock, CheckCircle2, XCircle, AlertCircle, Send, FileText, MapPin,
+  Clock, CheckCircle2, XCircle, AlertCircle, Send, FileText, MapPin, Bell,
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
