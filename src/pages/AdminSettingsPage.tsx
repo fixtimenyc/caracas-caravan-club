@@ -175,7 +175,7 @@ export default function AdminSettingsPage() {
   const actionTypes = useMemo(() => Array.from(new Set(logs.map((l) => l.action_type))), [logs]);
 
   return (
-    <AdminLayout>
+    <AdminLayout title="Configuración">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10"><Settings className="h-6 w-6 text-primary" /></div>
