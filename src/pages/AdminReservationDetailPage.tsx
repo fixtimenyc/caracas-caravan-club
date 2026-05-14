@@ -103,7 +103,7 @@ export default function AdminReservationDetailPage() {
     return idx >= 0 ? idx : 0;
   }, [reservation]);
 
-  const setStatus = async (status: string) => {
+  const setStatus = async (status: any) => {
     const { error } = await supabase.from("reservations").update({ status }).eq("id", id!);
     if (error) return toast.error(error.message);
     toast.success("Estado actualizado");
@@ -168,10 +168,10 @@ export default function AdminReservationDetailPage() {
   };
 
   if (loading) {
-    return <AdminLayout><div className="space-y-4"><Skeleton className="h-12 w-64" /><Skeleton className="h-96" /></div></AdminLayout>;
+    return <AdminLayout title="Detalle de Reserva"><div className="space-y-4"><Skeleton className="h-12 w-64" /><Skeleton className="h-96" /></div></AdminLayout>;
   }
   if (!reservation) {
-    return <AdminLayout><div className="text-center py-12"><p className="text-muted-foreground">Reserva no encontrada</p><Button onClick={() => navigate("/admin/reservas")} className="mt-4">Volver</Button></div></AdminLayout>;
+    return <AdminLayout title="Detalle de Reserva"><div className="text-center py-12"><p className="text-muted-foreground">Reserva no encontrada</p><Button onClick={() => navigate("/admin/reservas")} className="mt-4">Volver</Button></div></AdminLayout>;
   }
 
   const status = STATUS_META[reservation.status] || STATUS_META.pending;
@@ -180,7 +180,7 @@ export default function AdminReservationDetailPage() {
   const ownerWa = owner?.phone ? `https://wa.me/${owner.phone.replace(/\D/g, "")}` : null;
 
   return (
-    <AdminLayout>
+    <AdminLayout title="Detalle de Reserva">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4">
