@@ -114,6 +114,18 @@ const DEFAULTS: Settings = {
     bank_enabled: true, bank_name: "Banesco", bank_account_holder: "RUEDAVE C.A.",
     bank_account_number: "0134-XXXX-XX-XXXXXXXXXX", bank_rif: "J-XXXXXXXX-X",
     cash_enabled: true, bcv_rate: 36.5, bcv_auto_update: false,
+    fx: {
+      default_currency: "USD",
+      accepted_currencies: { USD: true, VES: true, EUR: false, USDT: true },
+      rates: { USD: 36.5, EUR: 39.8, USDT: 36.6 },
+      surcharge_pct: 0,
+      show_dual_pricing: true,
+      rate_source: "bcv",
+      zelle_enabled: true, zelle_email: "pagos@ruedave.com", zelle_holder: "RUEDAVE LLC",
+      binance_enabled: true, binance_pay_id: "", binance_email: "binance@ruedave.com",
+      wire_enabled: false, wire_bank: "", wire_account: "", wire_routing: "", wire_swift: "", wire_beneficiary: "RUEDAVE LLC", wire_address: "",
+      instructions: "Envíe el comprobante al WhatsApp de soporte tras realizar el pago. Las reservas se confirman al verificar la transacción.",
+    },
   },
   integrations: {
     google_maps_key: "", twilio_sid: "", twilio_token: "", twilio_whatsapp_from: "",
