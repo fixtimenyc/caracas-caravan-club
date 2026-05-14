@@ -27,6 +27,7 @@ import AdminSupportPage from "./pages/AdminSupportPage";
 import AdminFinancePage from "./pages/AdminFinancePage";
 import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
+import AdminAlertsPage from "./pages/AdminAlertsPage";
 import MessagesPage from "./pages/MessagesPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import MyEarningsPage from "./pages/MyEarningsPage";
