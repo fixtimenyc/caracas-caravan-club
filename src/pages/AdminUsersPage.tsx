@@ -188,10 +188,6 @@ const AdminUsersPage = () => {
           last_reservation_at: lastResByRenter.get(p.user_id) || null,
         };
       });
-          review_count: r?.n || 0,
-          last_payment_at: lastPaymentByOwner.get(p.user_id) || null,
-        };
-      });
 
       setUsers(rows);
     } catch (e: any) {
