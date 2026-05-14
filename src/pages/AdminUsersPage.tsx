@@ -85,8 +85,8 @@ const AdminUsersPage = () => {
           supabase.from("profiles").select("*").order("created_at", { ascending: false }),
           supabase.from("user_roles").select("user_id, role"),
           supabase.from("vehicles").select("id, owner_id, active"),
-          supabase.from("reservations").select("renter_id, vehicle_id, total_price, status, created_at"),
-          supabase.from("reviews").select("subject_user_id, rating"),
+          supabase.from("reservations").select("id, renter_id, vehicle_id, total_price, status, created_at"),
+          supabase.from("reviews").select("subject_user_id, author_id, reviewer_type, rating"),
           supabase.from("payments").select("reservation_id, amount, status, created_at"),
         ]);
 
