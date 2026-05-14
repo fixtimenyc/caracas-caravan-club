@@ -10,6 +10,7 @@ import {
   LifeBuoy,
   Settings,
   BarChart3,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,6 +36,7 @@ const items = [
   { title: "Inspecciones & Mantenimiento", url: "/admin/mantenimiento", icon: Wrench },
   { title: "Soporte & Reportes", url: "/admin/soporte", icon: LifeBuoy },
   { title: "Analytics & KPIs", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Alertas & Notificaciones", url: "/admin/alertas", icon: Bell },
   { title: "Configuración", url: "/admin/configuracion", icon: Settings },
 ];
 

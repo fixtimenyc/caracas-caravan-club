@@ -27,6 +27,7 @@ import AdminSupportPage from "./pages/AdminSupportPage";
 import AdminFinancePage from "./pages/AdminFinancePage";
 import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
+import AdminAlertsPage from "./pages/AdminAlertsPage";
 import MessagesPage from "./pages/MessagesPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import MyEarningsPage from "./pages/MyEarningsPage";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/admin/finanzas" element={<AdminFinancePage />} />
             <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
             <Route path="/admin/configuracion" element={<AdminSettingsPage />} />
+            <Route path="/admin/alertas" element={<AdminAlertsPage />} />
             <Route path="/mensajes" element={<MessagesPage />} />
             <Route path="/mis-reservas" element={<MyBookingsPage />} />
             <Route path="/mis-ganancias" element={<MyEarningsPage />} />
