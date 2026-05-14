@@ -433,3 +433,76 @@ export default function AdminReservationDetailPage() {
     </AdminLayout>
   );
 }
+
+function MileageCard({ reservation, onSaved }: { reservation: any; onSaved: () => void }) {
+  const [start, setStart] = useState<string>(reservation.start_mileage?.toString() ?? "");
+  const [end, setEnd] = useState<string>(reservation.end_mileage?.toString() ?? "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setStart(reservation.start_mileage?.toString() ?? "");
+    setEnd(reservation.end_mileage?.toString() ?? "");
+  }, [reservation.id, reservation.start_mileage, reservation.end_mileage]);
+
+  const driven =
+    start && end && Number(end) >= Number(start) ? Number(end) - Number(start) : null;
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("reservations")
+      .update({
+        start_mileage: start ? Number(start) : null,
+        end_mileage: end ? Number(end) : null,
+      })
+      .eq("id", reservation.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Kilometraje actualizado");
+    onSaved();
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Car className="h-4 w-4" /> Kilometraje
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+        <div>
+          <Label className="text-xs text-muted-foreground">Km al inicio</Label>
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={start}
+            onChange={(e) => setStart(e.target.value)}
+            placeholder="0"
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Km al final</Label>
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={end}
+            onChange={(e) => setEnd(e.target.value)}
+            placeholder="0"
+          />
+        </div>
+        <div className="flex flex-col justify-end">
+          <p className="text-xs text-muted-foreground">Km recorridos</p>
+          <p className="font-semibold text-lg">
+            {driven != null ? `${driven.toLocaleString()} km` : "—"}
+          </p>
+        </div>
+        <div className="md:col-span-3 flex justify-end">
+          <Button size="sm" onClick={save} disabled={saving}>
+            {saving ? "Guardando..." : "Guardar kilometraje"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
