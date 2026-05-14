@@ -108,9 +108,18 @@ const AdminUsersPage = () => {
 
       const bookingsByUser = new Map<string, number>();
       const revenueByOwner = new Map<string, number>();
-      const reservationOwner = new Map<string, string>();
+      const spentByRenter = new Map<string, number>();
+      const lastResByRenter = new Map<string, string>();
       (reservationsRes.data || []).forEach((r: any) => {
         bookingsByUser.set(r.renter_id, (bookingsByUser.get(r.renter_id) || 0) + 1);
+        // last reservation per renter
+        const cur = lastResByRenter.get(r.renter_id);
+        if (!cur || new Date(r.created_at) > new Date(cur)) {
+          lastResByRenter.set(r.renter_id, r.created_at);
+        }
+        if (["completed", "active"].includes(r.status)) {
+          spentByRenter.set(r.renter_id, (spentByRenter.get(r.renter_id) || 0) + Number(r.total_price || 0));
+        }
         const owner = vehicleOwner.get(r.vehicle_id);
         if (owner) {
           bookingsByUser.set(owner, (bookingsByUser.get(owner) || 0) + 1);
@@ -120,25 +129,27 @@ const AdminUsersPage = () => {
         }
       });
 
+      // Ratings received (subject) and ratings given by renter (author + type=renter)
       const ratingByUser = new Map<string, { sum: number; n: number }>();
+      const ratingGivenByRenter = new Map<string, { sum: number; n: number }>();
       (reviewsRes.data || []).forEach((rv: any) => {
-        if (!rv.subject_user_id) return;
-        const cur = ratingByUser.get(rv.subject_user_id) || { sum: 0, n: 0 };
-        cur.sum += rv.rating || 0;
-        cur.n += 1;
-        ratingByUser.set(rv.subject_user_id, cur);
+        if (rv.subject_user_id) {
+          const cur = ratingByUser.get(rv.subject_user_id) || { sum: 0, n: 0 };
+          cur.sum += rv.rating || 0;
+          cur.n += 1;
+          ratingByUser.set(rv.subject_user_id, cur);
+        }
+        if (rv.author_id && rv.reviewer_type === "renter") {
+          const cur = ratingGivenByRenter.get(rv.author_id) || { sum: 0, n: 0 };
+          cur.sum += rv.rating || 0;
+          cur.n += 1;
+          ratingGivenByRenter.set(rv.author_id, cur);
+        }
       });
 
       // Last payment per owner (via reservation -> vehicle owner)
       const lastPaymentByOwner = new Map<string, string>();
-      // Build reservation->owner map
       const allReservations = reservationsRes.data || [];
-      const resOwner = new Map<string, string>();
-      allReservations.forEach((r: any) => {
-        const o = vehicleOwner.get(r.vehicle_id);
-        if (o) resOwner.set((r as any).id || `${r.renter_id}-${r.vehicle_id}`, o);
-      });
-      // Use vehicle_id->owner via reservation_id mapping is missing; fallback: derive owner from payment via reservation lookup map keyed by id
       const resById = new Map<string, any>();
       (allReservations as any[]).forEach((r: any) => { if (r.id) resById.set(r.id, r); });
       (paymentsRes.data || []).forEach((p: any) => {
@@ -154,6 +165,7 @@ const AdminUsersPage = () => {
 
       const rows: UserRow[] = (profilesRes.data || []).map((p: any) => {
         const r = ratingByUser.get(p.user_id);
+        const rg = ratingGivenByRenter.get(p.user_id);
         return {
           user_id: p.user_id,
           full_name: p.full_name,
@@ -168,6 +180,14 @@ const AdminUsersPage = () => {
           vehicles_count: vehiclesByOwner.get(p.user_id) || 0,
           total_revenue: revenueByOwner.get(p.user_id) || 0,
           avg_rating: r ? Math.round((r.sum / r.n) * 10) / 10 : null,
+          review_count: r?.n || 0,
+          last_payment_at: lastPaymentByOwner.get(p.user_id) || null,
+          total_spent: spentByRenter.get(p.user_id) || 0,
+          rating_given: rg ? Math.round((rg.sum / rg.n) * 10) / 10 : null,
+          rating_given_count: rg?.n || 0,
+          last_reservation_at: lastResByRenter.get(p.user_id) || null,
+        };
+      });
           review_count: r?.n || 0,
           last_payment_at: lastPaymentByOwner.get(p.user_id) || null,
         };
