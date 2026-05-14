@@ -314,6 +314,11 @@ const AdminUsersPage = () => {
             Vista de dueños: muestra autos activos, ingresos acumulados, rating y último pago.
           </p>
         )}
+        {renterView && (
+          <p className="text-xs text-muted-foreground mb-2">
+            Vista de rentadores: muestra reservas, gasto total, rating dado y última reserva.
+          </p>
+        )}
 
         {/* Table */}
         <div className="rounded-xl border bg-card overflow-x-auto">
@@ -328,6 +333,13 @@ const AdminUsersPage = () => {
                     <TableHead className="text-right">Revenue</TableHead>
                     <TableHead>Rating</TableHead>
                     <TableHead>Último pago</TableHead>
+                  </>
+                ) : renterView ? (
+                  <>
+                    <TableHead className="text-right"># Reservas</TableHead>
+                    <TableHead className="text-right">Gasto total</TableHead>
+                    <TableHead>Rating dado</TableHead>
+                    <TableHead>Última reserva</TableHead>
                   </>
                 ) : (
                   <>
@@ -344,13 +356,13 @@ const AdminUsersPage = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={ownerView ? 9 : 8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={ownerView || renterView ? 9 : 8} className="text-center py-8 text-muted-foreground">
                     Cargando...
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={ownerView ? 9 : 8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={ownerView || renterView ? 9 : 8} className="text-center py-8 text-muted-foreground">
                     No se encontraron usuarios.
                   </TableCell>
                 </TableRow>
