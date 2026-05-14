@@ -361,6 +361,7 @@ export default function AdminSettingsPage() {
           <TabsTrigger value="emails"><Mail className="h-4 w-4 mr-2" />Emails</TabsTrigger>
           <TabsTrigger value="sms"><MessageSquare className="h-4 w-4 mr-2" />SMS/WhatsApp</TabsTrigger>
           <TabsTrigger value="admins"><UsersIcon className="h-4 w-4 mr-2" />Admins</TabsTrigger>
+          <TabsTrigger value="contract"><ScrollText className="h-4 w-4 mr-2" />Contrato</TabsTrigger>
           <TabsTrigger value="logs"><ScrollText className="h-4 w-4 mr-2" />Logs</TabsTrigger>
         </TabsList>
 
