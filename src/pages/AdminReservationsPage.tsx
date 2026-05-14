@@ -955,6 +955,9 @@ export default function AdminReservationsPage() {
                       {r.renter_name} • {format(parseISO(r.start_date), "dd MMM", { locale: es })}{" → "}
                       {format(parseISO(r.end_date), "dd MMM", { locale: es })} • $
                       {r.total_price.toLocaleString()}
+                      {r.start_mileage != null && r.end_mileage != null && (
+                        <> • {(r.end_mileage - r.start_mileage).toLocaleString()} km</>
+                      )}
                     </div>
                   </button>
                 ))}
