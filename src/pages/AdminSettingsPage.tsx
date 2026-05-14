@@ -33,7 +33,8 @@ type Settings = {
     cancel_lt_24h_refund: number;
     cancel_24_48h_refund: number;
     cancel_gt_48h_refund: number;
-    security_deposit: number;
+    security_deposits: { economy: number; sedan: number; suv: number; pickup: number; luxury: number; sports: number; van: number };
+    deposit_pct_of_value: number;
     auto_cancel_minutes: number;
     min_renter_age: number;
     require_id: boolean;
