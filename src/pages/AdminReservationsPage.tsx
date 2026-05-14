@@ -960,16 +960,20 @@ export default function AdminReservationsPage() {
             <div className="space-y-2">
               {dayDialog &&
                 (reservationsByDay.get(format(dayDialog, "yyyy-MM-dd")) || []).map((r) => (
-                  <button
+                  <div
                     key={r.id}
-                    onClick={() => {
-                      setDayDialog(null);
-                      navigate(`/admin/reservas/${r.id}`);
-                    }}
-                    className="w-full text-left rounded border p-3 space-y-1 hover:bg-accent/30"
+                    className="w-full rounded border p-3 space-y-2 hover:bg-accent/30"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="font-medium text-sm">{r.vehicle_name}</div>
+                      <button
+                        onClick={() => {
+                          setDayDialog(null);
+                          navigate(`/admin/reservas/${r.id}`);
+                        }}
+                        className="font-medium text-sm text-left hover:underline flex-1 min-w-0 truncate"
+                      >
+                        {r.vehicle_name}
+                      </button>
                       <Badge variant="outline" className={STATUS_META[r.status].cls}>
                         {STATUS_META[r.status].label}
                       </Badge>
@@ -982,7 +986,31 @@ export default function AdminReservationsPage() {
                         <> • {(r.end_mileage - r.start_mileage).toLocaleString()} km</>
                       )}
                     </div>
-                  </button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7"
+                        onClick={() => {
+                          setDayDialog(null);
+                          navigate(`/admin/reservas/${r.id}`);
+                        }}
+                      >
+                        <Eye className="h-3.5 w-3.5" /> Detalle
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7"
+                        onClick={() => {
+                          setDayDialog(null);
+                          navigate(`/admin/reservas/${r.id}/contrato`);
+                        }}
+                      >
+                        <FileText className="h-3.5 w-3.5" /> Contrato
+                      </Button>
+                    </div>
+                  </div>
                 ))}
             </div>
           </ScrollArea>
