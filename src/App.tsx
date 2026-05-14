@@ -10,6 +10,7 @@ import HowItWorksPage from "./pages/HowItWorksPage";
 import BecomeHostPage from "./pages/BecomeHostPage";
 import OwnerApplicationPage from "./pages/OwnerApplicationPage";
 import AdminApplicationsPage from "./pages/AdminApplicationsPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminUserDetailPage from "./pages/AdminUserDetailPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/como-funciona" element={<HowItWorksPage />} />
             <Route path="/conviertete-en-anfitrion" element={<BecomeHostPage />} />
             <Route path="/aliado/solicitud" element={<OwnerApplicationPage />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/solicitudes" element={<AdminApplicationsPage />} />
             <Route path="/admin/usuarios" element={<AdminUsersPage />} />
             <Route path="/admin/usuarios/:userId" element={<AdminUserDetailPage />} />

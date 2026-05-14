@@ -661,6 +661,42 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_maintenance: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          scheduled_date: string
+          status: string
+          type: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          scheduled_date: string
+          status?: string
+          type: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          scheduled_date?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           active: boolean
@@ -741,6 +777,10 @@ export type Database = {
           user_id: string
           verified: boolean
         }[]
+      }
+      admin_overview_metrics: {
+        Args: { _from: string; _to: string }
+        Returns: Json
       }
       get_renter_profile_for_owner: {
         Args: { _renter_id: string }
