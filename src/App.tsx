@@ -38,6 +38,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import CancellationPage from "./pages/CancellationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ReservationInspectionPage from "./pages/ReservationInspectionPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,8 @@ const App = () => (
             <Route path="/admin/mantenimiento" element={<AdminMaintenancePage />} />
             <Route path="/mensajes" element={<MessagesPage />} />
             <Route path="/mis-reservas" element={<MyBookingsPage />} />
+            <Route path="/reservas/:id/inspeccion-entrega" element={<ReservationInspectionPage type="pickup" />} />
+            <Route path="/reservas/:id/inspeccion-devolucion" element={<ReservationInspectionPage type="return" />} />
             <Route path="/mis-ganancias" element={<MyEarningsPage />} />
             <Route path="/terminos" element={<TermsPage />} />
             <Route path="/politica-privacidad" element={<PrivacyPage />} />

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ReservationInspectionsPanel from "@/components/admin/ReservationInspectionsPanel";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
@@ -322,6 +323,9 @@ export default function AdminReservationDetailPage() {
 
             {/* Mileage */}
             <MileageCard reservation={reservation} onSaved={load} />
+
+            {/* Inspections */}
+            <ReservationInspectionsPanel reservationId={reservation.id} />
 
             {/* Event log */}
             <Card>

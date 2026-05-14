@@ -712,6 +712,72 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_inspections: {
+        Row: {
+          accepted_terms: boolean
+          checklist: Json
+          created_at: string
+          damage_notes: string | null
+          fuel_level: string | null
+          id: string
+          inspector_id: string
+          inspector_role: string
+          ip: string | null
+          mileage: number | null
+          notes: string | null
+          photos: string[]
+          reservation_id: string
+          signature_name: string | null
+          signed_at: string | null
+          type: Database["public"]["Enums"]["inspection_type"]
+          updated_at: string
+          user_agent: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          accepted_terms?: boolean
+          checklist?: Json
+          created_at?: string
+          damage_notes?: string | null
+          fuel_level?: string | null
+          id?: string
+          inspector_id: string
+          inspector_role: string
+          ip?: string | null
+          mileage?: number | null
+          notes?: string | null
+          photos?: string[]
+          reservation_id: string
+          signature_name?: string | null
+          signed_at?: string | null
+          type: Database["public"]["Enums"]["inspection_type"]
+          updated_at?: string
+          user_agent?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          accepted_terms?: boolean
+          checklist?: Json
+          created_at?: string
+          damage_notes?: string | null
+          fuel_level?: string | null
+          id?: string
+          inspector_id?: string
+          inspector_role?: string
+          ip?: string | null
+          mileage?: number | null
+          notes?: string | null
+          photos?: string[]
+          reservation_id?: string
+          signature_name?: string | null
+          signed_at?: string | null
+          type?: Database["public"]["Enums"]["inspection_type"]
+          updated_at?: string
+          user_agent?: string | null
+          vehicle_id?: string
+        }
+        Relationships: []
+      }
       vehicle_maintenance: {
         Row: {
           category: string
@@ -976,6 +1042,7 @@ export type Database = {
         | "note"
       app_role: "renter" | "owner" | "admin"
       application_status: "pending" | "approved" | "rejected"
+      inspection_type: "pickup" | "return"
       payment_status: "pending" | "completed" | "failed" | "refunded"
       renter_verification_status: "pending" | "approved" | "rejected"
       reservation_status:
@@ -1136,6 +1203,7 @@ export const Constants = {
       ],
       app_role: ["renter", "owner", "admin"],
       application_status: ["pending", "approved", "rejected"],
+      inspection_type: ["pickup", "return"],
       payment_status: ["pending", "completed", "failed", "refunded"],
       renter_verification_status: ["pending", "approved", "rejected"],
       reservation_status: [
