@@ -309,8 +309,7 @@ export default function VehicleInspectionForm({
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {photos.map((p) => {
-              const url = supabase.storage.from("inspection-photos").getPublicUrl(p)
-                .data.publicUrl;
+              const url = photoUrls[p];
               return (
                 <div key={p} className="relative group aspect-square rounded-md overflow-hidden border border-border">
                   <img src={url} alt="Inspección" className="w-full h-full object-cover" />
