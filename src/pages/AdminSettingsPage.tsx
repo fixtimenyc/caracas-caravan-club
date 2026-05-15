@@ -361,12 +361,13 @@ export default function AdminSettingsPage() {
   const [newAdminEmail, setNewAdminEmail] = useState("");
 
   const save = (next: Settings) => {
-    const normalized = normalizeSettings(next);
+    const normalized = stripSensitiveCredentials(normalizeSettings(next));
     setRawSettings(normalized);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
   };
   const saveAll = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    const normalized = stripSensitiveCredentials(settings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
     toast({ title: "Configuración guardada", description: "Los cambios se aplicaron correctamente." });
   };
 
