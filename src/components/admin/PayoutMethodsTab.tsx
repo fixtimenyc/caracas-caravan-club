@@ -394,8 +394,8 @@ export default function PayoutMethodsTab() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={remove}>Eliminar</AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
-      </Dialog>
+      </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
