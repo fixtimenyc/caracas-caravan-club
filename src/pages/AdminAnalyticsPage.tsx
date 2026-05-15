@@ -460,9 +460,27 @@ function ReportsTab({ raw, d }: any) {
   };
 
   const downloadPDF = (title: string, lines: string[]) => {
-    const html = `<html><head><meta charset="utf-8"><title>${title}</title><style>body{font-family:system-ui;padding:40px;color:#1a1a1a}h1{color:#065f46}h2{margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:4px}pre{font-family:inherit;white-space:pre-wrap}</style></head><body><h1>${title}</h1><p>RuedaVe · ${format(new Date(), "dd/MM/yyyy HH:mm")}</p><pre>${lines.join("\n")}</pre><script>window.print()</script></body></html>`;
-    const w = window.open("", "_blank");
-    if (w) { w.document.write(html); w.document.close(); }
+    const escapeHtml = (s: unknown) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    const safeTitle = escapeHtml(title);
+    const safeLines = lines.map(escapeHtml).join("\n");
+    const safeDate = escapeHtml(format(new Date(), "dd/MM/yyyy HH:mm"));
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>body{font-family:system-ui;padding:40px;color:#1a1a1a}h1{color:#065f46}h2{margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:4px}pre{font-family:inherit;white-space:pre-wrap}</style></head><body><h1>${safeTitle}</h1><p>RuedaVe · ${safeDate}</p><pre>${safeLines}</pre><script>window.print()<\/script></body></html>`;
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (!w) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${title.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.html`;
+      a.click();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
   const reportFinanciero = (fmtType: string) => {

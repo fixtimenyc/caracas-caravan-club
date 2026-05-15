@@ -121,7 +121,7 @@ const VehicleDetailPage = () => {
       setLoading(true);
       const { data: veh, error: vErr } = await supabase
         .from("vehicles")
-        .select("*")
+        .select("id, owner_id, brand, model, year, color, location, zone, gps_lat, gps_lng, price_per_day, weekend_price, weekly_price, monthly_price, available, active, photos, description, house_rules, features, custom_features, fuel_type, transmission, seats, created_at, updated_at")
         .eq("id", id)
         .maybeSingle();
 
