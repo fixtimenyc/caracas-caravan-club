@@ -265,6 +265,60 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_payout_methods: {
+        Row: {
+          account_holder: string | null
+          account_number: string | null
+          account_type: string | null
+          bank_name: string | null
+          created_at: string
+          currency: string
+          email: string | null
+          holder_document: string | null
+          id: string
+          is_primary: boolean
+          method_type: string
+          notes: string | null
+          owner_id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_holder?: string | null
+          account_number?: string | null
+          account_type?: string | null
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          email?: string | null
+          holder_document?: string | null
+          id?: string
+          is_primary?: boolean
+          method_type: string
+          notes?: string | null
+          owner_id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_holder?: string | null
+          account_number?: string | null
+          account_type?: string | null
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          email?: string | null
+          holder_document?: string | null
+          id?: string
+          is_primary?: boolean
+          method_type?: string
+          notes?: string | null
+          owner_id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
