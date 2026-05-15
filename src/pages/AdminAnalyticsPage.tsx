@@ -450,8 +450,10 @@ function ReportsTab({ raw, d }: any) {
 
   const downloadCSV = (filename: string, rows: any[][]) => {
     const csv = rows.map(r => r.map(c => {
-      const s = String(c ?? "");
-      return s.includes(",") || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+      let s = String(c ?? "");
+      // Prevent CSV formula injection in spreadsheet apps (Excel/Sheets/Numbers).
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
     }).join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);

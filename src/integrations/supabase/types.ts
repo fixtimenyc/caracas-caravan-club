@@ -1049,6 +1049,10 @@ export type Database = {
         Args: { _from: string; _to: string }
         Returns: Json
       }
+      current_reservation_status: {
+        Args: { _reservation_id: string }
+        Returns: Database["public"]["Enums"]["reservation_status"]
+      }
       get_renter_profile_for_owner: {
         Args: { _renter_id: string }
         Returns: Json
@@ -1065,6 +1069,10 @@ export type Database = {
         Returns: boolean
       }
       is_review_public: { Args: { _reservation_id: string }; Returns: boolean }
+      reservation_has_completed_payment: {
+        Args: { _reservation_id: string }
+        Returns: boolean
+      }
       user_rating_summary: {
         Args: { _user_id: string }
         Returns: {
