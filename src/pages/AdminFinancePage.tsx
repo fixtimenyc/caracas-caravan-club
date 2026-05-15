@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import PayoutMethodsTab from "@/components/admin/PayoutMethodsTab";
 
 const COMMISSION_RATE = 0.20;
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--secondary))", "hsl(var(--muted))", "#f59e0b", "#10b981", "#6366f1", "#ec4899"];
