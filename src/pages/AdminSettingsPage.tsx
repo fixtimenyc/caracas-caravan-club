@@ -271,11 +271,35 @@ const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
   };
 };
 
+const SENSITIVE_INTEGRATION_KEYS = [
+  "google_maps_key",
+  "twilio_sid",
+  "twilio_token",
+  "twilio_whatsapp_from",
+  "email_api_key",
+  "auditcar_endpoint",
+  "auditcar_token",
+  "slack_webhook",
+] as const;
+
+const stripSensitiveCredentials = (s: Settings): Settings => {
+  const cleaned = { ...s, integrations: { ...s.integrations } };
+  for (const k of SENSITIVE_INTEGRATION_KEYS) {
+    if (k in cleaned.integrations) {
+      (cleaned.integrations as any)[k] = "";
+    }
+  }
+  return cleaned;
+};
+
 const loadSettings = (): Settings => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS;
-    return normalizeSettings(JSON.parse(raw));
+    const parsed = stripSensitiveCredentials(normalizeSettings(JSON.parse(raw)));
+    // Re-persist scrubbed copy so any previously stored credentials are removed from the browser.
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); } catch { /* ignore */ }
+    return parsed;
   } catch {
     return DEFAULTS;
   }
