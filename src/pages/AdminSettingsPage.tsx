@@ -645,15 +645,26 @@ export default function AdminSettingsPage() {
         {/* INTEGRATIONS */}
         <TabsContent value="integrations" className="mt-6">
           <Card>
-            <CardHeader><CardTitle>Integraciones externas</CardTitle><CardDescription>API keys y endpoints de servicios de terceros.</CardDescription></CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
-              <Field label="Google Maps API Key" value={settings.integrations.google_maps_key} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, google_maps_key: v } })} />
-              <Field label="Slack Webhook URL" value={settings.integrations.slack_webhook} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, slack_webhook: v } })} />
-              <Field label="Twilio SID" value={settings.integrations.twilio_sid} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, twilio_sid: v } })} />
-              <Field label="Twilio Token" value={settings.integrations.twilio_token} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, twilio_token: v } })} />
-              <Field label="Twilio WhatsApp From" value={settings.integrations.twilio_whatsapp_from} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, twilio_whatsapp_from: v } })} />
+            <CardHeader>
+              <CardTitle>Integraciones externas</CardTitle>
+              <CardDescription>Configura las credenciales de servicios de terceros de forma segura.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+                <p className="font-semibold mb-1">Por seguridad, las credenciales ya no se guardan en el navegador.</p>
+                <p>
+                  API keys, tokens y webhooks (Twilio, SendGrid/Mailchimp/Resend, Google Maps, AuditCar, Slack, etc.)
+                  deben almacenarse como <strong>secretos del backend</strong> y consumirse únicamente desde funciones del servidor.
+                  Esto evita que cualquier script en el navegador pueda exfiltrarlas.
+                </p>
+                <p className="mt-2">
+                  Pídele a un desarrollador que agregue cada credencial como secreto del backend
+                  (por ejemplo: <code>TWILIO_AUTH_TOKEN</code>, <code>EMAIL_API_KEY</code>, <code>SLACK_WEBHOOK_URL</code>)
+                  y la utilice solo desde edge functions.
+                </p>
+              </div>
               <div>
-                <Label>Email provider</Label>
+                <Label>Email provider (sólo selección, sin credenciales)</Label>
                 <Select value={settings.integrations.email_provider} onValueChange={(v) => save({ ...settings, integrations: { ...settings.integrations, email_provider: v } })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -664,10 +675,6 @@ export default function AdminSettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Field label="Email API Key" value={settings.integrations.email_api_key} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, email_api_key: v } })} />
-              <Field label="AuditCar Endpoint" value={settings.integrations.auditcar_endpoint} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, auditcar_endpoint: v } })} />
-              <Field label="AuditCar Token" value={settings.integrations.auditcar_token} onChange={(v) => save({ ...settings, integrations: { ...settings.integrations, auditcar_token: v } })} />
-              <p className="text-xs text-muted-foreground md:col-span-2">Recomendamos almacenar tokens y secretos sensibles como secretos del backend.</p>
             </CardContent>
           </Card>
         </TabsContent>
