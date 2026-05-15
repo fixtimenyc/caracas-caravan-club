@@ -92,6 +92,7 @@ export default function AdminFinancePage() {
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="payments">Pagos de Rentadores</TabsTrigger>
             <TabsTrigger value="payouts">Payouts a Dueños</TabsTrigger>
+            <TabsTrigger value="methods">Métodos de Pago</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-6">
@@ -102,6 +103,9 @@ export default function AdminFinancePage() {
           </TabsContent>
           <TabsContent value="payouts" className="mt-6">
             <PayoutsTab loading={loading} reservations={reservations} payments={payments} vMap={vMap} pMap={pMap} />
+          </TabsContent>
+          <TabsContent value="methods" className="mt-6">
+            <PayoutMethodsTab />
           </TabsContent>
         </Tabs>
       </div>
