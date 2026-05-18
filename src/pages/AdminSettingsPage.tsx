@@ -781,7 +781,7 @@ export default function AdminSettingsPage() {
                       <TableCell><Badge variant={a.account_status === "active" ? "default" : "secondary"}>{a.account_status || "active"}</Badge></TableCell>
                       <TableCell>{a.last_login_at ? format(new Date(a.last_login_at), "PP", { locale: es }) : "—"}</TableCell>
                       <TableCell>
-                        <Button size="sm" variant="ghost" onClick={() => toast({ title: "Acción registrada", description: "Función disponible próximamente." })}>Editar</Button>
+                        <Button size="sm" variant="ghost" onClick={() => navigate(`/admin/usuarios/${a.user_id}`)}>Editar</Button>
                       </TableCell>
                     </TableRow>
                   ))}
