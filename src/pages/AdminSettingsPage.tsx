@@ -353,6 +353,7 @@ function renderContractPreview(settings: Settings): string {
 }
 
 export default function AdminSettingsPage() {
+  const navigate = useNavigate();
   const [rawSettings, setRawSettings] = useState<Settings>(loadSettings);
   const settings = useMemo(() => normalizeSettings(rawSettings), [rawSettings]);
   const [admins, setAdmins] = useState<any[]>([]);
