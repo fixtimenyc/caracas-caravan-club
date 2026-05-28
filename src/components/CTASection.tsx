@@ -23,7 +23,7 @@ const CTASection = () => {
             <span className="block">tu vehículo</span>
           </h2>
 
-          <p className="text-lg text-primary-foreground/80 max-w-2xl mx-auto mb-10 text-center">
+          <p className="text-lg text-primary-foreground/80 max-w-2xl mx-auto mb-10">
             Únete a cientos de propietarios que ya están generando ingresos extra alquilando su vehículo cuando no lo usan.
           </p>
 
