@@ -51,8 +51,9 @@ const HeroSection = () => {
             Alquila el carro perfecto
             <span className="block text-accent">en Caracas</span>
           </h1>
-          <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: "0.1s" }}>
-            Conectamos propietarios con personas que necesitan un vehículo. 
+          <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto text-center animate-slide-up" style={{ animationDelay: "0.1s" }}>
+            Conectamos propietarios con personas que necesitan un vehículo.
+            <br />
             Fácil, seguro y al mejor precio.
           </p>
         </div>
