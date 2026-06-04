@@ -260,60 +260,93 @@ export default function AdminDataPage() {
 
         <TabsContent value="fraud">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Señales de fraude</CardTitle>
+              <Button size="sm" variant="outline" onClick={() => downloadCSV("fraud_signals.csv", fraud)}>
+                <Download className="h-4 w-4 mr-2" /> CSV
+              </Button>
             </CardHeader>
             <CardContent>
+              <p className="text-xs text-muted-foreground mb-3">
+                Captura automática al reservar y al iniciar sesión: IP (hash), país, huella de dispositivo, user-agent, plataforma, resolución, zona horaria, etc. La IP y la huella se almacenan hasheadas (SHA-256) para cumplir con la política de privacidad.
+              </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="border-b">
                     <tr className="text-left">
                       <th className="py-2 pr-3">Usuario</th>
+                      <th className="py-2 pr-3">Evento</th>
                       <th className="py-2 pr-3">Tipo</th>
                       <th className="py-2 pr-3">Score</th>
+                      <th className="py-2 pr-3">País</th>
+                      <th className="py-2 pr-3">IP (hash)</th>
+                      <th className="py-2 pr-3">Dispositivo (hash)</th>
+                      <th className="py-2 pr-3">Plataforma</th>
                       <th className="py-2 pr-3">Fecha</th>
                       <th className="py-2 pr-3">Estado</th>
+                      <th className="py-2 pr-3">Detalles</th>
                       <th className="py-2 pr-3"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {fraud.length === 0 ? (
-                      <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">Sin alertas activas</td></tr>
-                    ) : fraud.map((f) => (
-                      <tr key={f.id} className="border-b">
-                        <td className="py-2 pr-3 font-mono text-xs">{f.user_id?.slice(0, 8) ?? "—"}</td>
-                        <td className="py-2 pr-3">{f.signal_type}</td>
-                        <td className="py-2 pr-3">
-                          <Badge variant={f.risk_score >= 50 ? "destructive" : "secondary"}>{f.risk_score}</Badge>
-                        </td>
-                        <td className="py-2 pr-3">{new Date(f.created_at).toLocaleDateString("es-VE")}</td>
-                        <td className="py-2 pr-3">{f.reviewed ? "Revisado" : "Pendiente"}</td>
-                        <td className="py-2 pr-3">
-                          {!f.reviewed && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={async () => {
-                                const u = (await supabase.auth.getUser()).data.user;
-                                await supabase
-                                  .from("fraud_signals")
-                                  .update({ reviewed: true, reviewed_at: new Date().toISOString(), reviewed_by: u?.id })
-                                  .eq("id", f.id);
-                                await load();
-                              }}
-                            >
-                              Marcar revisado
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                      <tr><td colSpan={12} className="py-6 text-center text-muted-foreground">
+                        Sin señales todavía. Se generarán automáticamente cuando un usuario inicie sesión o cree una reserva.
+                      </td></tr>
+                    ) : fraud.map((f) => {
+                      const d = (f.details ?? {}) as any;
+                      return (
+                        <tr key={f.id} className="border-b align-top">
+                          <td className="py-2 pr-3 font-mono text-xs">{f.user_id?.slice(0, 8) ?? "—"}</td>
+                          <td className="py-2 pr-3">{d.event ?? "—"}</td>
+                          <td className="py-2 pr-3">{f.signal_type}</td>
+                          <td className="py-2 pr-3">
+                            <Badge variant={f.risk_score >= 50 ? "destructive" : f.risk_score > 0 ? "secondary" : "default"}>
+                              {f.risk_score}
+                            </Badge>
+                          </td>
+                          <td className="py-2 pr-3">{f.geo_country ?? "—"}</td>
+                          <td className="py-2 pr-3 font-mono text-xs">{f.ip_hash ? f.ip_hash.slice(0, 10) + "…" : "—"}</td>
+                          <td className="py-2 pr-3 font-mono text-xs">{f.device_fingerprint_hash ? f.device_fingerprint_hash.slice(0, 10) + "…" : "—"}</td>
+                          <td className="py-2 pr-3 text-xs">{d.platform ?? "—"}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap">{new Date(f.created_at).toLocaleString("es-VE")}</td>
+                          <td className="py-2 pr-3">{f.reviewed ? "Revisado" : "Pendiente"}</td>
+                          <td className="py-2 pr-3">
+                            <details>
+                              <summary className="cursor-pointer text-xs text-primary">Ver JSON</summary>
+                              <pre className="mt-1 max-w-md whitespace-pre-wrap break-all text-[10px] bg-muted p-2 rounded">
+{JSON.stringify(f.details, null, 2)}
+                              </pre>
+                            </details>
+                          </td>
+                          <td className="py-2 pr-3">
+                            {!f.reviewed && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={async () => {
+                                  const u = (await supabase.auth.getUser()).data.user;
+                                  await supabase
+                                    .from("fraud_signals")
+                                    .update({ reviewed: true, reviewed_at: new Date().toISOString(), reviewed_by: u?.id })
+                                    .eq("id", f.id);
+                                  await load();
+                                }}
+                              >
+                                Marcar revisado
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="ai">
           <Card>
