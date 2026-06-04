@@ -54,6 +54,7 @@ import { useAuth } from "@/hooks/useAuth";
 import ReviewsSection from "@/components/ReviewsSection";
 import ReviewDialog from "@/components/ReviewDialog";
 import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
+import { captureFraudSignal } from "@/lib/fraudCapture";
 
 type HouseRules = {
   noSmoking?: boolean;
@@ -281,6 +282,9 @@ const VehicleDetailPage = () => {
         vehicle_id: vehicle.id,
         action_url: "/my-vehicles",
       });
+
+      // Silent fraud-prevention capture (IP, device, UA, geo)
+      void captureFraudSignal({ event: "reservation", reservation_id: resv.id });
 
       toast.success("Reserva enviada", {
         description: "El anfitrión tiene 24 horas para responder",
