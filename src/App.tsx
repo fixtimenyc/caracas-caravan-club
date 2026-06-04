@@ -40,7 +40,16 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ReservationInspectionPage from "./pages/ReservationInspectionPage";
 import DemoInspectionPage from "./pages/DemoInspectionPage";
+import PrivacySettingsPage from "./pages/PrivacySettingsPage";
+import AdminDataPage from "./pages/AdminDataPage";
+import AIConsentBanner from "./components/AIConsentBanner";
+import { useFraudFingerprint } from "@/hooks/useFraudFingerprint";
 import NotFound from "./pages/NotFound";
+
+const GlobalListeners = () => {
+  useFraudFingerprint();
+  return null;
+};
 
 const queryClient = new QueryClient();
 
@@ -51,6 +60,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <GlobalListeners />
+          <AIConsentBanner />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -89,6 +100,8 @@ const App = () => (
             <Route path="/politica-cancelacion" element={<CancellationPage />} />
             <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/perfil/privacidad" element={<PrivacySettingsPage />} />
+            <Route path="/admin/datos" element={<AdminDataPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
