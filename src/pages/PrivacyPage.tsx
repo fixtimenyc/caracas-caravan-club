@@ -229,6 +229,46 @@ const PrivacyPage = () => {
         alternativo: <a href="mailto:legal@ruedave.com">legal@ruedave.com</a> ·
         Teléfono: (0424) 285-1254 · Caracas, Venezuela.
       </p>
+
+      <h2>17. Datos opcionales y monetización</h2>
+      <p>
+        Además del tratamiento descrito arriba, RuedaVe ofrece cuatro programas
+        opcionales basados en <strong>consentimiento granular y revocable</strong> en
+        cualquier momento desde{" "}
+        <a href="/perfil/privacidad">Mi perfil → Mis datos y privacidad</a>:
+      </p>
+      <ul>
+        <li>
+          <strong>Telemetría y Seguros:</strong> patrones de frenado, velocidad,
+          horarios, distancia y uso del teléfono durante el viaje. Permite obtener
+          primas de seguro más bajas. Solo se comparten resúmenes agregados con
+          aseguradoras aliadas; el evento crudo permanece en RuedaVe.
+        </li>
+        <li>
+          <strong>Pricing dinámico y optimización de flota:</strong> demanda por zona
+          y horario, ocupación y estacionalidad. Uso exclusivamente interno para
+          ajustar precios y planificar inventario.
+        </li>
+        <li>
+          <strong>Prevención de fraude:</strong> patrones de cancelación,
+          discrepancias de perfil, historial de disputas y huella digital del
+          dispositivo (IP, navegador, geolocalización). Se utiliza para detectar
+          cuentas duplicadas y suplantación.
+        </li>
+        <li>
+          <strong>Entrenamiento de IA y modelos de movilidad:</strong> datos de viaje{" "}
+          <em>completamente anonimizados</em> que pueden compartirse con socios
+          académicos y de movilidad para investigación de seguridad vial y
+          planificación urbana.
+        </li>
+      </ul>
+      <p>
+        <strong>Garantías:</strong> RuedaVe <em>nunca</em> vende datos de forma
+        identificable. Las coordenadas se anonimizan a una precisión de
+        aproximadamente 100 metros antes de cualquier compartición externa. La
+        revocación de un consentimiento detiene de inmediato la recolección
+        correspondiente y elimina los datos ya recopilados a solicitud del titular.
+      </p>
     </LegalLayout>
   );
 };

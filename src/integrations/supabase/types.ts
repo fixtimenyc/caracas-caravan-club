@@ -65,6 +65,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_training_datasets: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          row_count: number
+          source_tables: string[] | null
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          row_count?: number
+          source_tables?: string[] | null
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          row_count?: number
+          source_tables?: string[] | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -95,6 +128,84 @@ export type Database = {
           reservation_id?: string | null
           updated_at?: string
           vehicle_id?: string | null
+        }
+        Relationships: []
+      }
+      demand_signals: {
+        Row: {
+          created_at: string
+          hour_bucket: string
+          id: string
+          occupancy_rate: number | null
+          reservations_completed: number | null
+          reservations_created: number | null
+          searches: number | null
+          zone: string
+        }
+        Insert: {
+          created_at?: string
+          hour_bucket: string
+          id?: string
+          occupancy_rate?: number | null
+          reservations_completed?: number | null
+          reservations_created?: number | null
+          searches?: number | null
+          zone: string
+        }
+        Update: {
+          created_at?: string
+          hour_bucket?: string
+          id?: string
+          occupancy_rate?: number | null
+          reservations_completed?: number | null
+          reservations_created?: number | null
+          searches?: number | null
+          zone?: string
+        }
+        Relationships: []
+      }
+      fraud_signals: {
+        Row: {
+          created_at: string
+          details: Json | null
+          device_fingerprint_hash: string | null
+          geo_country: string | null
+          id: string
+          ip_hash: string | null
+          reviewed: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_score: number
+          signal_type: Database["public"]["Enums"]["fraud_signal_type"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          device_fingerprint_hash?: string | null
+          geo_country?: string | null
+          id?: string
+          ip_hash?: string | null
+          reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_score?: number
+          signal_type: Database["public"]["Enums"]["fraud_signal_type"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          device_fingerprint_hash?: string | null
+          geo_country?: string | null
+          id?: string
+          ip_hash?: string | null
+          reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_score?: number
+          signal_type?: Database["public"]["Enums"]["fraud_signal_type"]
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -745,6 +856,161 @@ export type Database = {
         }
         Relationships: []
       }
+      telemetry_events: {
+        Row: {
+          created_at: string
+          event_type: Database["public"]["Enums"]["telemetry_event_type"]
+          id: string
+          lat: number | null
+          lng: number | null
+          recorded_at: string
+          reservation_id: string
+          speed_kmh: number | null
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: Database["public"]["Enums"]["telemetry_event_type"]
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          recorded_at?: string
+          reservation_id: string
+          speed_kmh?: number | null
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["telemetry_event_type"]
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          recorded_at?: string
+          reservation_id?: string
+          speed_kmh?: number | null
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telemetry_events_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_summaries: {
+        Row: {
+          avg_speed_kmh: number | null
+          created_at: string
+          distance_km: number | null
+          harsh_accel_count: number | null
+          harsh_brake_count: number | null
+          id: string
+          max_speed_kmh: number | null
+          night_minutes: number | null
+          phone_use_count: number | null
+          reservation_id: string
+          risk_score: number | null
+          speeding_count: number | null
+          updated_at: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          avg_speed_kmh?: number | null
+          created_at?: string
+          distance_km?: number | null
+          harsh_accel_count?: number | null
+          harsh_brake_count?: number | null
+          id?: string
+          max_speed_kmh?: number | null
+          night_minutes?: number | null
+          phone_use_count?: number | null
+          reservation_id: string
+          risk_score?: number | null
+          speeding_count?: number | null
+          updated_at?: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          avg_speed_kmh?: number | null
+          created_at?: string
+          distance_km?: number | null
+          harsh_accel_count?: number | null
+          harsh_brake_count?: number | null
+          id?: string
+          max_speed_kmh?: number | null
+          night_minutes?: number | null
+          phone_use_count?: number | null
+          reservation_id?: string
+          risk_score?: number | null
+          speeding_count?: number | null
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_summaries_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: true
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_summaries_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_data_consents: {
+        Row: {
+          consent_type: Database["public"]["Enums"]["consent_type"]
+          created_at: string
+          granted: boolean
+          granted_at: string | null
+          id: string
+          ip_hash: string | null
+          revoked_at: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          consent_type: Database["public"]["Enums"]["consent_type"]
+          created_at?: string
+          granted?: boolean
+          granted_at?: string | null
+          id?: string
+          ip_hash?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          consent_type?: Database["public"]["Enums"]["consent_type"]
+          created_at?: string
+          granted?: boolean
+          granted_at?: string | null
+          id?: string
+          ip_hash?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1049,6 +1315,32 @@ export type Database = {
         Args: { _from: string; _to: string }
         Returns: Json
       }
+      compute_trip_risk_score: {
+        Args: { _reservation_id: string }
+        Returns: {
+          avg_speed_kmh: number | null
+          created_at: string
+          distance_km: number | null
+          harsh_accel_count: number | null
+          harsh_brake_count: number | null
+          id: string
+          max_speed_kmh: number | null
+          night_minutes: number | null
+          phone_use_count: number | null
+          reservation_id: string
+          risk_score: number | null
+          speeding_count: number | null
+          updated_at: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "trip_summaries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       current_reservation_status: {
         Args: { _reservation_id: string }
         Returns: Database["public"]["Enums"]["reservation_status"]
@@ -1056,6 +1348,13 @@ export type Database = {
       get_renter_profile_for_owner: {
         Args: { _renter_id: string }
         Returns: Json
+      }
+      has_consent: {
+        Args: {
+          _consent: Database["public"]["Enums"]["consent_type"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -1069,6 +1368,32 @@ export type Database = {
         Returns: boolean
       }
       is_review_public: { Args: { _reservation_id: string }; Returns: boolean }
+      record_consent: {
+        Args: {
+          _consent_type: Database["public"]["Enums"]["consent_type"]
+          _granted: boolean
+          _ip_hash?: string
+          _user_agent?: string
+        }
+        Returns: {
+          consent_type: Database["public"]["Enums"]["consent_type"]
+          created_at: string
+          granted: boolean
+          granted_at: string | null
+          id: string
+          ip_hash: string | null
+          revoked_at: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_data_consents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       reservation_has_completed_payment: {
         Args: { _reservation_id: string }
         Returns: boolean
@@ -1104,6 +1429,18 @@ export type Database = {
         | "note"
       app_role: "renter" | "owner" | "admin"
       application_status: "pending" | "approved" | "rejected"
+      consent_type:
+        | "telemetry"
+        | "dynamic_pricing"
+        | "fraud_prevention"
+        | "ai_training"
+      fraud_signal_type:
+        | "multi_account"
+        | "cancel_pattern"
+        | "identity_mismatch"
+        | "dispute"
+        | "device_reuse"
+        | "ip_burst"
       inspection_type: "pickup" | "return"
       payment_status: "pending" | "completed" | "failed" | "refunded"
       renter_verification_status: "pending" | "approved" | "rejected"
@@ -1114,6 +1451,13 @@ export type Database = {
         | "rejected"
         | "completed"
         | "cancelled"
+      telemetry_event_type:
+        | "harsh_brake"
+        | "harsh_accel"
+        | "speeding"
+        | "night_drive"
+        | "phone_use"
+        | "trip_segment"
       ticket_category:
         | "reservas"
         | "pagos"
@@ -1265,6 +1609,20 @@ export const Constants = {
       ],
       app_role: ["renter", "owner", "admin"],
       application_status: ["pending", "approved", "rejected"],
+      consent_type: [
+        "telemetry",
+        "dynamic_pricing",
+        "fraud_prevention",
+        "ai_training",
+      ],
+      fraud_signal_type: [
+        "multi_account",
+        "cancel_pattern",
+        "identity_mismatch",
+        "dispute",
+        "device_reuse",
+        "ip_burst",
+      ],
       inspection_type: ["pickup", "return"],
       payment_status: ["pending", "completed", "failed", "refunded"],
       renter_verification_status: ["pending", "approved", "rejected"],
@@ -1275,6 +1633,14 @@ export const Constants = {
         "rejected",
         "completed",
         "cancelled",
+      ],
+      telemetry_event_type: [
+        "harsh_brake",
+        "harsh_accel",
+        "speeding",
+        "night_drive",
+        "phone_use",
+        "trip_segment",
       ],
       ticket_category: [
         "reservas",

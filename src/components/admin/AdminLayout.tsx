@@ -11,6 +11,7 @@ import {
   Settings,
   BarChart3,
   Bell,
+  Database,
 } from "lucide-react";
 import {
   Sidebar,
@@ -37,6 +38,7 @@ const items = [
   { title: "Soporte & Reportes", url: "/admin/soporte", icon: LifeBuoy },
   { title: "Analytics & KPIs", url: "/admin/analytics", icon: BarChart3 },
   { title: "Alertas & Notificaciones", url: "/admin/alertas", icon: Bell },
+  { title: "Datos & Monetización", url: "/admin/datos", icon: Database },
   { title: "Configuración", url: "/admin/configuracion", icon: Settings },
 ];
 
