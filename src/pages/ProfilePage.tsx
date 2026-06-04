@@ -271,6 +271,10 @@ const ProfilePage = () => {
                     Mis vehículos
                   </Button>
                 )}
+                <Button type="button" variant="outline" onClick={() => navigate("/perfil/privacidad")}>
+                  <ShieldCheck className="w-4 h-4 mr-2" />
+                  Mis datos y privacidad
+                </Button>
               </div>
             </form>
           </CardContent>
