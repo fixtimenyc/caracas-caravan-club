@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { toCSV } from "@/lib/csv";
 import {
   format,
   startOfMonth,
@@ -376,10 +377,8 @@ export default function AdminReservationsPage() {
         r.created_at,
       ];
     });
-    const csv = [header, ...rowsCsv]
-      .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const csv = toCSV([header, ...rowsCsv]);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

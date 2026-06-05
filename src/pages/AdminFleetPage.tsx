@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { toCSV } from "@/lib/csv";
 import { Link } from "react-router-dom";
 import { format, subDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -428,26 +429,22 @@ export default function AdminFleetPage() {
       "Ocupación 30d (%)",
       "Última revisión",
     ];
-    const lines = [header.join(",")];
+    const rows: unknown[][] = [header];
     filtered.forEach((r) => {
-      lines.push(
-        [
-          r.brand,
-          r.model,
-          r.year,
-          r.owner_name,
-          r.zone,
-          VEHICLE_CATEGORIES.find((c) => c.id === r.category)?.name || r.category,
-          r.price_per_day,
-          STATUS_META[r.status].label,
-          r.occupancy,
-          r.last_revision ? format(r.last_revision, "yyyy-MM-dd") : "",
-        ]
-          .map((x) => `"${String(x).replace(/"/g, '""')}"`)
-          .join(","),
-      );
+      rows.push([
+        r.brand,
+        r.model,
+        r.year,
+        r.owner_name,
+        r.zone,
+        VEHICLE_CATEGORIES.find((c) => c.id === r.category)?.name || r.category,
+        r.price_per_day,
+        STATUS_META[r.status].label,
+        r.occupancy,
+        r.last_revision ? format(r.last_revision, "yyyy-MM-dd") : "",
+      ]);
     });
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([toCSV(rows)], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
