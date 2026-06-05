@@ -1,0 +1,2 @@
+REVOKE SELECT (plate, vin, soat_doc_url, circulation_doc_url, insurance_doc_url, internal_notes, gps_lat, gps_lng) ON public.vehicles FROM anon;
+REVOKE SELECT (plate, vin, soat_doc_url, circulation_doc_url, insurance_doc_url, internal_notes, gps_lat, gps_lng) ON public.vehicles FROM authenticated;

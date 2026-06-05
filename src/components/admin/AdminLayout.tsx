@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -72,6 +72,8 @@ function AdminSidebar() {
 export default function AdminLayout({ children, title }: { children: ReactNode; title: string }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -79,6 +81,7 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
       navigate("/auth");
       return;
     }
+    let cancelled = false;
     (async () => {
       const { data } = await supabase
         .from("user_roles")
@@ -86,9 +89,26 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
         .eq("user_id", user.id)
         .eq("role", "admin")
         .maybeSingle();
-      if (!data) navigate("/");
+      if (cancelled) return;
+      if (!data) {
+        navigate("/");
+      } else {
+        setIsAdmin(true);
+      }
+      setChecking(false);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [user, loading, navigate]);
+
+  if (loading || checking || !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-label="Cargando" />
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
