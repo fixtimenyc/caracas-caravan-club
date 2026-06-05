@@ -176,6 +176,9 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
+            type="button"
+            aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={isMenuOpen}
             className="md:hidden p-2 text-foreground"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
