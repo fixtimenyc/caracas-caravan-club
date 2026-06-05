@@ -594,8 +594,8 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
       ["Dueño", "Período", "Alquileres", "Bruto", "Comisión", "Devoluciones", "Neto", "Estado"],
       ...payouts.map((r: any) => [r.owner_name, period, r.count, r.gross, r.commission, r.refunds, r.net, r.status]),
     ];
-    const csv = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const csv = toCSV(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `payouts-${period}.csv`; a.click();
     URL.revokeObjectURL(url);
