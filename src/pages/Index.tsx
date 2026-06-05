@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import FeaturedCars from "@/components/FeaturedCars";
@@ -36,6 +37,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>RuedaVe - Alquiler de Vehículos en Caracas, Venezuela</title>
+        <meta name="description" content="Alquila vehículos de propietarios verificados en Caracas. Sedanes, SUVs, camionetas y más. Fácil, seguro y al mejor precio." />
+        <link rel="canonical" href="https://caracas-caravan-club.lovable.app/" />
+        <meta property="og:title" content="RuedaVe - Alquiler de Vehículos en Caracas" />
+        <meta property="og:description" content="Conectamos propietarios con personas que necesitan un vehículo. Fácil, seguro y al mejor precio." />
+        <meta property="og:url" content="https://caracas-caravan-club.lovable.app/" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
       <main>
         <HeroSection />
