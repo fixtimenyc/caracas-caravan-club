@@ -64,12 +64,13 @@ const HeroSection = () => {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Location */}
               <div className="md:col-span-1">
-                <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                <label htmlFor="hero-zone" className="text-xs font-medium text-muted-foreground mb-2 block">
                   Ubicación
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                   <select
+                    id="hero-zone"
                     value={zone}
                     onChange={(e) => setZone(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
@@ -86,12 +87,13 @@ const HeroSection = () => {
 
               {/* Vehicle Type */}
               <div className="md:col-span-1">
-                <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                <label htmlFor="hero-type" className="text-xs font-medium text-muted-foreground mb-2 block">
                   Tipo de vehículo
                 </label>
                 <div className="relative">
                   <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                   <select
+                    id="hero-type"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-muted rounded-xl text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
@@ -109,12 +111,13 @@ const HeroSection = () => {
 
               {/* From Date */}
               <div className="md:col-span-1">
-                <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                <label htmlFor="hero-from" className="text-xs font-medium text-muted-foreground mb-2 block">
                   Desde
                 </label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
+                    id="hero-from"
                     type="date"
                     value={from}
                     onChange={(e) => setFrom(e.target.value)}
@@ -125,12 +128,13 @@ const HeroSection = () => {
 
               {/* To Date */}
               <div className="md:col-span-1">
-                <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                <label htmlFor="hero-to" className="text-xs font-medium text-muted-foreground mb-2 block">
                   Hasta
                 </label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
+                    id="hero-to"
                     type="date"
                     value={to}
                     onChange={(e) => setTo(e.target.value)}

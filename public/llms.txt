@@ -1,0 +1,15 @@
+# RuedaVe
+
+> Marketplace de alquiler de vehículos entre particulares en Caracas, Venezuela. Conecta a propietarios con personas que necesitan un vehículo de forma fácil, segura y a buen precio.
+
+RuedaVe permite a los arrendatarios buscar y reservar vehículos verificados por días, y a los propietarios publicar sus vehículos para generar ingresos. La plataforma está enfocada en el mercado venezolano: precios en USD de referencia, pagos locales (transferencias, Pago Móvil, Zelle), zonas y regulaciones de Caracas.
+
+## Pages
+
+- [Inicio](/): Catálogo de vehículos disponibles en Caracas y búsqueda por zona, tipo y fechas.
+- [Cómo funciona](/como-funciona): Guía paso a paso para arrendatarios y propietarios, beneficios y preguntas frecuentes.
+- [Conviértete en anfitrión](/conviertete-en-anfitrion): Información para propietarios que quieren publicar su vehículo.
+- [Centro de ayuda](/ayuda): Preguntas frecuentes sobre reservas, pagos, aliados, cuenta y seguridad, además de un formulario de contacto.
+- [Términos y condiciones](/terminos): Condiciones de uso del servicio.
+- [Política de privacidad](/politica-privacidad): Cómo tratamos los datos personales.
+- [Política de cancelación](/politica-cancelacion): Reglas de cancelación y reembolsos.

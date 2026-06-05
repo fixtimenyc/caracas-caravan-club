@@ -1,4 +1,5 @@
 import { Search, CalendarCheck, Key, Star, Shield, Smartphone, Check, CreditCard, MapPin, MessageCircle } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CTASection from "@/components/CTASection";
@@ -105,6 +106,24 @@ const HowItWorksPage = () => {
 
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>Cómo funciona RuedaVe - Alquila o publica tu vehículo</title>
+        <meta name="description" content="Aprende cómo alquilar un vehículo o convertirte en anfitrión en RuedaVe Caracas: proceso paso a paso, beneficios y respuestas a preguntas frecuentes." />
+        <link rel="canonical" href="https://caracas-caravan-club.lovable.app/como-funciona" />
+        <meta property="og:title" content="Cómo funciona RuedaVe" />
+        <meta property="og:description" content="Alquilar o publicar tu vehículo en Caracas paso a paso." />
+        <meta property="og:url" content="https://caracas-caravan-club.lovable.app/como-funciona" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        })}</script>
+      </Helmet>
       <Navbar />
       <main className="pt-16">
         {/* Hero */}

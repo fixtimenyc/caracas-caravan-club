@@ -14,6 +14,7 @@ import {
   Mail,
   Loader2,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -245,6 +246,15 @@ const HelpPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Centro de ayuda RuedaVe - Soporte y preguntas frecuentes</title>
+        <meta name="description" content="Encuentra respuestas sobre reservas, pagos, aliados, cuenta y seguridad. Contacta a soporte de RuedaVe por WhatsApp, teléfono o correo." />
+        <link rel="canonical" href="https://caracas-caravan-club.lovable.app/ayuda" />
+        <meta property="og:title" content="Centro de ayuda RuedaVe" />
+        <meta property="og:description" content="Respuestas a preguntas frecuentes y atención al cliente." />
+        <meta property="og:url" content="https://caracas-caravan-club.lovable.app/ayuda" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
 
       <main className="pt-24 pb-16">

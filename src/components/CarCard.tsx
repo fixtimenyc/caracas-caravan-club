@@ -35,8 +35,12 @@ const CarCard = ({ car }: CarCardProps) => {
         
         {/* Favorite Button */}
         <button
+          type="button"
+          aria-label={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
+          aria-pressed={isFavorite}
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             setIsFavorite(!isFavorite);
           }}
           className="absolute top-3 right-3 w-10 h-10 bg-card/80 backdrop-blur-sm rounded-full flex items-center justify-center transition-smooth hover:bg-card"

@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
@@ -344,6 +345,48 @@ const VehicleDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {vehicle && (
+        <Helmet>
+          <title>{`${vehicle.brand} ${vehicle.model} ${vehicle.year} en alquiler - RuedaVe`}</title>
+          <meta
+            name="description"
+            content={`Alquila un ${vehicle.brand} ${vehicle.model} ${vehicle.year} en ${vehicle.location} desde $${vehicle.price_per_day}/día. Reserva fácil y segura con RuedaVe.`}
+          />
+          <link rel="canonical" href={`https://caracas-caravan-club.lovable.app/vehiculo/${vehicle.id}`} />
+          <meta property="og:title" content={`${vehicle.brand} ${vehicle.model} ${vehicle.year}`} />
+          <meta
+            property="og:description"
+            content={`Alquílalo en ${vehicle.location} desde $${vehicle.price_per_day}/día.`}
+          />
+          <meta property="og:url" content={`https://caracas-caravan-club.lovable.app/vehiculo/${vehicle.id}`} />
+          <meta property="og:type" content="product" />
+          {resolvedPhotos[0] && <meta property="og:image" content={resolvedPhotos[0]} />}
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: `${vehicle.brand} ${vehicle.model} ${vehicle.year}`,
+            brand: { "@type": "Brand", name: vehicle.brand },
+            description: vehicle.description ?? `${vehicle.brand} ${vehicle.model} ${vehicle.year} en alquiler en ${vehicle.location}.`,
+            image: resolvedPhotos.length ? resolvedPhotos : undefined,
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "USD",
+              price: vehicle.price_per_day,
+              availability: vehicle.available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              url: `https://caracas-caravan-club.lovable.app/vehiculo/${vehicle.id}`,
+            },
+            ...(ratingSummary.avg && ratingSummary.count > 0
+              ? {
+                  aggregateRating: {
+                    "@type": "AggregateRating",
+                    ratingValue: ratingSummary.avg,
+                    reviewCount: ratingSummary.count,
+                  },
+                }
+              : {}),
+          })}</script>
+        </Helmet>
+      )}
       <Navbar />
 
       <main className="container mx-auto px-4 pt-20 pb-12">
@@ -433,12 +476,14 @@ const VehicleDetailPage = () => {
             <>
               <button
                 onClick={prevPhoto}
+                aria-label="Imagen anterior"
                 className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-card/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-card hover:bg-card transition-smooth"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={nextPhoto}
+                aria-label="Siguiente imagen"
                 className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-card/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-card hover:bg-card transition-smooth"
               >
                 <ChevronRight className="w-5 h-5" />
