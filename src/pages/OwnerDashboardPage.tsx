@@ -889,6 +889,36 @@ const OwnerDashboardPage = () => {
             }}
           />
         )}
+
+        <AlertDialog
+          open={!!vehicleToDelete}
+          onOpenChange={(o) => !o && !deleting && setVehicleToDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar este vehículo?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {vehicleToDelete
+                  ? `Se eliminará permanentemente "${vehicleToDelete.brand} ${vehicleToDelete.model} ${vehicleToDelete.year}" de tu flota. Si tiene historial de reservas, será archivado en lugar de eliminado. Esta acción no se puede deshacer.`
+                  : ""}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteVehicle();
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Eliminando…" : "Eliminar"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
       </main>
       <Footer />
     </div>
