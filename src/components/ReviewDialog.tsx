@@ -28,6 +28,7 @@ interface ReviewDialogProps {
   reviewerType: ReviewerType;
   contextLabel?: string; // e.g. "Toyota Corolla · 12-15 Mar"
   onSubmitted?: () => void;
+  mandatory?: boolean; // when true, dialog cannot be dismissed until submitted
 }
 
 const renterSchema = z.object({
