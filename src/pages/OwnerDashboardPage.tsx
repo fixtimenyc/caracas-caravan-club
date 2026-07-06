@@ -654,8 +654,17 @@ const OwnerDashboardPage = () => {
                           >
                             <Pencil className="w-4 h-4 mr-1" /> Editar
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => setVehicleToDelete(v)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Eliminar
+                          </Button>
                         </div>
                       </div>
+
 
                       {/* Bookings tabs */}
                       <Tabs defaultValue="upcoming" className="mt-4">
