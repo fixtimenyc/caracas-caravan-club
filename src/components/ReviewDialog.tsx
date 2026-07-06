@@ -182,15 +182,32 @@ const ReviewDialog = ({
   const isRenter = reviewerType === "renter";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (mandatory && !next) return; // block dismissal
+        onOpenChange(next);
+      }}
+    >
+      <DialogContent
+        className="max-w-md"
+        onInteractOutside={(e) => {
+          if (mandatory) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (mandatory) e.preventDefault();
+        }}
+        {...(mandatory ? { onPointerDownOutside: (e: any) => e.preventDefault() } : {})}
+      >
         <DialogHeader>
           <DialogTitle>
             {isRenter ? "Califica tu experiencia" : "Califica al arrendatario"}
           </DialogTitle>
           <DialogDescription>
             {contextLabel ? `${contextLabel}. ` : ""}
-            Tu reseña será visible cuando la otra parte también califique, o automáticamente después de 7 días.
+            {mandatory
+              ? "Dejar tu reseña es obligatorio al finalizar el viaje. Será visible cuando la otra parte también califique, o automáticamente después de 7 días."
+              : "Tu reseña será visible cuando la otra parte también califique, o automáticamente después de 7 días."}
           </DialogDescription>
         </DialogHeader>
 
