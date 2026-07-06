@@ -61,14 +61,15 @@ const Auth = () => {
       const userRoles = (rolesData ?? []).map((r) => r.role as string);
       const isOwner = userRoles.includes('owner');
       const isRenter = userRoles.includes('renter');
+      const intendedRole = (user.user_metadata as any)?.role as string | undefined;
 
-      // Owner pending application
-      if (isRenter && !isOwner && ownerApp && ownerApp.status === 'pending') {
+      // Owner intent: send to application flow (pending, missing, or rejected)
+      if (!isOwner && (intendedRole === 'owner' || (ownerApp && ownerApp.status !== 'approved'))) {
         navigate('/aliado/solicitud');
         return;
       }
       // Renter without verification submitted yet
-      if (isRenter && !verif) {
+      if (isRenter && !verif && intendedRole !== 'owner') {
         navigate('/arrendatario/verificacion');
         return;
       }
