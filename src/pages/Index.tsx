@@ -16,19 +16,38 @@ const Index = () => {
 
   useEffect(() => {
     if (loading || !user) return;
-    // Only renters (not owners/admins) need the verification questionnaire
+    const intendedRole = (user.user_metadata as any)?.role as string | undefined;
+
+    // Users who registered as allies must complete the ally application first.
+    if (intendedRole === "owner" && !hasRole("owner") && !hasRole("admin")) {
+      navigate("/aliado/solicitud");
+      return;
+    }
+
+    // Only renters (not owners/admins or ally applicants) need the verification questionnaire
     if (hasRole("admin") || hasRole("owner")) return;
     if (!hasRole("renter")) return;
 
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("renter_verifications")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const [{ data: renterVerification }, { data: ownerApplication }] = await Promise.all([
+        supabase
+          .from("renter_verifications")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("owner_applications")
+          .select("status")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
       if (cancelled) return;
-      if (!data) navigate("/arrendatario/verificacion");
+      if (ownerApplication && ownerApplication.status !== "approved") {
+        navigate("/aliado/solicitud");
+        return;
+      }
+      if (!renterVerification) navigate("/arrendatario/verificacion");
     })();
     return () => {
       cancelled = true;
