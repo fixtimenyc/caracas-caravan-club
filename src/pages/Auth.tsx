@@ -27,6 +27,14 @@ const signupSchema = z.object({
 
 type SignupRole = 'renter' | 'owner';
 
+const SIGNUP_ROLE_INTENT_KEY = 'ruedave_signup_role_intent';
+
+const getStoredSignupRoleIntent = (): SignupRole | null => {
+  if (typeof window === 'undefined') return null;
+  const stored = window.localStorage.getItem(SIGNUP_ROLE_INTENT_KEY);
+  return stored === 'owner' || stored === 'renter' ? stored : null;
+};
+
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get('mode') === 'signup';
@@ -61,7 +69,17 @@ const Auth = () => {
       const userRoles = (rolesData ?? []).map((r) => r.role as string);
       const isOwner = userRoles.includes('owner');
       const isRenter = userRoles.includes('renter');
-      const intendedRole = (user.user_metadata as any)?.role as string | undefined;
+      const storedIntent = getStoredSignupRoleIntent();
+      const metadataRole = (user.user_metadata as any)?.role as string | undefined;
+      const intendedRole = storedIntent ?? metadataRole;
+
+      if (storedIntent && metadataRole !== storedIntent) {
+        await supabase.auth.updateUser({ data: { role: storedIntent } });
+      }
+
+      if (storedIntent) {
+        window.localStorage.removeItem(SIGNUP_ROLE_INTENT_KEY);
+      }
 
       // Owner intent: send to application flow (pending, missing, or rejected)
       if (!isOwner && (intendedRole === 'owner' || (ownerApp && ownerApp.status !== 'approved'))) {
@@ -189,8 +207,11 @@ const Auth = () => {
               setIsLoading(true);
               try {
                 const { lovable } = await import('@/integrations/lovable');
+                if (!isLogin) {
+                  window.localStorage.setItem(SIGNUP_ROLE_INTENT_KEY, role);
+                }
                 const result = await lovable.auth.signInWithOAuth('google', {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: `${window.location.origin}/auth`,
                 });
                 if (result.error) toast.error(result.error.message);
               } catch (err: any) {
