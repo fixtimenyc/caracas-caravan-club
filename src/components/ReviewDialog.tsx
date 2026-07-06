@@ -54,6 +54,7 @@ const ReviewDialog = ({
   reviewerType,
   contextLabel,
   onSubmitted,
+  mandatory = false,
 }: ReviewDialogProps) => {
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
