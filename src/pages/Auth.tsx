@@ -69,9 +69,10 @@ const Auth = () => {
       const userRoles = (rolesData ?? []).map((r) => r.role as string);
       const isOwner = userRoles.includes('owner');
       const isRenter = userRoles.includes('renter');
+      const signupUrlIntent = !isLogin ? role : null;
       const storedIntent = getStoredSignupRoleIntent();
       const metadataRole = (user.user_metadata as any)?.role as string | undefined;
-      const intendedRole = storedIntent ?? metadataRole;
+      const intendedRole = storedIntent ?? signupUrlIntent ?? metadataRole;
 
       if (storedIntent && metadataRole !== storedIntent) {
         await supabase.auth.updateUser({ data: { role: storedIntent } });
@@ -210,8 +211,9 @@ const Auth = () => {
                 if (!isLogin) {
                   window.localStorage.setItem(SIGNUP_ROLE_INTENT_KEY, role);
                 }
+                const redirectPath = isLogin ? '/auth' : `/auth?mode=signup&role=${role}`;
                 const result = await lovable.auth.signInWithOAuth('google', {
-                  redirect_uri: `${window.location.origin}/auth`,
+                  redirect_uri: `${window.location.origin}${redirectPath}`,
                 });
                 if (result.error) toast.error(result.error.message);
               } catch (err: any) {
