@@ -540,11 +540,12 @@ const VehicleDetailPage = () => {
                   })
                   .join(" ")
                   .trim();
-                return (
+                return cleaned ? (
                   <p className="text-muted-foreground leading-relaxed">
-                    {cleaned || "Sin descripción adicional."}
+                    {cleaned}
                   </p>
-                );
+                ) : null;
+
               })()}
 
               {/* Specs (real data from vehicle) */}
