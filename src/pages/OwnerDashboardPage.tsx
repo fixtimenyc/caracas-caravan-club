@@ -19,6 +19,7 @@ import {
   PlayCircle,
   Flag,
   ClipboardCheck,
+  Trash2,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
