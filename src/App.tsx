@@ -63,6 +63,8 @@ const App = () => (
         <BrowserRouter>
           <GlobalListeners />
           <AIConsentBanner />
+          <PendingReviewsGate />
+
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
