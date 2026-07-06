@@ -16,6 +16,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, roles, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const isOwnerApplicant = (user?.user_metadata as any)?.role === 'owner' && !roles.includes('owner') && !roles.includes('admin');
 
   const handleSignOut = async () => {
     await signOut();
@@ -25,12 +26,14 @@ const Navbar = () => {
   const getRoleLabel = () => {
     if (roles.includes('admin')) return 'Admin';
     if (roles.includes('owner')) return 'Propietario';
+    if (isOwnerApplicant) return 'Aliado pendiente';
     return 'Arrendatario';
   };
 
   const getRoleBadgeColor = () => {
     if (roles.includes('admin')) return 'bg-destructive/10 text-destructive';
     if (roles.includes('owner')) return 'bg-accent/50 text-accent-foreground';
+    if (isOwnerApplicant) return 'bg-accent/50 text-accent-foreground';
     return 'bg-primary/10 text-primary';
   };
 
@@ -117,13 +120,13 @@ const Navbar = () => {
                     <User className="w-4 h-4 mr-2" />
                     Perfil
                   </DropdownMenuItem>
-                  {(roles.includes('owner') || roles.includes('admin')) && (
+                  {(roles.includes('owner') || roles.includes('admin') || isOwnerApplicant) && (
                     <DropdownMenuItem onClick={() => navigate('/aliado/solicitud')}>
                       <ShieldCheck className="w-4 h-4 mr-2" />
                       Verificación aliado
                     </DropdownMenuItem>
                   )}
-                  {!roles.includes('owner') && !roles.includes('admin') && (
+                  {!roles.includes('owner') && !roles.includes('admin') && !isOwnerApplicant && (
                     <DropdownMenuItem onClick={() => navigate('/arrendatario/verificacion')}>
                       <ShieldCheck className="w-4 h-4 mr-2" />
                       Verificación arrendatario
@@ -237,7 +240,7 @@ const Navbar = () => {
                       <User className="w-4 h-4 mr-2" />
                       Perfil
                     </Button>
-                    {(roles.includes('owner') || roles.includes('admin')) ? (
+                    {(roles.includes('owner') || roles.includes('admin') || isOwnerApplicant) ? (
                       <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/aliado/solicitud'); setIsMenuOpen(false); }}>
                         <ShieldCheck className="w-4 h-4 mr-2" />
                         Verificación aliado
