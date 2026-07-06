@@ -190,14 +190,13 @@ const ReviewDialog = ({
       }}
     >
       <DialogContent
-        className="max-w-md"
+        className={`max-w-md ${mandatory ? "[&>button]:hidden" : ""}`}
         onInteractOutside={(e) => {
           if (mandatory) e.preventDefault();
         }}
         onEscapeKeyDown={(e) => {
           if (mandatory) e.preventDefault();
         }}
-        {...(mandatory ? { onPointerDownOutside: (e: any) => e.preventDefault() } : {})}
       >
         <DialogHeader>
           <DialogTitle>
