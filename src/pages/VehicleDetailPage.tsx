@@ -72,6 +72,7 @@ type VehicleRow = {
   brand: string;
   model: string;
   year: number;
+  color?: string | null;
   location: string;
   price_per_day: number;
   description: string | null;
@@ -82,6 +83,9 @@ type VehicleRow = {
   house_rules?: HouseRules | null;
   features?: string[] | null;
   custom_features?: string[] | null;
+  fuel_type?: string | null;
+  transmission?: string | null;
+  seats?: number | null;
 };
 
 type OwnerProfile = {
@@ -522,26 +526,56 @@ const VehicleDetailPage = () => {
               <h2 className="text-2xl font-bold text-foreground mb-3">
                 Acerca de este vehículo
               </h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {vehicle.description || "Sin descripción adicional."}
-              </p>
+              {(() => {
+                // Strip auto-generated sentences (e.g., "Color: ...", "Transmisión: ...", "Combustible: ...", "Vehículo <marca> <modelo> <año>.")
+                const raw = (vehicle.description || "").trim();
+                const cleaned = raw
+                  .split(/(?<=\.)\s+/)
+                  .map((s) => s.trim())
+                  .filter((s) => {
+                    if (!s) return false;
+                    if (/^Veh[íi]culo\s+.+\d{4}\.?$/i.test(s)) return false;
+                    if (/^(Color|Transmisi[óo]n|Combustible|Asientos|A[ñn]o|Marca|Modelo)\s*:/i.test(s)) return false;
+                    return true;
+                  })
+                  .join(" ")
+                  .trim();
+                return (
+                  <p className="text-muted-foreground leading-relaxed">
+                    {cleaned || "Sin descripción adicional."}
+                  </p>
+                );
+              })()}
 
-              {/* Specs */}
-              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {[
-                  { icon: Users, label: "5 asientos" },
-                  { icon: Fuel, label: "Gasolina" },
-                  { icon: Cog, label: "Transmisión automática" },
-                ].map(({ icon: Icon, label }) => (
-                  <div
-                    key={label}
-                    className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm font-medium text-foreground"
-                  >
-                    <Icon className="w-4 h-4 text-primary shrink-0" />
-                    <span className="truncate">{label}</span>
+              {/* Specs (real data from vehicle) */}
+              {(() => {
+                const fuelLabel = vehicle.fuel_type
+                  ? vehicle.fuel_type.charAt(0).toUpperCase() + vehicle.fuel_type.slice(1)
+                  : null;
+                const transLabel = vehicle.transmission
+                  ? `Transmisión ${vehicle.transmission.toLowerCase()}`
+                  : null;
+                const specs: { icon: any; label: string }[] = [];
+                if (vehicle.seats) specs.push({ icon: Users, label: `${vehicle.seats} asientos` });
+                if (fuelLabel) specs.push({ icon: Fuel, label: fuelLabel });
+                if (transLabel) specs.push({ icon: Cog, label: transLabel });
+                if (vehicle.color) specs.push({ icon: Droplet, label: `Color: ${vehicle.color}` });
+                if (vehicle.year) specs.push({ icon: CalendarIcon, label: `Año ${vehicle.year}` });
+                if (specs.length === 0) return null;
+                return (
+                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {specs.map(({ icon: Icon, label }) => (
+                      <div
+                        key={label}
+                        className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm font-medium text-foreground"
+                      >
+                        <Icon className="w-4 h-4 text-primary shrink-0" />
+                        <span className="truncate">{label}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
 
               {(() => {
                 const allFeatures = Array.from(
