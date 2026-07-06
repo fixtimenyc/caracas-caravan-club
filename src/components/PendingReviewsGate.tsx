@@ -97,8 +97,14 @@ const PendingReviewsGate = () => {
       contextLabel={current.contextLabel}
       mandatory
       onSubmitted={() => {
-        // Remove and continue with next
-        setPending((prev) => prev.slice(1));
+        setPending((prev) => {
+          const next = prev.slice(1);
+          if (next.length > 0) {
+            // Reopen for the next mandatory review on the next tick
+            setTimeout(() => setOpen(true), 50);
+          }
+          return next;
+        });
       }}
     />
   );
