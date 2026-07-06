@@ -222,6 +222,64 @@ const OwnerDashboardPage = () => {
     }
   };
 
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteVehicle = async () => {
+    if (!vehicleToDelete) return;
+    setDeleting(true);
+    try {
+      // Block delete if there are non-terminal reservations
+      const blocking = reservations.filter(
+        (r) =>
+          r.vehicle_id === vehicleToDelete.id &&
+          ["pending", "approved", "active"].includes(r.status)
+      );
+      if (blocking.length > 0) {
+        toast.error("No se puede eliminar", {
+          description:
+            "Este vehículo tiene reservas activas o pendientes. Cancélalas o espera a que se completen.",
+        });
+        setVehicleToDelete(null);
+        return;
+      }
+      const { error } = await supabase
+        .from("vehicles")
+        .delete()
+        .eq("id", vehicleToDelete.id);
+      if (error) {
+        // Fallback: soft-delete by deactivating if FK constraints prevent delete
+        const { error: err2 } = await supabase
+          .from("vehicles")
+          .update({ active: false, available: false })
+          .eq("id", vehicleToDelete.id);
+        if (err2) {
+          toast.error("No se pudo eliminar el vehículo", {
+            description: error.message,
+          });
+          return;
+        }
+        toast.success("Vehículo archivado", {
+          description:
+            "Tenía historial asociado, por lo que fue desactivado en lugar de eliminado.",
+        });
+        setVehicles((prev) =>
+          prev.map((x) =>
+            x.id === vehicleToDelete.id
+              ? { ...x, active: false, available: false }
+              : x
+          )
+        );
+      } else {
+        toast.success("Vehículo eliminado");
+        setVehicles((prev) => prev.filter((x) => x.id !== vehicleToDelete.id));
+      }
+      setVehicleToDelete(null);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const respondReservation = async (
     r: Reservation,
     decision: "approved" | "rejected"
