@@ -19,6 +19,7 @@ import {
   PlayCircle,
   Flag,
   ClipboardCheck,
+  Trash2,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -35,6 +36,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -208,6 +219,64 @@ const OwnerDashboardPage = () => {
       );
     } else {
       toast.success(newVal ? "Vehículo disponible" : "Vehículo pausado");
+    }
+  };
+
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteVehicle = async () => {
+    if (!vehicleToDelete) return;
+    setDeleting(true);
+    try {
+      // Block delete if there are non-terminal reservations
+      const blocking = reservations.filter(
+        (r) =>
+          r.vehicle_id === vehicleToDelete.id &&
+          ["pending", "approved", "active"].includes(r.status)
+      );
+      if (blocking.length > 0) {
+        toast.error("No se puede eliminar", {
+          description:
+            "Este vehículo tiene reservas activas o pendientes. Cancélalas o espera a que se completen.",
+        });
+        setVehicleToDelete(null);
+        return;
+      }
+      const { error } = await supabase
+        .from("vehicles")
+        .delete()
+        .eq("id", vehicleToDelete.id);
+      if (error) {
+        // Fallback: soft-delete by deactivating if FK constraints prevent delete
+        const { error: err2 } = await supabase
+          .from("vehicles")
+          .update({ active: false, available: false })
+          .eq("id", vehicleToDelete.id);
+        if (err2) {
+          toast.error("No se pudo eliminar el vehículo", {
+            description: error.message,
+          });
+          return;
+        }
+        toast.success("Vehículo archivado", {
+          description:
+            "Tenía historial asociado, por lo que fue desactivado en lugar de eliminado.",
+        });
+        setVehicles((prev) =>
+          prev.map((x) =>
+            x.id === vehicleToDelete.id
+              ? { ...x, active: false, available: false }
+              : x
+          )
+        );
+      } else {
+        toast.success("Vehículo eliminado");
+        setVehicles((prev) => prev.filter((x) => x.id !== vehicleToDelete.id));
+      }
+      setVehicleToDelete(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -585,8 +654,17 @@ const OwnerDashboardPage = () => {
                           >
                             <Pencil className="w-4 h-4 mr-1" /> Editar
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => setVehicleToDelete(v)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Eliminar
+                          </Button>
                         </div>
                       </div>
+
 
                       {/* Bookings tabs */}
                       <Tabs defaultValue="upcoming" className="mt-4">
@@ -811,6 +889,36 @@ const OwnerDashboardPage = () => {
             }}
           />
         )}
+
+        <AlertDialog
+          open={!!vehicleToDelete}
+          onOpenChange={(o) => !o && !deleting && setVehicleToDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar este vehículo?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {vehicleToDelete
+                  ? `Se eliminará permanentemente "${vehicleToDelete.brand} ${vehicleToDelete.model} ${vehicleToDelete.year}" de tu flota. Si tiene historial de reservas, será archivado en lugar de eliminado. Esta acción no se puede deshacer.`
+                  : ""}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteVehicle();
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Eliminando…" : "Eliminar"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
       </main>
       <Footer />
     </div>
