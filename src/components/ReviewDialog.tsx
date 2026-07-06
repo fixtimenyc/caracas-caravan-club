@@ -28,6 +28,7 @@ interface ReviewDialogProps {
   reviewerType: ReviewerType;
   contextLabel?: string; // e.g. "Toyota Corolla · 12-15 Mar"
   onSubmitted?: () => void;
+  mandatory?: boolean; // when true, dialog cannot be dismissed until submitted
 }
 
 const renterSchema = z.object({
@@ -53,6 +54,7 @@ const ReviewDialog = ({
   reviewerType,
   contextLabel,
   onSubmitted,
+  mandatory = false,
 }: ReviewDialogProps) => {
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
@@ -180,15 +182,31 @@ const ReviewDialog = ({
   const isRenter = reviewerType === "renter";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (mandatory && !next) return; // block dismissal
+        onOpenChange(next);
+      }}
+    >
+      <DialogContent
+        className={`max-w-md ${mandatory ? "[&>button]:hidden" : ""}`}
+        onInteractOutside={(e) => {
+          if (mandatory) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (mandatory) e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>
             {isRenter ? "Califica tu experiencia" : "Califica al arrendatario"}
           </DialogTitle>
           <DialogDescription>
             {contextLabel ? `${contextLabel}. ` : ""}
-            Tu reseña será visible cuando la otra parte también califique, o automáticamente después de 7 días.
+            {mandatory
+              ? "Dejar tu reseña es obligatorio al finalizar el viaje. Será visible cuando la otra parte también califique, o automáticamente después de 7 días."
+              : "Tu reseña será visible cuando la otra parte también califique, o automáticamente después de 7 días."}
           </DialogDescription>
         </DialogHeader>
 
@@ -259,13 +277,15 @@ const ReviewDialog = ({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={submitting}
-          >
-            Después
-          </Button>
+          {!mandatory && (
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
+              Después
+            </Button>
+          )}
           <Button onClick={submit} disabled={submitting}>
             {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Publicar reseña
