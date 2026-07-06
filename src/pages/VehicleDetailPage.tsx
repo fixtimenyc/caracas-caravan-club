@@ -72,6 +72,7 @@ type VehicleRow = {
   brand: string;
   model: string;
   year: number;
+  color?: string | null;
   location: string;
   price_per_day: number;
   description: string | null;
@@ -82,6 +83,9 @@ type VehicleRow = {
   house_rules?: HouseRules | null;
   features?: string[] | null;
   custom_features?: string[] | null;
+  fuel_type?: string | null;
+  transmission?: string | null;
+  seats?: number | null;
 };
 
 type OwnerProfile = {
