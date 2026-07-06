@@ -43,6 +43,7 @@ import DemoInspectionPage from "./pages/DemoInspectionPage";
 import PrivacySettingsPage from "./pages/PrivacySettingsPage";
 import AdminDataPage from "./pages/AdminDataPage";
 import AIConsentBanner from "./components/AIConsentBanner";
+import PendingReviewsGate from "./components/PendingReviewsGate";
 import { useFraudFingerprint } from "@/hooks/useFraudFingerprint";
 import NotFound from "./pages/NotFound";
 
