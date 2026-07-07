@@ -255,6 +255,18 @@ const OwnerApplicationPage = () => {
         accepted_terms: acceptedTerms,
       });
 
+      // Sync personal data to the user's profile so it shows across the app/admin
+      await supabase
+        .from('profiles')
+        .update({
+          full_name: personal.fullName,
+          cedula: personal.cedula,
+          phone: personal.phone,
+          birth_date: personal.birthDate,
+          address: personal.address,
+        })
+        .eq('user_id', user.id);
+
       if (error) {
         if (error.code === '23505') {
           toast.error('Ya enviaste una solicitud anteriormente');
