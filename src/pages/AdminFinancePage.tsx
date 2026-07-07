@@ -100,7 +100,7 @@ export default function AdminFinancePage() {
             <DashboardTab loading={loading} payments={payments} reservations={reservations} vehicles={vehicles} vMap={vMap} pMap={pMap} />
           </TabsContent>
           <TabsContent value="payments" className="mt-6">
-            <PaymentsTab loading={loading} payments={payments} rMap={rMap} vMap={vMap} pMap={pMap} reload={load} />
+            <PaymentsTab loading={loading} payments={payments} reservations={reservations} rMap={rMap} vMap={vMap} pMap={pMap} reload={load} />
           </TabsContent>
           <TabsContent value="payouts" className="mt-6">
             <PayoutsTab loading={loading} reservations={reservations} payments={payments} vMap={vMap} pMap={pMap} />
@@ -316,7 +316,7 @@ function AlertCard({ title, count, variant }: { title: string; count: number; va
 }
 
 /* ---------------- Pagos de Rentadores ---------------- */
-function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
+function PaymentsTab({ loading, payments, reservations, rMap, vMap, pMap, reload }: any) {
   const [search, setSearch] = useState("");
   const [statusF, setStatusF] = useState("all");
   const [methodF, setMethodF] = useState("all");
@@ -386,8 +386,78 @@ function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
     URL.revokeObjectURL(url);
   };
 
+  const pendingVerification = useMemo(() => {
+    const paidResIds = new Set(
+      payments.filter((p: Payment) => p.status === "completed").map((p: Payment) => p.reservation_id)
+    );
+    const latestPaymentByRes: Record<string, Payment> = {};
+    payments.forEach((p: Payment) => {
+      const cur = latestPaymentByRes[p.reservation_id];
+      if (!cur || new Date(p.created_at) > new Date(cur.created_at)) {
+        latestPaymentByRes[p.reservation_id] = p;
+      }
+    });
+    return (reservations as Reservation[])
+      .filter((r) => ["awaiting_payment", "approved"].includes(r.status) && !paidResIds.has(r.id))
+      .map((r) => ({ reservation: r, payment: latestPaymentByRes[r.id] || null }))
+      .sort((a, b) => new Date(b.reservation.created_at).getTime() - new Date(a.reservation.created_at).getTime());
+  }, [payments, reservations]);
+
   return (
     <div className="space-y-4">
+      {pendingVerification.length > 0 && (
+        <Card className="border-amber-500/40 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              Pendientes de verificación ({pendingVerification.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reserva</TableHead>
+                  <TableHead>Rentador</TableHead>
+                  <TableHead>Monto</TableHead>
+                  <TableHead>Estado reserva</TableHead>
+                  <TableHead>Comprobante</TableHead>
+                  <TableHead>Vence pago</TableHead>
+                  <TableHead className="text-right">Acción</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingVerification.map(({ reservation: r, payment: p }) => {
+                  const renter = pMap[r.renter_id];
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <Link to={`/admin/reservas/${r.id}`} className="text-primary hover:underline text-xs font-mono">
+                          {r.id.slice(0, 8)}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm">{renter?.full_name || "—"}</TableCell>
+                      <TableCell className="font-semibold">{fmt(Number(r.total_price))}</TableCell>
+                      <TableCell><Badge variant="outline" className="capitalize text-xs">{r.status}</Badge></TableCell>
+                      <TableCell>
+                        {p ? <PaymentStatusBadge status={p.status} /> : <span className="text-xs text-muted-foreground">Sin enviar</span>}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {(r as any).payment_deadline ? format(new Date((r as any).payment_deadline), "dd/MM HH:mm") : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/admin/reservas/${r.id}`}>Verificar</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardContent className="p-4 space-y-3">
           <div className="flex flex-wrap gap-3">
@@ -399,6 +469,7 @@ function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
               <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="submitted">En revisión</SelectItem>
                 <SelectItem value="completed">Pagado</SelectItem>
                 <SelectItem value="pending">Pendiente</SelectItem>
                 <SelectItem value="failed">Rechazado</SelectItem>
@@ -521,6 +592,7 @@ function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
 function PaymentStatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string; icon: any }> = {
     completed: { label: "Pagado", cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30", icon: CheckCircle2 },
+    submitted: { label: "En revisión", cls: "bg-blue-500/15 text-blue-700 border-blue-500/30", icon: Clock },
     pending: { label: "Pendiente", cls: "bg-amber-500/15 text-amber-700 border-amber-500/30", icon: Clock },
     failed: { label: "Rechazado", cls: "bg-destructive/15 text-destructive border-destructive/30", icon: XCircle },
     refunded: { label: "Reembolsado", cls: "bg-blue-500/15 text-blue-700 border-blue-500/30", icon: RefreshCw },
