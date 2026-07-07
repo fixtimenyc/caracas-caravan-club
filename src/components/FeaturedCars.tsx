@@ -67,7 +67,7 @@ const FeaturedCars = () => {
         (data as VehicleRow[]).map(async (v) => {
           const [{ data: rating }, image] = await Promise.all([
             supabase.rpc("vehicle_rating_summary", { _vehicle_id: v.id }),
-            resolvePhoto(v.photos?.[0]),
+            resolveVehiclePhoto(sanitizeVehiclePhotoPaths(v.photos)[0], carPlaceholder),
           ]);
           const summary = rating?.[0];
           return {
