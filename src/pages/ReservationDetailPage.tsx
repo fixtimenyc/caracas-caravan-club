@@ -155,6 +155,27 @@ export default function ReservationDetailPage() {
           <Badge variant="outline" className={meta.cls}>{meta.label}</Badge>
         </div>
 
+        {reservation.status === "awaiting_payment" && !isOwnerView && (
+          <div className="mb-4">
+            <PaymentReceiptUpload
+              reservationId={reservation.id}
+              totalPrice={Number(reservation.total_price)}
+              paymentDeadline={reservation.payment_deadline}
+            />
+          </div>
+        )}
+
+        {reservation.status === "awaiting_payment" && isOwnerView && (
+          <div className="mb-4 rounded-lg border border-orange-500/30 bg-orange-500/5 p-4 text-sm">
+            <p className="font-medium text-orange-800">Esperando pago del arrendatario</p>
+            <p className="text-muted-foreground text-xs mt-1">
+              La reserva quedará aprobada automáticamente cuando un administrador de RuedaVe
+              verifique el comprobante de pago. Si no se recibe pago en 24h desde tu aprobación,
+              la reserva se cancelará.
+            </p>
+          </div>
+        )}
+
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="md:col-span-2">
             <CardHeader>
