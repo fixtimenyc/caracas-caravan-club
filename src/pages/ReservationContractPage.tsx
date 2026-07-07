@@ -74,7 +74,7 @@ export default function ReservationContractPage() {
       const canView = r.renter_id === user.id || v?.owner_id === user.id;
       if (!canView) { setLoading(false); return; }
       setAllowed(true);
-      const [{ data: renterRows }, { data: payment }] = await Promise.all([
+      const [{ data: renterRows }, { data: payment }, { data: pickup }] = await Promise.all([
         supabase.rpc("get_reservation_renter_info", { _reservation_id: id }),
         supabase
           .from("payments")
@@ -82,6 +82,12 @@ export default function ReservationContractPage() {
           .eq("reservation_id", id)
           .order("created_at", { ascending: false })
           .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("vehicle_inspections")
+          .select("mileage")
+          .eq("reservation_id", id)
+          .eq("type", "pickup")
           .maybeSingle(),
       ]);
       const renter = Array.isArray(renterRows) ? renterRows[0] : renterRows;
