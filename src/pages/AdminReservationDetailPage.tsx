@@ -388,20 +388,22 @@ export default function AdminReservationDetailPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Pagos</CardTitle></CardHeader>
-              <CardContent>
-                {payments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin pagos registrados</p>
-                ) : payments.map(p => (
-                  <div key={p.id} className="flex justify-between text-sm py-1">
-                    <span>{p.payment_method}</span>
-                    <span className="font-semibold">${Number(p.amount).toFixed(2)}</span>
-                    <Badge variant="outline">{p.status}</Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <AdminPaymentVerification reservationId={reservation.id} onChange={load} />
+
+            {payments.length > 1 && (
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Historial de pagos</CardTitle></CardHeader>
+                <CardContent>
+                  {payments.map(p => (
+                    <div key={p.id} className="flex justify-between text-sm py-1">
+                      <span>{p.payment_method}</span>
+                      <span className="font-semibold">${Number(p.amount).toFixed(2)}</span>
+                      <Badge variant="outline">{p.status}</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
