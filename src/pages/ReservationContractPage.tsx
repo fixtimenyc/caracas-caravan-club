@@ -97,7 +97,7 @@ export default function ReservationContractPage() {
       const renterProfile = (
         await supabase.from("profiles").select("*").eq("user_id", r.renter_id).maybeSingle()
       ).data;
-      setData({ r, v, renter, renterProfile, ownerProfile, payment });
+      setData({ r, v, renter, renterProfile, ownerProfile, payment, pickup });
       setLoading(false);
     })();
   }, [id, user]);
