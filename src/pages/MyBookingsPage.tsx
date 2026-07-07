@@ -339,8 +339,8 @@ const MyBookingsPage = () => {
             <Button size="sm" variant="outline" onClick={() => contactRenter(r)}>
               <MessageCircle className="h-4 w-4 mr-1" /> Contactar
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => navigate("/mis-vehiculos")}>
-              Gestionar
+            <Button size="sm" onClick={() => setManageReservation(r)}>
+              <Settings2 className="h-4 w-4 mr-1" /> Gestionar
             </Button>
           </div>
         </CardContent>
