@@ -86,14 +86,14 @@ export default function AdminReservationContractPage() {
           .eq("user_id", r.renter_id)
           .maybeSingle()
       ).data;
-      setData({ r, v, renter, renterProfile, ownerProfile, payment });
+      setData({ r, v, renter, renterProfile, ownerProfile, payment, pickup });
       setLoading(false);
     })();
   }, [id]);
 
   const rendered = useMemo(() => {
     if (!data || !settings) return "";
-    const { r, v, renter, renterProfile, ownerProfile, payment } = data;
+    const { r, v, renter, renterProfile, ownerProfile, payment, pickup } = data;
     const days = Math.max(
       1,
       differenceInCalendarDays(parseISO(r.end_date), parseISO(r.start_date)),
