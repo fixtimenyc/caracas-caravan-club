@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
+  awaiting_payment: { label: "Esperando pago", cls: "bg-orange-500/10 text-orange-700 border-orange-500/30" },
   approved: { label: "Aprobada", cls: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30" },
   active: { label: "Activa", cls: "bg-blue-500/10 text-blue-700 border-blue-500/30" },
   completed: { label: "Completada", cls: "bg-muted text-muted-foreground border-border" },
