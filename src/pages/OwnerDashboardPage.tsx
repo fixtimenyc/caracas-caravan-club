@@ -718,7 +718,13 @@ const OwnerDashboardPage = () => {
                                       ? () => respondReservation(r, "rejected")
                                       : undefined
                                   }
+                                  onContact={
+                                    r.status === "pending"
+                                      ? () => contactRenter(r)
+                                      : undefined
+                                  }
                                 />
+
                               ))}
                             </div>
                           )}
