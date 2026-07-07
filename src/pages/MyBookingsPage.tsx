@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
@@ -25,6 +26,7 @@ const MyBookingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [reservations, setReservations] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<Record<string, any>>({});
+  const [vehiclePhotos, setVehiclePhotos] = useState<Record<string, string>>({});
   const [pickupDone, setPickupDone] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -47,6 +49,16 @@ const MyBookingsPage = () => {
         const map: Record<string, any> = {};
         (vs || []).forEach((v) => (map[v.id] = v));
         setVehicles(map);
+        const photos = await Promise.all(
+          (vs || []).map(async (v: any) => [
+            v.id,
+            await resolveVehiclePhoto(Array.isArray(v.photos) ? v.photos[0] : null),
+          ] as const),
+        );
+        setVehiclePhotos(Object.fromEntries(photos));
+      } else {
+        setVehicles({});
+        setVehiclePhotos({});
       }
       const resIds = list.map((r) => r.id);
       if (resIds.length) {
@@ -86,8 +98,8 @@ const MyBookingsPage = () => {
         <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-16 h-16 rounded-md bg-muted overflow-hidden flex-shrink-0">
-              {v?.photos?.[0] ? (
-                <img src={v.photos[0]} alt="" className="w-full h-full object-cover" />
+              {v && vehiclePhotos[v.id] ? (
+                <img src={vehiclePhotos[v.id]} alt={`${v.brand} ${v.model}`} className="w-full h-full object-cover" />
               ) : (
                 <Car className="w-full h-full p-4 text-muted-foreground" />
               )}

@@ -370,7 +370,7 @@ function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
       title: "Recordatorio de pago",
       message: `Tienes un pago pendiente de ${fmt(Number(p.amount))} para tu reserva.`,
       reservation_id: r.id,
-      action_url: `/reservas/${r.id}`,
+      action_url: "/mis-reservas",
     });
     toast({ title: "Recordatorio enviado" });
   };

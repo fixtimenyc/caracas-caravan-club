@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useVerificationStatus } from "@/hooks/useVerificationStatus";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -23,6 +24,7 @@ interface ProfileData {
 
 const ProfilePage = () => {
   const { user, roles, loading: authLoading } = useAuth();
+  const verification = useVerificationStatus();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -109,12 +111,10 @@ const ProfilePage = () => {
   };
 
   const getRoleLabel = () => {
-    if (roles.includes("admin")) return "Admin";
-    if (roles.includes("owner")) return "Propietario";
-    return "Arrendatario";
+    return verification.roleLabel;
   };
 
-  if (authLoading || loading) {
+  if (authLoading || verification.loading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -269,6 +269,18 @@ const ProfilePage = () => {
                   <Button type="button" variant="outline" onClick={() => navigate("/my-vehicles")}>
                     <Car className="w-4 h-4 mr-2" />
                     Mis vehículos
+                  </Button>
+                )}
+                {verification.isOwnerApplicant && (
+                  <Button type="button" variant="outline" onClick={() => navigate("/aliado/solicitud")}>
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    Solicitud de aliado
+                  </Button>
+                )}
+                {verification.needsRenterVerification && (
+                  <Button type="button" variant="outline" onClick={() => navigate("/arrendatario/verificacion")}>
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    Verificación arrendatario
                   </Button>
                 )}
                 <Button type="button" variant="outline" onClick={() => navigate("/perfil/privacidad")}>

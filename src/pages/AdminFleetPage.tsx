@@ -63,6 +63,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CARACAS_ZONES, matchZone } from "@/lib/locations";
 import { VEHICLE_CATEGORIES, inferCategory, type VehicleCategory } from "@/lib/vehicleCategory";
+import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 
 type FleetStatus = "active" | "maintenance" | "paused" | "inactive";
 
@@ -202,7 +203,7 @@ export default function AdminFleetPage() {
       maintMap.set(m.vehicle_id, cur);
     });
 
-    const next: FleetRow[] = vehicles.map((v: any) => {
+    const next: FleetRow[] = await Promise.all(vehicles.map(async (v: any) => {
       const reserved = reservedByVehicle.get(v.id) || 0;
       const occupancy = Math.min(100, Math.round((reserved / 30) * 100));
       const m = maintMap.get(v.id) || { last: null, inMaintenance: false };
@@ -212,7 +213,7 @@ export default function AdminFleetPage() {
         brand: v.brand,
         model: v.model,
         year: v.year,
-        photo: Array.isArray(v.photos) && v.photos.length ? v.photos[0] : null,
+        photo: Array.isArray(v.photos) && v.photos.length ? await resolveVehiclePhoto(v.photos[0]) : null,
         location: v.location,
         zone,
         category: inferCategory(v.brand, v.model),
@@ -230,7 +231,7 @@ export default function AdminFleetPage() {
         reserved_days_30d: reserved,
         last_revision: m.last,
       };
-    });
+    }));
 
     setRows(next);
     setSelected({});

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useVerificationStatus } from "@/hooks/useVerificationStatus";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +16,10 @@ import NotificationBell from "@/components/NotificationBell";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, roles, signOut, loading } = useAuth();
+  const verification = useVerificationStatus();
   const navigate = useNavigate();
-  const isOwnerApplicant = (user?.user_metadata as any)?.role === 'owner' && !roles.includes('owner') && !roles.includes('admin');
+  const isOwnerApplicant = verification.isOwnerApplicant;
+  const isRenterVerificationVisible = !verification.isAdmin && !verification.isOwner && !isOwnerApplicant;
 
   const handleSignOut = async () => {
     await signOut();
@@ -24,10 +27,7 @@ const Navbar = () => {
   };
 
   const getRoleLabel = () => {
-    if (roles.includes('admin')) return 'Admin';
-    if (roles.includes('owner')) return 'Propietario';
-    if (isOwnerApplicant) return 'Aliado pendiente';
-    return 'Arrendatario';
+    return verification.roleLabel;
   };
 
   const getRoleBadgeColor = () => {
@@ -73,7 +73,7 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            {loading ? (
+            {loading || verification.loading ? (
               <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
             ) : user ? (
               <>
@@ -100,12 +100,12 @@ const Navbar = () => {
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Mensajes
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/mis-reservas')}>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Mis reservas
+                  </DropdownMenuItem>
                   {(roles.includes('owner') || roles.includes('admin')) && (
                     <>
-                      <DropdownMenuItem onClick={() => navigate('/mis-reservas')}>
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Mis reservas
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/mis-ganancias')}>
                         <DollarSign className="w-4 h-4 mr-2" />
                         Mis ganancias
@@ -120,13 +120,13 @@ const Navbar = () => {
                     <User className="w-4 h-4 mr-2" />
                     Perfil
                   </DropdownMenuItem>
-                  {(roles.includes('owner') || roles.includes('admin') || isOwnerApplicant) && (
+                  {isOwnerApplicant && (
                     <DropdownMenuItem onClick={() => navigate('/aliado/solicitud')}>
                       <ShieldCheck className="w-4 h-4 mr-2" />
-                      Verificación aliado
+                      Solicitud de aliado
                     </DropdownMenuItem>
                   )}
-                  {!roles.includes('owner') && !roles.includes('admin') && !isOwnerApplicant && (
+                  {isRenterVerificationVisible && (
                     <DropdownMenuItem onClick={() => navigate('/arrendatario/verificacion')}>
                       <ShieldCheck className="w-4 h-4 mr-2" />
                       Verificación arrendatario
@@ -220,12 +220,12 @@ const Navbar = () => {
                       <MessageSquare className="w-4 h-4 mr-2" />
                       Mensajes
                     </Button>
+                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-reservas'); setIsMenuOpen(false); }}>
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Mis reservas
+                    </Button>
                     {(roles.includes('owner') || roles.includes('admin')) && (
                       <>
-                        <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-reservas'); setIsMenuOpen(false); }}>
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Mis reservas
-                        </Button>
                         <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-ganancias'); setIsMenuOpen(false); }}>
                           <DollarSign className="w-4 h-4 mr-2" />
                           Mis ganancias
@@ -240,17 +240,17 @@ const Navbar = () => {
                       <User className="w-4 h-4 mr-2" />
                       Perfil
                     </Button>
-                    {(roles.includes('owner') || roles.includes('admin') || isOwnerApplicant) ? (
+                    {isOwnerApplicant ? (
                       <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/aliado/solicitud'); setIsMenuOpen(false); }}>
                         <ShieldCheck className="w-4 h-4 mr-2" />
-                        Verificación aliado
+                        Solicitud de aliado
                       </Button>
-                    ) : (
+                    ) : isRenterVerificationVisible ? (
                       <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/arrendatario/verificacion'); setIsMenuOpen(false); }}>
                         <ShieldCheck className="w-4 h-4 mr-2" />
                         Verificación arrendatario
                       </Button>
-                    )}
+                    ) : null}
                     {roles.includes('admin') && (
                       <>
                         <Button variant="ghost" size="sm" className="justify-start text-primary" onClick={() => { navigate('/admin'); setIsMenuOpen(false); }}>

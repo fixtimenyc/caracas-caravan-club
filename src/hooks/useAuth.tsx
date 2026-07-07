@@ -38,36 +38,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let active = true;
+
+    const applySession = async (nextSession: Session | null) => {
+      setLoading(true);
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (nextSession?.user) {
+        const fetchedRoles = await fetchUserRoles(nextSession.user.id);
+        if (!active) return;
+        setRoles(fetchedRoles);
+      } else {
+        setRoles([]);
+      }
+
+      if (active) setLoading(false);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRoles(session.user.id).then(setRoles);
-          }, 0);
-        } else {
-          setRoles([]);
-        }
+        setTimeout(() => {
+          void applySession(session);
+        }, 0);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserRoles(session.user.id).then((fetchedRoles) => {
-          setRoles(fetchedRoles);
-          setLoading(false);
-        });
-      } else {
-        setLoading(false);
-      }
+      void applySession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, role: 'renter' | 'owner' = 'renter') => {
@@ -98,8 +102,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    setLoading(true);
     await supabase.auth.signOut();
     setRoles([]);
+    setLoading(false);
   };
 
   const hasRole = (role: AppRole) => roles.includes(role);
