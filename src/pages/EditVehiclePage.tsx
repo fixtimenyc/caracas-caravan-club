@@ -539,6 +539,37 @@ const EditVehiclePage = () => {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Color <span className="text-destructive">*</span></Label>
+                    <Input
+                      value={form.color}
+                      placeholder="Ej: Blanco"
+                      onChange={(e) => update("color", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Placa <span className="text-destructive">*</span></Label>
+                    <Input
+                      value={form.plate}
+                      placeholder="AA123BB"
+                      onChange={(e) => update("plate", e.target.value.toUpperCase())}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>VIN / Serial</Label>
+                    <Input
+                      value={form.vin}
+                      placeholder="17 caracteres"
+                      onChange={(e) => update("vin", e.target.value.toUpperCase())}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Color, placa y VIN son datos legales que aparecen en el contrato de arrendamiento.
+                </p>
+
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="zone">Zona de Caracas</Label>
