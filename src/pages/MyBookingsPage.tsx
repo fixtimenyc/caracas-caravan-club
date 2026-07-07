@@ -421,6 +421,14 @@ const MyBookingsPage = () => {
                         </div>
                       </section>
                     )}
+                    {ownerGrouped.awaitingPayment.length > 0 && (
+                      <section>
+                        <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Esperando pago del arrendatario</h3>
+                        <div className="space-y-3">
+                          {ownerGrouped.awaitingPayment.map((r) => <OwnerRow key={r.id} r={r} />)}
+                        </div>
+                      </section>
+                    )}
                     {ownerGrouped.active.length > 0 && (
                       <section>
                         <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Confirmadas y activas</h3>
