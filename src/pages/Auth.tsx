@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Car, Mail, Lock, User, ArrowLeft, Key, Handshake } from 'lucide-react';
+import { Car, Mail, Lock, User, ArrowLeft, Key, Handshake, IdCard, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,8 @@ const loginSchema = z.object({
 
 const signupSchema = z.object({
   fullName: z.string().trim().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'Nombre muy largo'),
+  cedula: z.string().trim().regex(/^[VEJvej]-?\d{6,9}$/i, 'Formato: V-12345678'),
+  phone: z.string().trim().regex(/^(\+58|0)?\d{10}$/, 'Teléfono venezolano inválido'),
   email: z.string().trim().email('Email inválido').max(255),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').max(72),
   role: z.enum(['renter', 'owner']),
@@ -51,6 +53,8 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [cedula, setCedula] = useState('');
+  const [phone, setPhone] = useState('');
   const [role, setRole] = useState<SignupRole>(initialRole);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -139,7 +143,7 @@ const Auth = () => {
           navigate('/');
         }
       } else {
-        const validation = signupSchema.safeParse({ fullName, email, password, role, acceptedTerms, acceptedPrivacy, acceptedCancellation });
+        const validation = signupSchema.safeParse({ fullName, cedula, phone, email, password, role, acceptedTerms, acceptedPrivacy, acceptedCancellation });
         if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
           validation.error.errors.forEach((err) => {
@@ -150,7 +154,7 @@ const Auth = () => {
           return;
         }
 
-        const { error } = await signUp(email, password, fullName, role);
+        const { error } = await signUp(email, password, fullName, role, { cedula, phone });
         if (error) {
           if (error.message.includes('User already registered')) {
             toast.error('Este email ya está registrado');
@@ -317,6 +321,48 @@ const Auth = () => {
                 </div>
                 {errors.fullName && (
                   <p className="text-sm text-destructive">{errors.fullName}</p>
+                )}
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="cedula">Cédula</Label>
+                <div className="relative">
+                  <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="cedula"
+                    type="text"
+                    placeholder="V-12345678"
+                    value={cedula}
+                    onChange={(e) => setCedula(e.target.value)}
+                    className="pl-10"
+                    maxLength={12}
+                  />
+                </div>
+                {errors.cedula && (
+                  <p className="text-sm text-destructive">{errors.cedula}</p>
+                )}
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="04141234567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="pl-10"
+                    maxLength={15}
+                  />
+                </div>
+                {errors.phone && (
+                  <p className="text-sm text-destructive">{errors.phone}</p>
                 )}
               </div>
             )}
