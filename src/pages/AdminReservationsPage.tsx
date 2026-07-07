@@ -268,6 +268,7 @@ export default function AdminReservationsPage() {
   const counts = useMemo(() => {
     const c: Record<Status, number> = {
       pending: 0,
+      awaiting_payment: 0,
       approved: 0,
       active: 0,
       completed: 0,
@@ -315,7 +316,7 @@ export default function AdminReservationsPage() {
     }
     const { error } = await supabase
       .from("reservations")
-      .update({ status: "approved" })
+      .update({ status: "awaiting_payment" })
       .in("id", targets.map((t) => t.id));
     if (error) return toast.error(error.message);
     toast.success(`${targets.length} reservas confirmadas`);
