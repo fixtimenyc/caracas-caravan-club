@@ -101,6 +101,7 @@ const App = () => (
             <Route path="/reservas/:id/inspeccion-entrega" element={<ReservationInspectionPage type="pickup" />} />
             <Route path="/reservas/:id/inspeccion-devolucion" element={<ReservationInspectionPage type="return" />} />
             <Route path="/demo/inspeccion" element={<DemoInspectionPage />} />
+            <Route path="/mis-ganancias" element={<MyEarningsPage />} />
             <Route path="/terminos" element={<TermsPage />} />
             <Route path="/politica-privacidad" element={<PrivacyPage />} />
             <Route path="/politica-cancelacion" element={<CancellationPage />} />
