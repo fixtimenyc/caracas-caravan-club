@@ -292,6 +292,13 @@ const MyBookingsPage = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 md:justify-end">
+            {r.status === "awaiting_payment" && (
+              <Link to={`/reservas/${r.id}`}>
+                <Button size="sm">
+                  Pagar ahora
+                </Button>
+              </Link>
+            )}
             <Link to={`/reservas/${r.id}`}>
               <Button size="sm" variant="outline">
                 <Eye className="h-4 w-4 mr-1" /> Detalles
