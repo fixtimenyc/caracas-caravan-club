@@ -1,13 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { format, differenceInHours } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar, ClipboardCheck, Loader2, Car, MessageCircle, User as UserIcon } from "lucide-react";
+import {
+  Calendar,
+  ClipboardCheck,
+  Loader2,
+  Car,
+  MessageCircle,
+  User as UserIcon,
+  Check,
+  X,
+  PlayCircle,
+  Flag,
+  Settings2,
+  MapPin,
+  Phone,
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
