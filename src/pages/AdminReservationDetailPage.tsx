@@ -24,10 +24,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReservationInspectionsPanel from "@/components/admin/ReservationInspectionsPanel";
+import AdminPaymentVerification from "@/components/AdminPaymentVerification";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
+  awaiting_payment: { label: "Esperando pago", cls: "bg-orange-500/10 text-orange-700 border-orange-500/30" },
   approved: { label: "Aprobada", cls: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30" },
   active: { label: "Activa", cls: "bg-blue-500/10 text-blue-700 border-blue-500/30" },
   completed: { label: "Completada", cls: "bg-muted text-muted-foreground border-border" },
@@ -37,6 +39,7 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
 
 const TIMELINE_STEPS = [
   { key: "created", label: "Creada" },
+  { key: "awaiting_payment", label: "Pago" },
   { key: "approved", label: "Aprobada" },
   { key: "active", label: "Activa" },
   { key: "completed", label: "Completada" },
@@ -205,7 +208,7 @@ export default function AdminReservationDetailPage() {
           <div className="flex flex-wrap gap-2">
             {reservation.status === "pending" && (
               <>
-                <Button onClick={() => setStatus("approved")}><CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar</Button>
+                <Button onClick={() => setStatus("awaiting_payment")}><CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar (esperar pago)</Button>
                 <Button variant="outline" onClick={() => setStatus("rejected")}><XCircle className="h-4 w-4 mr-1" /> Rechazar</Button>
               </>
             )}
@@ -385,20 +388,22 @@ export default function AdminReservationDetailPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Pagos</CardTitle></CardHeader>
-              <CardContent>
-                {payments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin pagos registrados</p>
-                ) : payments.map(p => (
-                  <div key={p.id} className="flex justify-between text-sm py-1">
-                    <span>{p.payment_method}</span>
-                    <span className="font-semibold">${Number(p.amount).toFixed(2)}</span>
-                    <Badge variant="outline">{p.status}</Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <AdminPaymentVerification reservationId={reservation.id} onChange={load} />
+
+            {payments.length > 1 && (
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Historial de pagos</CardTitle></CardHeader>
+                <CardContent>
+                  {payments.map(p => (
+                    <div key={p.id} className="flex justify-between text-sm py-1">
+                      <span>{p.payment_method}</span>
+                      <span className="font-semibold">${Number(p.amount).toFixed(2)}</span>
+                      <Badge variant="outline">{p.status}</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

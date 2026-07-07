@@ -41,6 +41,7 @@ import { toast } from "sonner";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
+  awaiting_payment: { label: "Esperando pago", cls: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
   approved: { label: "Aprobada", cls: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30" },
   active: { label: "Activa", cls: "bg-blue-500/10 text-blue-700 border-blue-500/30" },
   completed: { label: "Completada", cls: "bg-muted text-muted-foreground border-border" },
@@ -144,16 +145,17 @@ const MyBookingsPage = () => {
   }, [user, isOwner]);
 
   const grouped = useMemo(() => {
-    const upcoming = reservations.filter((r) => ["approved", "active", "pending"].includes(r.status));
+    const upcoming = reservations.filter((r) => ["approved", "active", "pending", "awaiting_payment"].includes(r.status));
     const past = reservations.filter((r) => ["completed", "cancelled", "rejected"].includes(r.status));
     return { upcoming, past };
   }, [reservations]);
 
   const ownerGrouped = useMemo(() => {
     const pending = ownerReservations.filter((r) => r.status === "pending");
+    const awaitingPayment = ownerReservations.filter((r) => r.status === "awaiting_payment");
     const active = ownerReservations.filter((r) => ["approved", "active"].includes(r.status));
     const past = ownerReservations.filter((r) => ["completed", "cancelled", "rejected"].includes(r.status));
-    return { pending, active, past };
+    return { pending, awaitingPayment, active, past };
   }, [ownerReservations]);
 
   const contactRenter = async (r: any) => {
@@ -189,21 +191,31 @@ const MyBookingsPage = () => {
       return;
     }
     setActionLoading(true);
+    // "approved" from the owner now sends the reservation to "awaiting_payment" —
+    // the renter must upload the payment receipt and an admin must verify it
+    // before the reservation is fully released.
+    const dbStatus = decision === "approved" ? "awaiting_payment" : "rejected";
     const { error } = await supabase
       .from("reservations")
-      .update({ status: decision })
+      .update({ status: dbStatus })
       .eq("id", r.id);
     setActionLoading(false);
     if (error) return toast.error("No se pudo actualizar la reserva");
-    setOwnerReservations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: decision } : x)));
-    setManageReservation((prev: any) => (prev && prev.id === r.id ? { ...prev, status: decision } : prev));
-    await notifyRenter(
-      r,
-      decision === "approved" ? "reservation_approved" : "reservation_rejected",
-      decision === "approved" ? "¡Tu reserva fue aprobada!" : "Reserva rechazada",
-      `${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(new Date(r.end_date), "d MMM yyyy", { locale: es })}`,
-    );
-    toast.success(decision === "approved" ? "Reserva aprobada" : "Reserva rechazada");
+    setOwnerReservations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: dbStatus } : x)));
+    setManageReservation((prev: any) => (prev && prev.id === r.id ? { ...prev, status: dbStatus } : prev));
+    if (decision === "approved") {
+      // The DB trigger already notifies the renter about the payment step, so
+      // we skip a duplicate notification here.
+      toast.success("Reserva aprobada — el arrendatario debe completar el pago");
+    } else {
+      await notifyRenter(
+        r,
+        "reservation_rejected",
+        "Reserva rechazada",
+        `${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(new Date(r.end_date), "d MMM yyyy", { locale: es })}`,
+      );
+      toast.success("Reserva rechazada");
+    }
   };
 
   const transitionReservation = async (r: any, newStatus: "active" | "completed" | "cancelled") => {
@@ -280,6 +292,13 @@ const MyBookingsPage = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 md:justify-end">
+            {r.status === "awaiting_payment" && (
+              <Link to={`/reservas/${r.id}`}>
+                <Button size="sm">
+                  Pagar ahora
+                </Button>
+              </Link>
+            )}
             <Link to={`/reservas/${r.id}`}>
               <Button size="sm" variant="outline">
                 <Eye className="h-4 w-4 mr-1" /> Detalles
@@ -406,6 +425,14 @@ const MyBookingsPage = () => {
                         <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Pendientes de aprobación</h3>
                         <div className="space-y-3">
                           {ownerGrouped.pending.map((r) => <OwnerRow key={r.id} r={r} />)}
+                        </div>
+                      </section>
+                    )}
+                    {ownerGrouped.awaitingPayment.length > 0 && (
+                      <section>
+                        <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Esperando pago del arrendatario</h3>
+                        <div className="space-y-3">
+                          {ownerGrouped.awaitingPayment.map((r) => <OwnerRow key={r.id} r={r} />)}
                         </div>
                       </section>
                     )}

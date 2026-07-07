@@ -16,11 +16,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 import { getOrCreateConversation } from "@/lib/conversations";
+import PaymentReceiptUpload from "@/components/PaymentReceiptUpload";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
+  awaiting_payment: { label: "Esperando pago", cls: "bg-orange-500/10 text-orange-700 border-orange-500/30" },
   approved: { label: "Aprobada", cls: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30" },
   active: { label: "Activa", cls: "bg-blue-500/10 text-blue-700 border-blue-500/30" },
   completed: { label: "Completada", cls: "bg-muted text-muted-foreground border-border" },
@@ -152,6 +154,27 @@ export default function ReservationDetailPage() {
           </div>
           <Badge variant="outline" className={meta.cls}>{meta.label}</Badge>
         </div>
+
+        {reservation.status === "awaiting_payment" && !isOwnerView && (
+          <div className="mb-4">
+            <PaymentReceiptUpload
+              reservationId={reservation.id}
+              totalPrice={Number(reservation.total_price)}
+              paymentDeadline={reservation.payment_deadline}
+            />
+          </div>
+        )}
+
+        {reservation.status === "awaiting_payment" && isOwnerView && (
+          <div className="mb-4 rounded-lg border border-orange-500/30 bg-orange-500/5 p-4 text-sm">
+            <p className="font-medium text-orange-800">Esperando pago del arrendatario</p>
+            <p className="text-muted-foreground text-xs mt-1">
+              La reserva quedará aprobada automáticamente cuando un administrador de RuedaVe
+              verifique el comprobante de pago. Si no se recibe pago en 24h desde tu aprobación,
+              la reserva se cancelará.
+            </p>
+          </div>
+        )}
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="md:col-span-2">

@@ -149,7 +149,7 @@ const VehicleDetailPage = () => {
           .from("reservations")
           .select("start_date, end_date, status")
           .eq("vehicle_id", id)
-          .in("status", ["pending", "approved"]),
+          .in("status", ["pending", "awaiting_payment", "approved", "active"]),
       ]);
 
       setOwner((prof as unknown as OwnerProfile) || null);
