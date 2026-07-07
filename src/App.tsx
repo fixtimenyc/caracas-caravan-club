@@ -39,6 +39,8 @@ import CancellationPage from "./pages/CancellationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ReservationInspectionPage from "./pages/ReservationInspectionPage";
+import ReservationDetailPage from "./pages/ReservationDetailPage";
+import ReservationContractPage from "./pages/ReservationContractPage";
 import DemoInspectionPage from "./pages/DemoInspectionPage";
 import PrivacySettingsPage from "./pages/PrivacySettingsPage";
 import AdminDataPage from "./pages/AdminDataPage";
@@ -94,6 +96,8 @@ const App = () => (
             <Route path="/admin/mantenimiento" element={<AdminMaintenancePage />} />
             <Route path="/mensajes" element={<MessagesPage />} />
             <Route path="/mis-reservas" element={<MyBookingsPage />} />
+            <Route path="/reservas/:id" element={<ReservationDetailPage />} />
+            <Route path="/reservas/:id/contrato" element={<ReservationContractPage />} />
             <Route path="/reservas/:id/inspeccion-entrega" element={<ReservationInspectionPage type="pickup" />} />
             <Route path="/reservas/:id/inspeccion-devolucion" element={<ReservationInspectionPage type="return" />} />
             <Route path="/demo/inspeccion" element={<DemoInspectionPage />} />
