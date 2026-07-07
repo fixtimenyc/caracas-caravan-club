@@ -280,6 +280,14 @@ const VehicleDetailPage = () => {
 
       if (error) throw error;
 
+      // Registrar cobro (incluye depósito en garantía) para trazabilidad y contrato
+      await supabase.from("payments").insert({
+        reservation_id: resv.id,
+        amount: total,
+        payment_method: "pending",
+        status: "pending",
+      });
+
       // Notify owner (best-effort)
       await supabase.from("notifications").insert({
         user_id: vehicle.owner_id,
