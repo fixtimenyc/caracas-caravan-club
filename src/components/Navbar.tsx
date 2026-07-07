@@ -90,7 +90,7 @@ const Navbar = () => {
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 max-h-[75vh] overflow-y-auto overscroll-contain">
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-medium">{user.email}</p>
                     <p className="text-xs text-muted-foreground">{getRoleLabel()}</p>
