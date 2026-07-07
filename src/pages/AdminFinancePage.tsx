@@ -88,7 +88,7 @@ export default function AdminFinancePage() {
           </Button>
         </div>
 
-        <Tabs defaultValue="dashboard">
+        <Tabs defaultValue="payments">
           <TabsList>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="payments">Pagos de Rentadores</TabsTrigger>
