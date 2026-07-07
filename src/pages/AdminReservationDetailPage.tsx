@@ -207,7 +207,7 @@ export default function AdminReservationDetailPage() {
           <div className="flex flex-wrap gap-2">
             {reservation.status === "pending" && (
               <>
-                <Button onClick={() => setStatus("approved")}><CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar</Button>
+                <Button onClick={() => setStatus("awaiting_payment")}><CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar (esperar pago)</Button>
                 <Button variant="outline" onClick={() => setStatus("rejected")}><XCircle className="h-4 w-4 mr-1" /> Rechazar</Button>
               </>
             )}
