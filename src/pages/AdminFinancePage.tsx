@@ -386,6 +386,23 @@ function PaymentsTab({ loading, payments, reservations, rMap, vMap, pMap, reload
     URL.revokeObjectURL(url);
   };
 
+  const pendingVerification = useMemo(() => {
+    const paidResIds = new Set(
+      payments.filter((p: Payment) => p.status === "completed").map((p: Payment) => p.reservation_id)
+    );
+    const latestPaymentByRes: Record<string, Payment> = {};
+    payments.forEach((p: Payment) => {
+      const cur = latestPaymentByRes[p.reservation_id];
+      if (!cur || new Date(p.created_at) > new Date(cur.created_at)) {
+        latestPaymentByRes[p.reservation_id] = p;
+      }
+    });
+    return (reservations as Reservation[])
+      .filter((r) => ["awaiting_payment", "approved"].includes(r.status) && !paidResIds.has(r.id))
+      .map((r) => ({ reservation: r, payment: latestPaymentByRes[r.id] || null }))
+      .sort((a, b) => new Date(b.reservation.created_at).getTime() - new Date(a.reservation.created_at).getTime());
+  }, [payments, reservations]);
+
   return (
     <div className="space-y-4">
       <Card>
