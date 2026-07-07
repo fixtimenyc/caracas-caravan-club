@@ -100,12 +100,12 @@ const Navbar = () => {
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Mensajes
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/mis-reservas')}>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Mis reservas
+                  </DropdownMenuItem>
                   {(roles.includes('owner') || roles.includes('admin')) && (
                     <>
-                      <DropdownMenuItem onClick={() => navigate('/mis-reservas')}>
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Mis reservas
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/mis-ganancias')}>
                         <DollarSign className="w-4 h-4 mr-2" />
                         Mis ganancias
@@ -220,12 +220,12 @@ const Navbar = () => {
                       <MessageSquare className="w-4 h-4 mr-2" />
                       Mensajes
                     </Button>
+                    <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-reservas'); setIsMenuOpen(false); }}>
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Mis reservas
+                    </Button>
                     {(roles.includes('owner') || roles.includes('admin')) && (
                       <>
-                        <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-reservas'); setIsMenuOpen(false); }}>
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Mis reservas
-                        </Button>
                         <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate('/mis-ganancias'); setIsMenuOpen(false); }}>
                           <DollarSign className="w-4 h-4 mr-2" />
                           Mis ganancias
