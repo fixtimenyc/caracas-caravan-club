@@ -220,12 +220,20 @@ const MyBookingsPage = () => {
 
   const transitionReservation = async (r: any, newStatus: "active" | "completed" | "cancelled") => {
     setActionLoading(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("reservations")
       .update({ status: newStatus })
-      .eq("id", r.id);
+      .eq("id", r.id)
+      .select("id, status")
+      .maybeSingle();
     setActionLoading(false);
-    if (error) return toast.error("No se pudo actualizar la reserva");
+    if (error) {
+      console.error("transitionReservation error", error);
+      return toast.error(error.message || "No se pudo actualizar la reserva");
+    }
+    if (!data) {
+      return toast.error("No tienes permiso para cambiar la reserva a este estado");
+    }
     setOwnerReservations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: newStatus } : x)));
     setManageReservation((prev: any) => (prev && prev.id === r.id ? { ...prev, status: newStatus } : prev));
     const map: Record<string, { type: string; title: string; message: string }> = {
