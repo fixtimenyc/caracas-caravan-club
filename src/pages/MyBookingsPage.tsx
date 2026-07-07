@@ -280,6 +280,16 @@ const MyBookingsPage = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 md:justify-end">
+            <Link to={`/reservas/${r.id}`}>
+              <Button size="sm" variant="outline">
+                <Eye className="h-4 w-4 mr-1" /> Detalles
+              </Button>
+            </Link>
+            <Link to={`/reservas/${r.id}/contrato`}>
+              <Button size="sm" variant="outline">
+                <FileText className="h-4 w-4 mr-1" /> Contrato
+              </Button>
+            </Link>
             {canInspect && (
               <Link to={`/reservas/${r.id}/inspeccion-entrega`}>
                 <Button size="sm" variant={inspected ? "outline" : "default"}>
