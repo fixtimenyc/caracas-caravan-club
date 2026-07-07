@@ -362,6 +362,8 @@ const EditVehiclePage = () => {
         price_per_day: form.pricePerDay,
         photos: form.photos,
         active: form.active,
+        features: form.features,
+        custom_features: form.customFeatures,
         house_rules: {
           noSmoking: form.noSmoking,
           smokingFine: Number(form.smokingFine) || 0,
