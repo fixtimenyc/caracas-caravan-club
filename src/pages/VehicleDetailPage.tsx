@@ -223,7 +223,10 @@ const VehicleDetailPage = () => {
   const subtotal = days * dailyRate;
   const serviceFee = Math.round(subtotal * 0.1);
   const insuranceFee = days * 8;
-  const total = subtotal + serviceFee + insuranceFee;
+  const securityDeposit = Number(
+    (vehicle?.house_rules as any)?.securityDeposit ?? 200,
+  );
+  const total = subtotal + serviceFee + insuranceFee + securityDeposit;
 
   const isDateBlocked = (date: Date) => {
     if (date < new Date(new Date().setHours(0, 0, 0, 0))) return true;
@@ -276,6 +279,14 @@ const VehicleDetailPage = () => {
         .single();
 
       if (error) throw error;
+
+      // Registrar cobro (incluye depósito en garantía) para trazabilidad y contrato
+      await supabase.from("payments").insert({
+        reservation_id: resv.id,
+        amount: total,
+        payment_method: "pending",
+        status: "pending",
+      });
 
       // Notify owner (best-effort)
       await supabase.from("notifications").insert({
@@ -860,6 +871,10 @@ const VehicleDetailPage = () => {
                       <span>Seguro de protección</span>
                       <span>${insuranceFee}</span>
                     </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Depósito en garantía (reembolsable)</span>
+                      <span>${securityDeposit}</span>
+                    </div>
                   </div>
 
                   <Separator className="my-4" />
@@ -935,6 +950,10 @@ const VehicleDetailPage = () => {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Seguro</span>
               <span>${insuranceFee}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Depósito en garantía (reembolsable)</span>
+              <span>${securityDeposit}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-bold text-lg">
