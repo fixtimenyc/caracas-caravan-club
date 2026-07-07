@@ -316,7 +316,7 @@ function AlertCard({ title, count, variant }: { title: string; count: number; va
 }
 
 /* ---------------- Pagos de Rentadores ---------------- */
-function PaymentsTab({ loading, payments, rMap, vMap, pMap, reload }: any) {
+function PaymentsTab({ loading, payments, reservations, rMap, vMap, pMap, reload }: any) {
   const [search, setSearch] = useState("");
   const [statusF, setStatusF] = useState("all");
   const [methodF, setMethodF] = useState("all");
