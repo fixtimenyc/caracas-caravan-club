@@ -808,8 +808,15 @@ const OwnerDashboardPage = () => {
                     {hoursLeftForResponse(selectedReservation) > 0 ? (
                       <>
                         <p className="text-xs text-muted-foreground mb-3">
-                          Tienes {hoursLeftForResponse(selectedReservation)}h para responder esta solicitud.
+                          Tienes {hoursLeftForResponse(selectedReservation)}h para responder esta solicitud. Puedes contactar al arrendatario para aclarar detalles antes de decidir.
                         </p>
+                        <Button
+                          variant="outline"
+                          className="w-full mb-2"
+                          onClick={() => contactRenter(selectedReservation)}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" /> Contactar arrendatario
+                        </Button>
                         <div className="flex gap-2">
                           <Button
                             className="flex-1"
