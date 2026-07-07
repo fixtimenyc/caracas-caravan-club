@@ -65,6 +65,9 @@ type FormState = {
   brand: string;
   model: string;
   year: number;
+  color: string;
+  plate: string;
+  vin: string;
   features: string[];
   customFeatures: string[];
   photos: string[];
@@ -93,6 +96,9 @@ const SAMPLE: FormState = {
   brand: "Toyota",
   model: "Terios",
   year: 2016,
+  color: "Blanco",
+  plate: "AA123BB",
+  vin: "1HGBH41JXMN109186",
   features: ["Bluetooth", "USB", "Aire acondicionado"],
   customFeatures: ["Vidrios polarizados"],
   photos: ["/placeholder.svg", "/placeholder.svg"],
@@ -170,6 +176,9 @@ const EditVehiclePage = () => {
         brand: data.brand || "",
         model: data.model || "",
         year: data.year || new Date().getFullYear(),
+        color: (data as any).color || "",
+        plate: (data as any).plate || "",
+        vin: (data as any).vin || "",
         features: Array.isArray((data as any).features) ? (data as any).features : [],
         customFeatures: Array.isArray((data as any).custom_features) ? (data as any).custom_features : [],
         photos: data.photos || [],
@@ -344,6 +353,10 @@ const EditVehiclePage = () => {
     if (!form.model.trim()) return "El modelo es obligatorio";
     if (!form.year || form.year < 1980 || form.year > currentYear + 1)
       return `El año debe estar entre 1980 y ${currentYear + 1}`;
+    if (!form.color.trim()) return "El color es obligatorio (se usa en el contrato)";
+    if (!form.plate.trim()) return "La placa es obligatoria (se usa en el contrato)";
+    if (form.vin.trim() && form.vin.trim().length < 5)
+      return "El VIN parece inválido";
     if (!form.zone.trim() || !CARACAS_ZONES.includes(form.zone as typeof CARACAS_ZONES[number]))
       return "Selecciona una zona válida de Caracas";
     if (form.description.trim().length < 20)
@@ -384,6 +397,9 @@ const EditVehiclePage = () => {
         brand: form.brand.trim(),
         model: form.model.trim(),
         year: form.year,
+        color: form.color.trim() || null,
+        plate: form.plate.trim().toUpperCase() || null,
+        vin: form.vin.trim().toUpperCase() || null,
         location,
         description: form.description.trim(),
         price_per_day: form.pricePerDay,
