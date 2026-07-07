@@ -131,7 +131,7 @@ export default function ReservationContractPage() {
       vehiculo_color: dash(v?.color) === "—" ? "Por registrar" : v.color,
       vehiculo_placa: dash(v?.plate) === "—" ? "Por registrar" : v.plate,
       vehiculo_vin: dash(v?.vin) === "—" ? "Por registrar" : v.vin,
-      km_inicio: r.start_mileage != null ? r.start_mileage.toLocaleString() : "Se registrará en la entrega",
+      km_inicio: (pickup?.mileage ?? r.start_mileage) != null ? Number(pickup?.mileage ?? r.start_mileage).toLocaleString() : "Se registrará en la entrega",
       km_max_dia: (v?.house_rules as any)?.maxKmPerDay ? String((v.house_rules as any).maxKmPerDay) : "Sin límite",
       inicio: format(parseISO(r.start_date), "PPP", { locale: es }),
       fin: format(parseISO(r.end_date), "PPP", { locale: es }),
