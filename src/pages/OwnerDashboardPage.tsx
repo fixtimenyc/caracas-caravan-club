@@ -20,7 +20,9 @@ import {
   Flag,
   ClipboardCheck,
   Trash2,
+  MessageCircle,
 } from "lucide-react";
+import { getOrCreateConversation } from "@/lib/conversations";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
@@ -321,6 +323,21 @@ const OwnerDashboardPage = () => {
     toast.success(
       decision === "approved" ? "Reserva aprobada" : "Reserva rechazada"
     );
+  };
+
+  const contactRenter = async (r: Reservation) => {
+    if (!user) return;
+    try {
+      const convId = await getOrCreateConversation({
+        renterId: r.renter_id,
+        ownerId: user.id,
+        vehicleId: r.vehicle_id,
+        reservationId: r.id,
+      });
+      navigate(`/mensajes?c=${convId}`);
+    } catch (e) {
+      toast.error("No se pudo abrir la conversación");
+    }
   };
 
   const transitionReservation = async (
@@ -701,7 +718,13 @@ const OwnerDashboardPage = () => {
                                       ? () => respondReservation(r, "rejected")
                                       : undefined
                                   }
+                                  onContact={
+                                    r.status === "pending"
+                                      ? () => contactRenter(r)
+                                      : undefined
+                                  }
                                 />
+
                               ))}
                             </div>
                           )}
@@ -785,8 +808,15 @@ const OwnerDashboardPage = () => {
                     {hoursLeftForResponse(selectedReservation) > 0 ? (
                       <>
                         <p className="text-xs text-muted-foreground mb-3">
-                          Tienes {hoursLeftForResponse(selectedReservation)}h para responder esta solicitud.
+                          Tienes {hoursLeftForResponse(selectedReservation)}h para responder esta solicitud. Puedes contactar al arrendatario para aclarar detalles antes de decidir.
                         </p>
+                        <Button
+                          variant="outline"
+                          className="w-full mb-2"
+                          onClick={() => contactRenter(selectedReservation)}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" /> Contactar arrendatario
+                        </Button>
                         <div className="flex gap-2">
                           <Button
                             className="flex-1"
@@ -945,6 +975,7 @@ const BookingRow = ({
   hoursLeft,
   onAccept,
   onDecline,
+  onContact,
 }: {
   reservation: Reservation;
   onView: () => void;
@@ -952,6 +983,7 @@ const BookingRow = ({
   hoursLeft?: number;
   onAccept?: () => void;
   onDecline?: () => void;
+  onContact?: () => void;
 }) => {
   const showActions =
     onAccept && onDecline && reservation.status === "pending" && (hoursLeft ?? 0) > 0;
@@ -979,6 +1011,16 @@ const BookingRow = ({
       </div>
       <div className="flex items-center gap-2">
         {badge}
+        {showActions && onContact && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onContact}
+            className="text-primary hover:bg-primary/10"
+          >
+            <MessageCircle className="w-4 h-4 mr-1" /> Contactar
+          </Button>
+        )}
         {showActions && (
           <>
             <Button
