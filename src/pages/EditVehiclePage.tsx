@@ -250,7 +250,33 @@ const EditVehiclePage = () => {
     const files = Array.from(e.target.files || []);
     e.target.value = "";
     if (!files.length) return;
-    if (form.photos.length + files.length > 10) {
+
+    // Only browser-renderable formats. Others (RAW like .dng/.heic/.tiff) won't display.
+    const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "gif", "avif"];
+    const ALLOWED_MIME = new Set([
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/avif",
+    ]);
+    const valid: File[] = [];
+    const rejected: string[] = [];
+    for (const f of files) {
+      const ext = (f.name.split(".").pop() || "").toLowerCase();
+      const okExt = ALLOWED_EXT.includes(ext);
+      const okMime = f.type ? ALLOWED_MIME.has(f.type) : true;
+      if (okExt && okMime) valid.push(f);
+      else rejected.push(f.name);
+    }
+    if (rejected.length) {
+      toast.error(
+        `Formato no soportado: ${rejected.join(", ")}. Usa JPG, PNG, WEBP, GIF o AVIF.`
+      );
+    }
+    if (!valid.length) return;
+
+    if (form.photos.length + valid.length > 10) {
       toast.error("Máximo 10 fotos");
       return;
     }
@@ -261,8 +287,8 @@ const EditVehiclePage = () => {
     setUploadingPhotos(true);
     try {
       const uploaded: string[] = [];
-      for (const file of files) {
-        const ext = file.name.split(".").pop() || "jpg";
+      for (const file of valid) {
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
         const path = `${user.id}/${id}/${Date.now()}-${Math.random()
           .toString(36)
           .slice(2, 8)}.${ext}`;
@@ -283,6 +309,7 @@ const EditVehiclePage = () => {
       setUploadingPhotos(false);
     }
   };
+
 
   const removePhoto = async (i: number) => {
     if (form.photos.length <= 1) {
