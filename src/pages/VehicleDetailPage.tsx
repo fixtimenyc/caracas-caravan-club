@@ -951,6 +951,10 @@ const VehicleDetailPage = () => {
               <span className="text-muted-foreground">Seguro</span>
               <span>${insuranceFee}</span>
             </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Depósito en garantía (reembolsable)</span>
+              <span>${securityDeposit}</span>
+            </div>
             <Separator />
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
