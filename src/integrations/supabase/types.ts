@@ -435,28 +435,55 @@ export type Database = {
           amount: number
           created_at: string
           id: string
+          notes: string | null
+          payer_name: string | null
+          payer_phone: string | null
           payment_method: string
+          receipt_url: string | null
+          reference_number: string | null
+          rejection_reason: string | null
           reservation_id: string
           status: Database["public"]["Enums"]["payment_status"]
+          submitted_at: string | null
           updated_at: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           amount: number
           created_at?: string
           id?: string
-          payment_method: string
+          notes?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
+          payment_method?: string
+          receipt_url?: string | null
+          reference_number?: string | null
+          rejection_reason?: string | null
           reservation_id: string
           status?: Database["public"]["Enums"]["payment_status"]
+          submitted_at?: string | null
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           amount?: number
           created_at?: string
           id?: string
+          notes?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
           payment_method?: string
+          receipt_url?: string | null
+          reference_number?: string | null
+          rejection_reason?: string | null
           reservation_id?: string
           status?: Database["public"]["Enums"]["payment_status"]
+          submitted_at?: string | null
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -687,6 +714,7 @@ export type Database = {
           end_date: string
           end_mileage: number | null
           id: string
+          payment_deadline: string | null
           refund_amount: number | null
           refund_percent: number | null
           renter_id: string
@@ -705,6 +733,7 @@ export type Database = {
           end_date: string
           end_mileage?: number | null
           id?: string
+          payment_deadline?: string | null
           refund_amount?: number | null
           refund_percent?: number | null
           renter_id: string
@@ -723,6 +752,7 @@ export type Database = {
           end_date?: string
           end_mileage?: number | null
           id?: string
+          payment_deadline?: string | null
           refund_amount?: number | null
           refund_percent?: number | null
           renter_id?: string
@@ -1315,6 +1345,7 @@ export type Database = {
         Args: { _from: string; _to: string }
         Returns: Json
       }
+      auto_cancel_unpaid_reservations: { Args: never; Returns: number }
       compute_trip_risk_score: {
         Args: { _reservation_id: string }
         Returns: {
