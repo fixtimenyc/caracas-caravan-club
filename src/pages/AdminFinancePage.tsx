@@ -399,6 +399,7 @@ function PaymentsTab({ loading, payments, reservations, rMap, vMap, pMap, reload
               <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="submitted">En revisión</SelectItem>
                 <SelectItem value="completed">Pagado</SelectItem>
                 <SelectItem value="pending">Pendiente</SelectItem>
                 <SelectItem value="failed">Rechazado</SelectItem>
