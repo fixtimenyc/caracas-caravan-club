@@ -405,6 +405,59 @@ function PaymentsTab({ loading, payments, reservations, rMap, vMap, pMap, reload
 
   return (
     <div className="space-y-4">
+      {pendingVerification.length > 0 && (
+        <Card className="border-amber-500/40 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              Pendientes de verificación ({pendingVerification.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reserva</TableHead>
+                  <TableHead>Rentador</TableHead>
+                  <TableHead>Monto</TableHead>
+                  <TableHead>Estado reserva</TableHead>
+                  <TableHead>Comprobante</TableHead>
+                  <TableHead>Vence pago</TableHead>
+                  <TableHead className="text-right">Acción</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingVerification.map(({ reservation: r, payment: p }) => {
+                  const renter = pMap[r.renter_id];
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <Link to={`/admin/reservas/${r.id}`} className="text-primary hover:underline text-xs font-mono">
+                          {r.id.slice(0, 8)}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm">{renter?.full_name || "—"}</TableCell>
+                      <TableCell className="font-semibold">{fmt(Number(r.total_price))}</TableCell>
+                      <TableCell><Badge variant="outline" className="capitalize text-xs">{r.status}</Badge></TableCell>
+                      <TableCell>
+                        {p ? <PaymentStatusBadge status={p.status} /> : <span className="text-xs text-muted-foreground">Sin enviar</span>}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {(r as any).payment_deadline ? format(new Date((r as any).payment_deadline), "dd/MM HH:mm") : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/admin/reservas/${r.id}`}>Verificar</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardContent className="p-4 space-y-3">
           <div className="flex flex-wrap gap-3">
