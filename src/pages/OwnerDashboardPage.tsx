@@ -325,6 +325,21 @@ const OwnerDashboardPage = () => {
     );
   };
 
+  const contactRenter = async (r: Reservation) => {
+    if (!user) return;
+    try {
+      const convId = await getOrCreateConversation({
+        renterId: r.renter_id,
+        ownerId: user.id,
+        vehicleId: r.vehicle_id,
+        reservationId: r.id,
+      });
+      navigate(`/mensajes?c=${convId}`);
+    } catch (e) {
+      toast.error("No se pudo abrir la conversación");
+    }
+  };
+
   const transitionReservation = async (
     r: Reservation,
     newStatus: "active" | "completed" | "cancelled"
