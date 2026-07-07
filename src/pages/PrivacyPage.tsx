@@ -230,12 +230,18 @@ const PrivacyPage = () => {
         Teléfono: (0424) 285-1254 · Caracas, Venezuela.
       </p>
 
-      <h2>17. Datos opcionales y monetización</h2>
+      <h2>17. Datos de movilidad y monetización</h2>
       <p>
-        Además del tratamiento descrito arriba, RuedaVe ofrece cuatro programas
-        opcionales basados en <strong>consentimiento granular y revocable</strong> en
-        cualquier momento desde{" "}
-        <a href="/perfil/privacidad">Mi perfil → Mis datos y privacidad</a>:
+        <strong>
+          Al aceptar esta Política de Privacidad durante el registro, el titular
+          autoriza expresamente a RuedaVe a tratar sus datos de viaje —de forma
+          anonimizada y agregada— para los fines descritos en esta sección,
+          incluyendo el desarrollo de productos de movilidad, la mejora de la
+          seguridad vial y la planificación urbana.
+        </strong>{" "}
+        Esta autorización puede ser revocada en cualquier momento desde{" "}
+        <a href="/perfil/privacidad">Mi perfil → Mis datos y privacidad</a>, donde
+        además puede gestionar de forma granular los siguientes programas:
       </p>
       <ul>
         <li>
