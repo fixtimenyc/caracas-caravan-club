@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 import { getOrCreateConversation } from "@/lib/conversations";
+import PaymentReceiptUpload from "@/components/PaymentReceiptUpload";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
