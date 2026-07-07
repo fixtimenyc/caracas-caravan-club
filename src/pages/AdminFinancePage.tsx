@@ -100,7 +100,7 @@ export default function AdminFinancePage() {
             <DashboardTab loading={loading} payments={payments} reservations={reservations} vehicles={vehicles} vMap={vMap} pMap={pMap} />
           </TabsContent>
           <TabsContent value="payments" className="mt-6">
-            <PaymentsTab loading={loading} payments={payments} rMap={rMap} vMap={vMap} pMap={pMap} reload={load} />
+            <PaymentsTab loading={loading} payments={payments} reservations={reservations} rMap={rMap} vMap={vMap} pMap={pMap} reload={load} />
           </TabsContent>
           <TabsContent value="payouts" className="mt-6">
             <PayoutsTab loading={loading} reservations={reservations} payments={payments} vMap={vMap} pMap={pMap} />
