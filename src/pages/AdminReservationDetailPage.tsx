@@ -24,6 +24,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReservationInspectionsPanel from "@/components/admin/ReservationInspectionsPanel";
+import AdminPaymentVerification from "@/components/AdminPaymentVerification";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
