@@ -57,6 +57,9 @@ const MyBookingsPage = () => {
   const [vehiclePhotos, setVehiclePhotos] = useState<Record<string, string>>({});
   const [renters, setRenters] = useState<Record<string, any>>({});
   const [pickupDone, setPickupDone] = useState<Set<string>>(new Set());
+  const [returnDone, setReturnDone] = useState<Set<string>>(new Set());
+  const [manageReservation, setManageReservation] = useState<any>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
