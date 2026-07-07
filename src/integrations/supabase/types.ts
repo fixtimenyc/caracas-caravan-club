@@ -1349,6 +1349,23 @@ export type Database = {
         Args: { _renter_id: string }
         Returns: Json
       }
+      get_reservation_renter_info: {
+        Args: { _reservation_id: string }
+        Returns: {
+          address: string
+          birth_date: string
+          city: string
+          country: string
+          document_number: string
+          document_type: string
+          driving_license_expiry: string
+          driving_license_number: string
+          full_name: string
+          nationality: string
+          phone: string
+          state: string
+        }[]
+      }
       has_consent: {
         Args: {
           _consent: Database["public"]["Enums"]["consent_type"]
