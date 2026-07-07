@@ -33,9 +33,9 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-6">Explorar</h4>
             <ul className="space-y-3">
-              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Buscar vehículos</a></li>
-              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Cómo funciona</a></li>
-              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Convertirse en anfitrión</a></li>
+              <li><a href="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Buscar vehículos</a></li>
+              <li><a href="/como-funciona" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Cómo funciona</a></li>
+              <li><a href="/conviertete-en-anfitrion" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Convertirse en anfitrión</a></li>
               <li><a href="/ayuda" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Centro de ayuda</a></li>
             </ul>
           </div>
@@ -47,7 +47,7 @@ const Footer = () => {
               <li><a href="/terminos" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Términos de uso</a></li>
               <li><a href="/politica-privacidad" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Política de privacidad</a></li>
               <li><a href="/politica-cancelacion" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Política de cancelación</a></li>
-              <li><a href="#" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Seguro</a></li>
+              <li><a href="/ayuda" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-smooth">Seguro</a></li>
             </ul>
           </div>
 
