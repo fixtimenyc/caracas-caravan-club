@@ -20,7 +20,9 @@ import {
   Flag,
   ClipboardCheck,
   Trash2,
+  MessageCircle,
 } from "lucide-react";
+import { getOrCreateConversation } from "@/lib/conversations";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
