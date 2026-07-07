@@ -94,9 +94,12 @@ export default function AdminReservationContractPage() {
     );
     const securityDeposit = Number((v?.house_rules as any)?.securityDeposit ?? 200);
     const insuranceFee = days * 8;
-    const serviceFee = Math.round(((Number(r.total_price) - insuranceFee - securityDeposit) * 0.1) / 1.1) || 0;
-    const subtotal = Math.max(0, Number(r.total_price) - serviceFee - insuranceFee - securityDeposit);
-    const tarifaDia = subtotal > 0 ? subtotal / days : 0;
+    const tarifaDia = Number(v?.price_per_day ?? 0);
+    const subtotal = tarifaDia * days;
+    const serviceFee = Math.round(subtotal * 0.1 * 100) / 100;
+    const totalCharged = Number(r.total_price);
+    const totalConDeposito = subtotal + serviceFee + insuranceFee + securityDeposit;
+    const totalMostrar = totalCharged >= totalConDeposito - 1 ? totalCharged : totalConDeposito;
     const dash = (val: any) => (val === null || val === undefined || val === "" ? "—" : String(val));
     const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
     const accepted = r.created_at;
