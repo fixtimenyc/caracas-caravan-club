@@ -962,6 +962,7 @@ const BookingRow = ({
   hoursLeft,
   onAccept,
   onDecline,
+  onContact,
 }: {
   reservation: Reservation;
   onView: () => void;
@@ -969,6 +970,7 @@ const BookingRow = ({
   hoursLeft?: number;
   onAccept?: () => void;
   onDecline?: () => void;
+  onContact?: () => void;
 }) => {
   const showActions =
     onAccept && onDecline && reservation.status === "pending" && (hoursLeft ?? 0) > 0;
@@ -996,6 +998,16 @@ const BookingRow = ({
       </div>
       <div className="flex items-center gap-2">
         {badge}
+        {showActions && onContact && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onContact}
+            className="text-primary hover:bg-primary/10"
+          >
+            <MessageCircle className="w-4 h-4 mr-1" /> Contactar
+          </Button>
+        )}
         {showActions && (
           <>
             <Button
