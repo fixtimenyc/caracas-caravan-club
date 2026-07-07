@@ -169,6 +169,73 @@ const MyBookingsPage = () => {
     }
   };
 
+  const notifyRenter = async (r: any, type: string, title: string, message: string) => {
+    await supabase.from("notifications").insert({
+      user_id: r.renter_id,
+      type,
+      title,
+      message,
+      reservation_id: r.id,
+      vehicle_id: r.vehicle_id,
+    });
+  };
+
+  const respondReservation = async (r: any, decision: "approved" | "rejected") => {
+    const hoursElapsed = differenceInHours(new Date(), new Date(r.created_at));
+    if (hoursElapsed > 24) {
+      toast.error("El plazo de 24 horas para responder ha expirado");
+      return;
+    }
+    setActionLoading(true);
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: decision })
+      .eq("id", r.id);
+    setActionLoading(false);
+    if (error) return toast.error("No se pudo actualizar la reserva");
+    setOwnerReservations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: decision } : x)));
+    setManageReservation((prev: any) => (prev && prev.id === r.id ? { ...prev, status: decision } : prev));
+    await notifyRenter(
+      r,
+      decision === "approved" ? "reservation_approved" : "reservation_rejected",
+      decision === "approved" ? "¡Tu reserva fue aprobada!" : "Reserva rechazada",
+      `${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(new Date(r.end_date), "d MMM yyyy", { locale: es })}`,
+    );
+    toast.success(decision === "approved" ? "Reserva aprobada" : "Reserva rechazada");
+  };
+
+  const transitionReservation = async (r: any, newStatus: "active" | "completed" | "cancelled") => {
+    setActionLoading(true);
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: newStatus })
+      .eq("id", r.id);
+    setActionLoading(false);
+    if (error) return toast.error("No se pudo actualizar la reserva");
+    setOwnerReservations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: newStatus } : x)));
+    setManageReservation((prev: any) => (prev && prev.id === r.id ? { ...prev, status: newStatus } : prev));
+    const map: Record<string, { type: string; title: string; message: string }> = {
+      active: {
+        type: "reservation_active",
+        title: "¡Tu viaje ha comenzado!",
+        message: `Disfruta tu viaje del ${format(new Date(r.start_date), "d MMM", { locale: es })} al ${format(new Date(r.end_date), "d MMM yyyy", { locale: es })}.`,
+      },
+      completed: {
+        type: "reservation_completed",
+        title: "Viaje completado",
+        message: `Tu reserva fue marcada como completada. ¡Déjale una reseña al anfitrión!`,
+      },
+      cancelled: {
+        type: "reservation_cancelled",
+        title: "Reserva cancelada",
+        message: `La reserva del ${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(new Date(r.end_date), "d MMM", { locale: es })} fue cancelada.`,
+      },
+    };
+    const n = map[newStatus];
+    await notifyRenter(r, n.type, n.title, n.message);
+    toast.success(n.title);
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
