@@ -647,7 +647,7 @@ const EditVehiclePage = () => {
                     <label className={`cursor-pointer ${uploadingPhotos ? "opacity-60 pointer-events-none" : ""}`}>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                         multiple
                         className="hidden"
                         onChange={addPhoto}
