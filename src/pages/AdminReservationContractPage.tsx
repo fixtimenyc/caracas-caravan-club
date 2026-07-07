@@ -52,15 +52,9 @@ export default function AdminReservationContractPage() {
         setLoading(false);
         return;
       }
-      const [{ data: v }, { data: renter }, { data: payment }] = await Promise.all([
+      const [{ data: v }, { data: renterRows }, { data: payment }] = await Promise.all([
         supabase.from("vehicles").select("*").eq("id", r.vehicle_id).maybeSingle(),
-        supabase
-          .from("renter_verifications")
-          .select("*")
-          .eq("user_id", r.renter_id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
+        supabase.rpc("get_reservation_renter_info", { _reservation_id: id }),
         supabase
           .from("payments")
           .select("*")
@@ -69,6 +63,7 @@ export default function AdminReservationContractPage() {
           .limit(1)
           .maybeSingle(),
       ]);
+      const renter = Array.isArray(renterRows) ? renterRows[0] : renterRows;
       const ownerProfile = v?.owner_id
         ? (
             await supabase
