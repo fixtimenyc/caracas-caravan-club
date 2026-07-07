@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, MapPin, X, Car as CarIcon } from "lucide-react";
 import { inferCategory, VehicleCategory, VEHICLE_CATEGORIES } from "@/lib/vehicleCategory";
 import { CARACAS_ZONES } from "@/lib/locations";
+import { resolveVehiclePhoto, sanitizeVehiclePhotoPaths } from "@/lib/vehiclePhoto";
 
 import carPlaceholder from "@/assets/car-sedan.jpg";
 
@@ -30,20 +31,6 @@ interface CardCar {
   transmission: string;
   category: VehicleCategory;
 }
-
-const resolvePhoto = async (path?: string | null): Promise<string> => {
-  if (!path) return carPlaceholder;
-  if (path.startsWith("http")) return path;
-  const pub = supabase.storage.from("vehicle-photos").getPublicUrl(path);
-  try {
-    const head = await fetch(pub.data.publicUrl, { method: "HEAD" });
-    if (head.ok) return pub.data.publicUrl;
-  } catch {}
-  const { data: signed } = await supabase.storage
-    .from("owner-documents")
-    .createSignedUrl(path, 60 * 60);
-  return signed?.signedUrl || carPlaceholder;
-};
 
 const FeaturedCars = () => {
   const [cars, setCars] = useState<CardCar[]>([]);
