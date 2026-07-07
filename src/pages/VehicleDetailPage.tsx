@@ -223,7 +223,10 @@ const VehicleDetailPage = () => {
   const subtotal = days * dailyRate;
   const serviceFee = Math.round(subtotal * 0.1);
   const insuranceFee = days * 8;
-  const total = subtotal + serviceFee + insuranceFee;
+  const securityDeposit = Number(
+    (vehicle?.house_rules as any)?.securityDeposit ?? 200,
+  );
+  const total = subtotal + serviceFee + insuranceFee + securityDeposit;
 
   const isDateBlocked = (date: Date) => {
     if (date < new Date(new Date().setHours(0, 0, 0, 0))) return true;
