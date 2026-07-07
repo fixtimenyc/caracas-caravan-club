@@ -191,21 +191,31 @@ const MyBookingsPage = () => {
       return;
     }
     setActionLoading(true);
+    // "approved" from the owner now sends the reservation to "awaiting_payment" —
+    // the renter must upload the payment receipt and an admin must verify it
+    // before the reservation is fully released.
+    const dbStatus = decision === "approved" ? "awaiting_payment" : "rejected";
     const { error } = await supabase
       .from("reservations")
-      .update({ status: decision })
+      .update({ status: dbStatus })
       .eq("id", r.id);
     setActionLoading(false);
     if (error) return toast.error("No se pudo actualizar la reserva");
-    setOwnerReservations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: decision } : x)));
-    setManageReservation((prev: any) => (prev && prev.id === r.id ? { ...prev, status: decision } : prev));
-    await notifyRenter(
-      r,
-      decision === "approved" ? "reservation_approved" : "reservation_rejected",
-      decision === "approved" ? "¡Tu reserva fue aprobada!" : "Reserva rechazada",
-      `${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(new Date(r.end_date), "d MMM yyyy", { locale: es })}`,
-    );
-    toast.success(decision === "approved" ? "Reserva aprobada" : "Reserva rechazada");
+    setOwnerReservations((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: dbStatus } : x)));
+    setManageReservation((prev: any) => (prev && prev.id === r.id ? { ...prev, status: dbStatus } : prev));
+    if (decision === "approved") {
+      // The DB trigger already notifies the renter about the payment step, so
+      // we skip a duplicate notification here.
+      toast.success("Reserva aprobada — el arrendatario debe completar el pago");
+    } else {
+      await notifyRenter(
+        r,
+        "reservation_rejected",
+        "Reserva rechazada",
+        `${format(new Date(r.start_date), "d MMM", { locale: es })} → ${format(new Date(r.end_date), "d MMM yyyy", { locale: es })}`,
+      );
+      toast.success("Reserva rechazada");
+    }
   };
 
   const transitionReservation = async (r: any, newStatus: "active" | "completed" | "cancelled") => {
