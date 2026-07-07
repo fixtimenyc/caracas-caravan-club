@@ -39,6 +39,8 @@ import CancellationPage from "./pages/CancellationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ReservationInspectionPage from "./pages/ReservationInspectionPage";
+import ReservationDetailPage from "./pages/ReservationDetailPage";
+import ReservationContractPage from "./pages/ReservationContractPage";
 import DemoInspectionPage from "./pages/DemoInspectionPage";
 import PrivacySettingsPage from "./pages/PrivacySettingsPage";
 import AdminDataPage from "./pages/AdminDataPage";
