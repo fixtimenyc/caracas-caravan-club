@@ -74,7 +74,7 @@ export default function ReservationContractPage() {
       const canView = r.renter_id === user.id || v?.owner_id === user.id;
       if (!canView) { setLoading(false); return; }
       setAllowed(true);
-      const [{ data: renterRows }, { data: payment }] = await Promise.all([
+      const [{ data: renterRows }, { data: payment }, { data: pickup }] = await Promise.all([
         supabase.rpc("get_reservation_renter_info", { _reservation_id: id }),
         supabase
           .from("payments")
@@ -82,6 +82,12 @@ export default function ReservationContractPage() {
           .eq("reservation_id", id)
           .order("created_at", { ascending: false })
           .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("vehicle_inspections")
+          .select("mileage")
+          .eq("reservation_id", id)
+          .eq("type", "pickup")
           .maybeSingle(),
       ]);
       const renter = Array.isArray(renterRows) ? renterRows[0] : renterRows;
@@ -91,14 +97,14 @@ export default function ReservationContractPage() {
       const renterProfile = (
         await supabase.from("profiles").select("*").eq("user_id", r.renter_id).maybeSingle()
       ).data;
-      setData({ r, v, renter, renterProfile, ownerProfile, payment });
+      setData({ r, v, renter, renterProfile, ownerProfile, payment, pickup });
       setLoading(false);
     })();
   }, [id, user]);
 
   const rendered = useMemo(() => {
     if (!data || !settings) return "";
-    const { r, v, renter, renterProfile, ownerProfile, payment } = data;
+    const { r, v, renter, renterProfile, ownerProfile, payment, pickup } = data;
     const days = Math.max(1, differenceInCalendarDays(parseISO(r.end_date), parseISO(r.start_date)));
     const securityDeposit = Number((v?.house_rules as any)?.securityDeposit ?? 200);
     const insuranceFee = days * 8;
@@ -125,7 +131,7 @@ export default function ReservationContractPage() {
       vehiculo_color: dash(v?.color) === "—" ? "Por registrar" : v.color,
       vehiculo_placa: dash(v?.plate) === "—" ? "Por registrar" : v.plate,
       vehiculo_vin: dash(v?.vin) === "—" ? "Por registrar" : v.vin,
-      km_inicio: r.start_mileage != null ? r.start_mileage.toLocaleString() : "Se registrará en la entrega",
+      km_inicio: (pickup?.mileage ?? r.start_mileage) != null ? Number(pickup?.mileage ?? r.start_mileage).toLocaleString() : "Se registrará en la entrega",
       km_max_dia: (v?.house_rules as any)?.maxKmPerDay ? String((v.house_rules as any).maxKmPerDay) : "Sin límite",
       inicio: format(parseISO(r.start_date), "PPP", { locale: es }),
       fin: format(parseISO(r.end_date), "PPP", { locale: es }),

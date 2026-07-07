@@ -52,7 +52,7 @@ export default function AdminReservationContractPage() {
         setLoading(false);
         return;
       }
-      const [{ data: v }, { data: renterRows }, { data: payment }] = await Promise.all([
+      const [{ data: v }, { data: renterRows }, { data: payment }, { data: pickup }] = await Promise.all([
         supabase.from("vehicles").select("*").eq("id", r.vehicle_id).maybeSingle(),
         supabase.rpc("get_reservation_renter_info", { _reservation_id: id }),
         supabase
@@ -61,6 +61,12 @@ export default function AdminReservationContractPage() {
           .eq("reservation_id", id)
           .order("created_at", { ascending: false })
           .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("vehicle_inspections")
+          .select("mileage")
+          .eq("reservation_id", id)
+          .eq("type", "pickup")
           .maybeSingle(),
       ]);
       const renter = Array.isArray(renterRows) ? renterRows[0] : renterRows;
@@ -80,14 +86,14 @@ export default function AdminReservationContractPage() {
           .eq("user_id", r.renter_id)
           .maybeSingle()
       ).data;
-      setData({ r, v, renter, renterProfile, ownerProfile, payment });
+      setData({ r, v, renter, renterProfile, ownerProfile, payment, pickup });
       setLoading(false);
     })();
   }, [id]);
 
   const rendered = useMemo(() => {
     if (!data || !settings) return "";
-    const { r, v, renter, renterProfile, ownerProfile, payment } = data;
+    const { r, v, renter, renterProfile, ownerProfile, payment, pickup } = data;
     const days = Math.max(
       1,
       differenceInCalendarDays(parseISO(r.end_date), parseISO(r.start_date)),
@@ -117,7 +123,7 @@ export default function AdminReservationContractPage() {
       vehiculo_color: dash(v?.color) === "—" ? "Por registrar" : v.color,
       vehiculo_placa: dash(v?.plate) === "—" ? "Por registrar" : v.plate,
       vehiculo_vin: dash(v?.vin) === "—" ? "Por registrar" : v.vin,
-      km_inicio: r.start_mileage != null ? r.start_mileage.toLocaleString() : "Se registrará en la entrega",
+      km_inicio: (pickup?.mileage ?? r.start_mileage) != null ? Number(pickup?.mileage ?? r.start_mileage).toLocaleString() : "Se registrará en la entrega",
       km_max_dia: (v?.house_rules as any)?.maxKmPerDay ? String((v.house_rules as any).maxKmPerDay) : "Sin límite",
       inicio: format(parseISO(r.start_date), "PPP", { locale: es }),
       fin: format(parseISO(r.end_date), "PPP", { locale: es }),
