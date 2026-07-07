@@ -85,6 +85,7 @@ import { toast } from "sonner";
 
 type Status =
   | "pending"
+  | "awaiting_payment"
   | "approved"
   | "active"
   | "completed"
@@ -113,6 +114,7 @@ interface Row {
 
 const STATUS_META: Record<Status, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-amber-100 text-amber-700 border-amber-200" },
+  awaiting_payment: { label: "Esperando pago", cls: "bg-orange-100 text-orange-700 border-orange-200" },
   approved: { label: "Aprobada", cls: "bg-sky-100 text-sky-700 border-sky-200" },
   active: { label: "En curso", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   completed: { label: "Completada", cls: "bg-slate-100 text-slate-700 border-slate-200" },
@@ -122,6 +124,7 @@ const STATUS_META: Record<Status, { label: string; cls: string }> = {
 
 const STATUS_DOT: Record<Status, string> = {
   pending: "bg-amber-500",
+  awaiting_payment: "bg-orange-500",
   approved: "bg-sky-500",
   active: "bg-emerald-500",
   completed: "bg-slate-400",
