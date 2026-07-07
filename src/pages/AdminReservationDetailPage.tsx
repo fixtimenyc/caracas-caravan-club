@@ -24,6 +24,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReservationInspectionsPanel from "@/components/admin/ReservationInspectionsPanel";
+import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
@@ -47,6 +48,7 @@ export default function AdminReservationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [reservation, setReservation] = useState<any>(null);
   const [vehicle, setVehicle] = useState<any>(null);
+  const [vehiclePhoto, setVehiclePhoto] = useState<string | null>(null);
   const [renter, setRenter] = useState<any>(null);
   const [owner, setOwner] = useState<any>(null);
   const [events, setEvents] = useState<any[]>([]);
@@ -69,6 +71,9 @@ export default function AdminReservationDetailPage() {
       supabase.from("payments").select("*").eq("reservation_id", id).order("created_at", { ascending: false }),
     ]);
     setVehicle(v);
+    setVehiclePhoto(
+      v?.photos?.[0] ? await resolveVehiclePhoto(v.photos[0]) : null,
+    );
     setRenter(rp);
     setEvents(ev || []);
     setPayments(pay || []);
@@ -257,8 +262,8 @@ export default function AdminReservationDetailPage() {
               <CardHeader><CardTitle className="flex items-center gap-2"><Car className="h-4 w-4" /> Vehículo</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex gap-4">
-                  {vehicle?.photos?.[0] && (
-                    <img src={vehicle.photos[0]} alt="" className="w-32 h-24 object-cover rounded" />
+                  {vehiclePhoto && (
+                    <img src={vehiclePhoto} alt={`${vehicle?.brand || "Vehículo"} ${vehicle?.model || ""}`} className="w-32 h-24 object-cover rounded" />
                   )}
                   <div className="flex-1">
                     <p className="font-semibold">{vehicle?.brand} {vehicle?.model} {vehicle?.year}</p>

@@ -27,7 +27,7 @@ type Notification = {
 };
 
 const NotificationBell = () => {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
@@ -110,11 +110,11 @@ const NotificationBell = () => {
     if (!n.read) await markAsRead(n.id);
     setOpen(false);
     if (n.action_url) {
-      navigate(n.action_url);
+      navigate(n.action_url === "/admin/applications" ? "/admin/solicitudes" : n.action_url);
     } else if (n.vehicle_id) {
       navigate(`/vehiculo/${n.vehicle_id}`);
     } else if (n.reservation_id) {
-      navigate("/my-vehicles");
+      navigate(roles.includes("owner") || roles.includes("admin") ? "/my-vehicles" : "/mis-reservas");
     }
   };
 
