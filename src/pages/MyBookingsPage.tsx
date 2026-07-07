@@ -145,16 +145,17 @@ const MyBookingsPage = () => {
   }, [user, isOwner]);
 
   const grouped = useMemo(() => {
-    const upcoming = reservations.filter((r) => ["approved", "active", "pending"].includes(r.status));
+    const upcoming = reservations.filter((r) => ["approved", "active", "pending", "awaiting_payment"].includes(r.status));
     const past = reservations.filter((r) => ["completed", "cancelled", "rejected"].includes(r.status));
     return { upcoming, past };
   }, [reservations]);
 
   const ownerGrouped = useMemo(() => {
     const pending = ownerReservations.filter((r) => r.status === "pending");
+    const awaitingPayment = ownerReservations.filter((r) => r.status === "awaiting_payment");
     const active = ownerReservations.filter((r) => ["approved", "active"].includes(r.status));
     const past = ownerReservations.filter((r) => ["completed", "cancelled", "rejected"].includes(r.status));
-    return { pending, active, past };
+    return { pending, awaitingPayment, active, past };
   }, [ownerReservations]);
 
   const contactRenter = async (r: any) => {
