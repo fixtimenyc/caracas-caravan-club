@@ -97,7 +97,12 @@ export default function AdminReservationContractPage() {
       1,
       differenceInCalendarDays(parseISO(r.end_date), parseISO(r.start_date)),
     );
-    const tarifaDia = r.total_price > 0 ? r.total_price / days : 0;
+    const securityDeposit = Number((v?.house_rules as any)?.securityDeposit ?? 200);
+    const insuranceFee = days * 8;
+    const serviceFee = Math.round(((Number(r.total_price) - insuranceFee - securityDeposit) * 0.1) / 1.1) || 0;
+    const subtotal = Math.max(0, Number(r.total_price) - serviceFee - insuranceFee - securityDeposit);
+    const tarifaDia = subtotal > 0 ? subtotal / days : 0;
+    const dash = (val: any) => (val === null || val === undefined || val === "" ? "—" : String(val));
     const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
     const accepted = r.created_at;
     const map: Record<string, string> = {
@@ -108,32 +113,32 @@ export default function AdminReservationContractPage() {
       arrendatario_direccion: renter?.address ?? renterProfile?.address ?? "—",
       propietario_nombre: ownerProfile?.full_name ?? "—",
       propietario_cedula: ownerProfile?.cedula ?? "—",
-      vehiculo_marca: v?.brand ?? "—",
-      vehiculo_modelo: v?.model ?? "—",
-      vehiculo_anio: String(v?.year ?? "—"),
-      vehiculo_color: v?.color ?? "—",
-      vehiculo_placa: v?.plate ?? "—",
-      vehiculo_vin: v?.vin ?? "—",
-      km_inicio: r.start_mileage != null ? r.start_mileage.toLocaleString() : "—",
-      km_max_dia: String(v?.house_rules?.maxKmPerDay ?? "—"),
+      vehiculo_marca: dash(v?.brand),
+      vehiculo_modelo: dash(v?.model),
+      vehiculo_anio: dash(v?.year),
+      vehiculo_color: dash(v?.color) === "—" ? "Por registrar" : v.color,
+      vehiculo_placa: dash(v?.plate) === "—" ? "Por registrar" : v.plate,
+      vehiculo_vin: dash(v?.vin) === "—" ? "Por registrar" : v.vin,
+      km_inicio: r.start_mileage != null ? r.start_mileage.toLocaleString() : "Se registrará en la entrega",
+      km_max_dia: (v?.house_rules as any)?.maxKmPerDay ? String((v.house_rules as any).maxKmPerDay) : "Sin límite",
       inicio: format(parseISO(r.start_date), "PPP", { locale: es }),
       fin: format(parseISO(r.end_date), "PPP", { locale: es }),
       dias: String(days),
       lugar_entrega: v?.location ?? v?.zone ?? "—",
       lugar_devolucion: v?.location ?? v?.zone ?? "—",
       tarifa_dia: fmt(tarifaDia),
-      subtotal: fmt(r.total_price),
-      comision: fmt(r.total_price * 0.1),
-      seguro: fmt(0),
-      deposito: fmt(0),
+      subtotal: fmt(subtotal),
+      comision: fmt(serviceFee),
+      seguro: fmt(insuranceFee),
+      deposito: fmt(securityDeposit),
       total: fmt(Number(r.total_price)),
       moneda: "USD",
-      metodo_pago: payment?.payment_method ?? "—",
+      metodo_pago: payment?.payment_method && payment.payment_method !== "pending" ? payment.payment_method : "Pago pendiente de confirmación",
       referencia_pago: payment?.id?.slice(0, 8).toUpperCase() ?? "—",
       fecha_pago: payment?.created_at
         ? format(parseISO(payment.created_at), "PPP p", { locale: es })
-        : "—",
-      multa_fumar: `$${v?.house_rules?.smokingFine ?? 50}`,
+        : "Pendiente",
+      multa_fumar: `$${(v?.house_rules as any)?.smokingFine ?? 50}`,
       empresa_razon_social: settings.company_legal_name,
       empresa_rif: settings.company_rif,
       empresa_direccion: settings.company_address,
