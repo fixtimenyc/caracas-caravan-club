@@ -159,10 +159,10 @@ const Auth = () => {
           }
         } else {
           if (role === 'owner') {
-            toast.success('¡Cuenta creada! Completa tu solicitud de aliado.');
+            toast.success('¡Cuenta creada! Revisa tu correo y verifica tu email para continuar con tu solicitud de aliado.');
             navigate('/aliado/solicitud');
           } else {
-            toast.success('¡Cuenta creada! Completa tu verificación de identidad.');
+            toast.success('¡Cuenta creada! Revisa tu correo y verifica tu email para continuar con tu verificación de identidad.');
             navigate('/arrendatario/verificacion');
           }
         }
