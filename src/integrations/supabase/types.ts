@@ -1459,10 +1459,16 @@ export type Database = {
         | "device_reuse"
         | "ip_burst"
       inspection_type: "pickup" | "return"
-      payment_status: "pending" | "completed" | "failed" | "refunded"
+      payment_status:
+        | "pending"
+        | "submitted"
+        | "completed"
+        | "failed"
+        | "refunded"
       renter_verification_status: "pending" | "approved" | "rejected"
       reservation_status:
         | "pending"
+        | "awaiting_payment"
         | "approved"
         | "active"
         | "rejected"
@@ -1641,10 +1647,17 @@ export const Constants = {
         "ip_burst",
       ],
       inspection_type: ["pickup", "return"],
-      payment_status: ["pending", "completed", "failed", "refunded"],
+      payment_status: [
+        "pending",
+        "submitted",
+        "completed",
+        "failed",
+        "refunded",
+      ],
       renter_verification_status: ["pending", "approved", "rejected"],
       reservation_status: [
         "pending",
+        "awaiting_payment",
         "approved",
         "active",
         "rejected",
