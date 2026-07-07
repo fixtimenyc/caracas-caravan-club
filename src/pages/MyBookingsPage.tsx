@@ -16,6 +16,8 @@ import {
   Settings2,
   MapPin,
   Phone,
+  FileText,
+  Eye,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
