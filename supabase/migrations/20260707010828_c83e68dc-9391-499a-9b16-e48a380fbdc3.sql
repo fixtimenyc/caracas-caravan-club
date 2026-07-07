@@ -1,0 +1,1 @@
+CREATE POLICY "Owner can create conversation" ON public.conversations FOR INSERT TO authenticated WITH CHECK (auth.uid() = owner_id AND EXISTS (SELECT 1 FROM public.vehicles v WHERE v.id = conversations.vehicle_id AND v.owner_id = auth.uid()));
