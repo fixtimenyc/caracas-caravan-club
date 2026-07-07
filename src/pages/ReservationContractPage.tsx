@@ -104,7 +104,7 @@ export default function ReservationContractPage() {
 
   const rendered = useMemo(() => {
     if (!data || !settings) return "";
-    const { r, v, renter, renterProfile, ownerProfile, payment } = data;
+    const { r, v, renter, renterProfile, ownerProfile, payment, pickup } = data;
     const days = Math.max(1, differenceInCalendarDays(parseISO(r.end_date), parseISO(r.start_date)));
     const securityDeposit = Number((v?.house_rules as any)?.securityDeposit ?? 200);
     const insuranceFee = days * 8;
