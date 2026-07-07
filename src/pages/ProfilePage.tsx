@@ -283,10 +283,12 @@ const ProfilePage = () => {
                     Verificación arrendatario
                   </Button>
                 )}
-                <Button type="button" variant="outline" onClick={() => navigate("/perfil/privacidad")}>
-                  <ShieldCheck className="w-4 h-4 mr-2" />
-                  Mis datos y privacidad
-                </Button>
+                {verification.needsRenterVerification && (
+                  <Button type="button" variant="outline" onClick={() => navigate("/arrendatario/verificacion")}>
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    Verificación arrendatario
+                  </Button>
+                )}
               </div>
             </form>
           </CardContent>
