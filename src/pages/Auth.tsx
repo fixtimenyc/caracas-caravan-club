@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Car, Mail, Lock, User, ArrowLeft, Key, Handshake } from 'lucide-react';
+import { Car, Mail, Lock, User, ArrowLeft, Key, Handshake, IdCard, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
