@@ -439,6 +439,153 @@ const MyBookingsPage = () => {
         )}
       </main>
       <Footer />
+
+      <Dialog open={!!manageReservation} onOpenChange={(o) => !o && setManageReservation(null)}>
+        <DialogContent className="max-w-lg">
+          {manageReservation && (() => {
+            const r = manageReservation;
+            const v = vehicles[r.vehicle_id];
+            const renter = renters[r.renter_id];
+            const meta = STATUS_META[r.status] || STATUS_META.pending;
+            const hoursLeft = Math.max(0, 24 - differenceInHours(new Date(), new Date(r.created_at)));
+            const hasReturnInspection = returnDone.has(r.id);
+            const days = Math.max(
+              1,
+              Math.ceil(
+                (new Date(r.end_date).getTime() - new Date(r.start_date).getTime()) / (1000 * 60 * 60 * 24),
+              ),
+            );
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Gestionar reserva</DialogTitle>
+                  <DialogDescription>
+                    {v ? `${v.brand} ${v.model} ${v.year}` : "Vehículo"} · #{String(r.id).slice(0, 8)}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className={meta.cls}>{meta.label}</Badge>
+                    {r.status === "pending" && (
+                      <span className="text-xs text-muted-foreground">
+                        {hoursLeft > 0 ? `Quedan ${hoursLeft}h para responder` : "Plazo expirado"}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="rounded-lg border p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{renter?.full_name || "Arrendatario"}</span>
+                    </div>
+                    {renter?.phone && (
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                        <Phone className="h-3.5 w-3.5" /> {renter.phone}
+                      </div>
+                    )}
+                    {v?.location && (
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                        <MapPin className="h-3.5 w-3.5" /> {v.location}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Desde</p>
+                      <p className="font-medium text-sm">
+                        {format(new Date(r.start_date), "d MMM yyyy", { locale: es })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Hasta</p>
+                      <p className="font-medium text-sm">
+                        {format(new Date(r.end_date), "d MMM yyyy", { locale: es })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Duración</p>
+                      <p className="font-medium text-sm">{days} día{days > 1 ? "s" : ""}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Ingreso neto</p>
+                      <p className="font-medium text-sm">
+                        ${(Number(r.total_price) * 0.7).toFixed(2)}
+                        <span className="text-muted-foreground font-normal"> / ${Number(r.total_price).toFixed(2)}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" onClick={() => contactRenter(r)}>
+                      <MessageCircle className="h-4 w-4 mr-1" /> Mensaje
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/reservas/${r.id}/inspeccion-devolucion`)}
+                      disabled={!["approved", "active", "completed"].includes(r.status)}
+                    >
+                      <ClipboardCheck className="h-4 w-4 mr-1" />
+                      {hasReturnInspection ? "Ver devolución" : "Inspección devolución"}
+                    </Button>
+                  </div>
+                </div>
+
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  {r.status === "pending" && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="text-destructive"
+                        disabled={actionLoading || hoursLeft === 0}
+                        onClick={() => respondReservation(r, "rejected")}
+                      >
+                        <X className="h-4 w-4 mr-1" /> Rechazar
+                      </Button>
+                      <Button
+                        disabled={actionLoading || hoursLeft === 0}
+                        onClick={() => respondReservation(r, "approved")}
+                      >
+                        <Check className="h-4 w-4 mr-1" /> Aprobar
+                      </Button>
+                    </>
+                  )}
+                  {r.status === "approved" && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="text-destructive"
+                        disabled={actionLoading}
+                        onClick={() => transitionReservation(r, "cancelled")}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        disabled={actionLoading}
+                        onClick={() => transitionReservation(r, "active")}
+                      >
+                        <PlayCircle className="h-4 w-4 mr-1" /> Iniciar viaje
+                      </Button>
+                    </>
+                  )}
+                  {r.status === "active" && (
+                    <Button
+                      disabled={actionLoading}
+                      onClick={() => transitionReservation(r, "completed")}
+                    >
+                      <Flag className="h-4 w-4 mr-1" /> Marcar completada
+                    </Button>
+                  )}
+                </DialogFooter>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
