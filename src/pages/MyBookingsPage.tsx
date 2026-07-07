@@ -128,14 +128,14 @@ const MyBookingsPage = () => {
         setRenters(rmap);
       }
 
-      const resIds = list.map((r) => r.id);
-      if (resIds.length) {
+      const allResIds = Array.from(new Set([...list.map((r) => r.id), ...ownerList.map((r) => r.id)]));
+      if (allResIds.length) {
         const { data: ins } = await supabase
           .from("vehicle_inspections")
           .select("reservation_id, type")
-          .in("reservation_id", resIds)
-          .eq("type", "pickup");
-        setPickupDone(new Set((ins || []).map((i) => i.reservation_id)));
+          .in("reservation_id", allResIds);
+        setPickupDone(new Set((ins || []).filter((i) => i.type === "pickup").map((i) => i.reservation_id)));
+        setReturnDone(new Set((ins || []).filter((i) => i.type === "return").map((i) => i.reservation_id)));
       }
       setLoading(false);
     })();
