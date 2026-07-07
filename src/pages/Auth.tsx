@@ -29,6 +29,12 @@ type SignupRole = 'renter' | 'owner';
 
 const SIGNUP_ROLE_INTENT_KEY = 'ruedave_signup_role_intent';
 
+const getSafeRedirect = (redirect: string | null) => {
+  if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) return null;
+  if (redirect.startsWith('/auth')) return null;
+  return redirect;
+};
+
 const getStoredSignupRoleIntent = (): SignupRole | null => {
   if (typeof window === 'undefined') return null;
   const stored = window.localStorage.getItem(SIGNUP_ROLE_INTENT_KEY);
@@ -41,6 +47,7 @@ const Auth = () => {
   const initialRole = (searchParams.get('role') as SignupRole) === 'owner' ? 'owner' : 'renter';
 
   const [isLogin, setIsLogin] = useState(!initialMode);
+  const safeRedirect = getSafeRedirect(searchParams.get('redirect'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -58,6 +65,11 @@ const Auth = () => {
     if (loading || !user) return;
     let cancelled = false;
     (async () => {
+      if (isLogin) {
+        navigate(safeRedirect ?? '/');
+        return;
+      }
+
       // Determine where to send the user based on their roles + verification state
       const { supabase } = await import('@/integrations/supabase/client');
       const [{ data: rolesData }, { data: verif }, { data: ownerApp }] = await Promise.all([
@@ -92,10 +104,10 @@ const Auth = () => {
         navigate('/arrendatario/verificacion');
         return;
       }
-      navigate('/');
+      navigate(safeRedirect ?? '/');
     })();
     return () => { cancelled = true; };
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isLogin, role, safeRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

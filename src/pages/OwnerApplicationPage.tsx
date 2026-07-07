@@ -100,6 +100,7 @@ const OwnerApplicationPage = () => {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [existingStatus, setExistingStatus] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [personal, setPersonal] = useState<PersonalData>({
@@ -135,6 +136,19 @@ const OwnerApplicationPage = () => {
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth?mode=signup&role=owner');
+      return;
+    }
+    if (user) {
+      supabase
+        .from('owner_applications')
+        .select('status')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setExistingStatus(data.status);
+        });
     }
   }, [user, loading, navigate]);
 
@@ -267,22 +281,46 @@ const OwnerApplicationPage = () => {
     );
   }
 
-  if (submitted) {
+  if (existingStatus || submitted) {
+    const status = submitted ? 'pending' : existingStatus!;
+    const config = {
+      pending: {
+        title: '¡Solicitud enviada!',
+        desc: 'Recibimos tu solicitud para ser Aliado de RuedaVe. Nuestro equipo la revisará en un plazo de 24 a 48 horas y te notificaremos por correo.',
+        color: 'text-primary',
+        action: 'Volver al inicio',
+        path: '/',
+      },
+      approved: {
+        title: '¡Solicitud aprobada!',
+        desc: 'Tu cuenta ya está aprobada como Aliado. Puedes gestionar tus vehículos y reservas desde tu panel.',
+        color: 'text-primary',
+        action: 'Ir a mis vehículos',
+        path: '/my-vehicles',
+      },
+      rejected: {
+        title: 'Solicitud rechazada',
+        desc: 'Tu solicitud fue revisada y no pudo ser aprobada. Contacta al equipo de soporte si necesitas más información.',
+        color: 'text-destructive',
+        action: 'Ir a ayuda',
+        path: '/ayuda',
+      },
+    }[status as 'pending' | 'approved' | 'rejected'];
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 shadow-elegant text-center">
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-8 h-8 text-primary" />
+            <CheckCircle2 className={cn('w-8 h-8', config.color)} />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-3">
-            ¡Solicitud enviada!
+            {config.title}
           </h1>
           <p className="text-muted-foreground mb-6">
-            Recibimos tu solicitud para ser Aliado de RuedaVe. Nuestro equipo la
-            revisará en un plazo de 24 a 48 horas y te notificaremos por correo.
+            {config.desc}
           </p>
-          <Button onClick={() => navigate('/')} className="w-full">
-            Volver al inicio
+          <Button onClick={() => navigate(config.path)} className="w-full">
+            {config.action}
           </Button>
         </div>
       </div>
