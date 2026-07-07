@@ -129,7 +129,7 @@ export default function AdminReservationContractPage() {
       comision: fmt(serviceFee),
       seguro: fmt(insuranceFee),
       deposito: fmt(securityDeposit),
-      total: fmt(Number(r.total_price)),
+      total: fmt(totalMostrar),
       moneda: "USD",
       metodo_pago: payment?.payment_method && payment.payment_method !== "pending" ? payment.payment_method : "Pago pendiente de confirmación",
       referencia_pago: payment?.id?.slice(0, 8).toUpperCase() ?? "—",
