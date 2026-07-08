@@ -78,8 +78,9 @@ export default function VehicleInspectionForm({
   const setItem = (key: string, value: InspectionItemState) =>
     setChecklist((c) => ({ ...c, [key]: value }));
 
-  const handleUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const handleUpload = async (files: FileList | File[] | null) => {
+    if (!files || (files as any).length === 0) return;
+
     setUploading(true);
     try {
       const uploaded: string[] = [];
