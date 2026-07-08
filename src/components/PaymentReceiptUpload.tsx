@@ -183,7 +183,7 @@ export default function PaymentReceiptUpload({ reservationId, totalPrice, paymen
           </AlertDescription>
         </Alert>
 
-        <PaymentMethodsPanel amount={totalPrice} selected={method} onSelect={setMethod} />
+        <PaymentMethodsPanel amount={totalPrice} selected={method} onSelect={setMethod} reservationId={reservationId} />
 
         {wasRejected && payment.rejection_reason && (
           <Alert variant="destructive">
