@@ -23,6 +23,9 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
   const [saving, setSaving] = useState(false);
   const [facing, setFacing] = useState<"environment" | "user">("environment");
 
+  const [denied, setDenied] = useState(false);
+  const fallbackRef = useRef<HTMLInputElement>(null);
+
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -30,8 +33,12 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
 
   const start = useCallback(async () => {
     setStarting(true);
+    setDenied(false);
     try {
       stop();
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Cámara no disponible en este navegador");
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false,
@@ -42,12 +49,13 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
         await videoRef.current.play().catch(() => {});
       }
     } catch (e: any) {
-      toast.error("No se pudo acceder a la cámara: " + (e?.message ?? "permiso denegado"));
-      onClose();
+      const msg = e?.message ?? "permiso denegado";
+      toast.error("No se pudo acceder a la cámara: " + msg);
+      setDenied(true);
     } finally {
       setStarting(false);
     }
-  }, [facing, stop, onClose]);
+  }, [facing, stop]);
 
   useEffect(() => {
     if (open) start();
