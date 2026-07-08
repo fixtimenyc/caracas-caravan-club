@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Upload, X, ClipboardCheck, AlertTriangle, Camera } from "lucide-react";
+import { Loader2, X, ClipboardCheck, AlertTriangle, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import LiveCameraCapture from "@/components/LiveCameraCapture";
 import {
   INSPECTION_SECTIONS,
   FUEL_LEVELS,
@@ -21,6 +22,7 @@ import {
   summarizeChecklist,
   InspectionItemState,
 } from "@/lib/inspectionChecklist";
+
 
 interface Props {
   reservationId: string;
@@ -57,6 +59,8 @@ export default function VehicleInspectionForm({
   const [accepted, setAccepted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+
 
   const summary = useMemo(() => summarizeChecklist(checklist), [checklist]);
 
@@ -76,8 +80,9 @@ export default function VehicleInspectionForm({
   const setItem = (key: string, value: InspectionItemState) =>
     setChecklist((c) => ({ ...c, [key]: value }));
 
-  const handleUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const handleUpload = async (files: FileList | File[] | null) => {
+    if (!files || (files as any).length === 0) return;
+
     setUploading(true);
     try {
       const uploaded: string[] = [];
@@ -349,7 +354,11 @@ export default function VehicleInspectionForm({
                 </div>
               );
             })}
-            <label className="aspect-square rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-muted transition">
+            <button
+              type="button"
+              onClick={() => setCameraOpen(true)}
+              className="aspect-square rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-muted transition"
+            >
               {uploading ? (
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               ) : (
@@ -358,17 +367,13 @@ export default function VehicleInspectionForm({
                   <span className="text-xs text-muted-foreground">Tomar foto</span>
                 </>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                multiple
-                className="hidden"
-                onChange={(e) => handleUpload(e.target.files)}
-              />
-            </label>
-
+            </button>
           </div>
+          <LiveCameraCapture
+            open={cameraOpen}
+            onClose={() => setCameraOpen(false)}
+            onCapture={(files) => handleUpload(files)}
+          />
         </CardContent>
       </Card>
 
