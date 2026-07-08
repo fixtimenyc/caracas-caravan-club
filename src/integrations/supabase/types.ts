@@ -886,6 +886,27 @@ export type Database = {
         }
         Relationships: []
       }
+      system_config: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       telemetry_events: {
         Row: {
           created_at: string
@@ -1375,6 +1396,13 @@ export type Database = {
       current_reservation_status: {
         Args: { _reservation_id: string }
         Returns: Database["public"]["Enums"]["reservation_status"]
+      }
+      get_pricing_config: {
+        Args: never
+        Returns: {
+          commission_pct: number
+          insurance_per_day: number
+        }[]
       }
       get_renter_profile_for_owner: {
         Args: { _renter_id: string }

@@ -362,14 +362,35 @@ export default function AdminSettingsPage() {
   const [loadingAdmins, setLoadingAdmins] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
 
+  const syncPricingToDb = async (next: Settings) => {
+    // Keep the DB trigger aligned with the configured commission %.
+    try {
+      await supabase.from("system_config").upsert(
+        {
+          key: "pricing",
+          value: {
+            commission_pct: Number(next.policies.commission_pct ?? 20),
+            insurance_per_day: 8,
+          },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "key" },
+      );
+    } catch {
+      /* non-admins hitting RLS is fine — this is a best-effort sync */
+    }
+  };
+
   const save = (next: Settings) => {
     const normalized = stripSensitiveCredentials(normalizeSettings(next));
     setRawSettings(normalized);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    void syncPricingToDb(normalized);
   };
   const saveAll = () => {
     const normalized = stripSensitiveCredentials(settings);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    void syncPricingToDb(normalized);
     toast({ title: "Configuración guardada", description: "Los cambios se aplicaron correctamente." });
   };
 
