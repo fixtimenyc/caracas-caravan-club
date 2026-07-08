@@ -131,7 +131,8 @@ function DashboardTab({ loading, payments, reservations, vehicles, vMap, pMap }:
         const days = Math.max(differenceInDays(new Date(r.end_date), new Date(r.start_date)), 1);
         return s + days * 8; // insurance approx
       }, 0);
-      const comision = ingresos * COMMISSION_RATE;
+      const commissionRate = getCommissionRate();
+      const comision = ingresos * commissionRate;
       return { mes: format(m, "MMM yy", { locale: es }), ingresos, gastos, comision, neto: ingresos - gastos };
     });
 
