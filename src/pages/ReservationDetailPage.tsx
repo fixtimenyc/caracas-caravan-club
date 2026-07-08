@@ -248,31 +248,66 @@ export default function ReservationDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <DollarSign className="h-4 w-4" /> Pago
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tarifa/día</span>
-                <span>${(total / days).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Días</span>
-                <span>{days}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-              {payment?.payment_method && (
-                <p className="text-xs text-muted-foreground pt-1">Método: {payment.payment_method}</p>
-              )}
-            </CardContent>
-          </Card>
+          {(() => {
+            const dailyRate = Number(vehicle.price_per_day || 0);
+            const subtotal = Math.round(dailyRate * days * 100) / 100;
+            const insuranceFee = days * 8;
+            const securityDeposit = Number((vehicle.house_rules as any)?.securityDeposit ?? 0);
+            // Derive service fee from stored total so we always match what was charged
+            const derivedFee = Math.max(
+              0,
+              Math.round((total - subtotal - insuranceFee - securityDeposit) * 100) / 100,
+            );
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" /> Pago
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tarifa/día</span>
+                    <span>${dailyRate.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Días</span>
+                    <span>{days}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  {derivedFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Comisión de servicio</span>
+                      <span>${derivedFee.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {insuranceFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Seguro</span>
+                      <span>${insuranceFee.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {securityDeposit > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Depósito reembolsable</span>
+                      <span>${securityDeposit.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
+                  {payment?.payment_method && (
+                    <p className="text-xs text-muted-foreground pt-1">Método: {payment.payment_method}</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           <Card className="md:col-span-3">
             <CardHeader>
