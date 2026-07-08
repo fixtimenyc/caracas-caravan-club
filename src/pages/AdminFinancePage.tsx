@@ -183,7 +183,7 @@ function DashboardTab({ loading, payments, reservations, vehicles, vMap, pMap }:
       const hasPaid = payments.some((p: Payment) => p.reservation_id === r.id && p.status === "completed");
       if (!hasPaid) {
         const owner = vMap[r.vehicle_id]?.owner_id;
-        if (owner) ownerPending[owner] = (ownerPending[owner] || 0) + Number(r.total_price || 0) * (1 - COMMISSION_RATE);
+        if (owner) ownerPending[owner] = (ownerPending[owner] || 0) + Number(r.total_price || 0) * (1 - getCommissionRate());
       }
     });
 
