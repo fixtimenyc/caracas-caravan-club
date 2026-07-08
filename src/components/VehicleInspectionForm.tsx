@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, X, ClipboardCheck, AlertTriangle, Camera } from "lucide-react";
+import { Loader2, X, ClipboardCheck, AlertTriangle, Camera, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -389,6 +389,22 @@ export default function VehicleInspectionForm({
                 </>
               )}
             </button>
+            <label
+              className="aspect-square rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-muted transition"
+            >
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground text-center px-1">Subir del dispositivo</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  void handleUpload(e.currentTarget.files);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
           </div>
           <LiveCameraCapture
             open={cameraOpen}
