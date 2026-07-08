@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, DollarSign, Clock, AlertCircle, CheckCircle2, Loader2, ImageIcon } from "lucide-react";
+import { Upload, DollarSign, Clock, AlertCircle, CheckCircle2, Loader2, ImageIcon, Copy, Smartphone, Building2, Mail, Banknote, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { es } from "date-fns/locale";
@@ -176,6 +176,8 @@ export default function PaymentReceiptUpload({ reservationId, totalPrice, paymen
           </AlertDescription>
         </Alert>
 
+        <PaymentMethodsPanel amount={totalPrice} selected={method} onSelect={setMethod} />
+
         {wasRejected && payment.rejection_reason && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -237,5 +239,166 @@ export default function PaymentReceiptUpload({ reservationId, totalPrice, paymen
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+type MethodKey = "pago_movil" | "transferencia" | "zelle" | "efectivo";
+
+const PAYMENT_METHODS: Array<{
+  key: MethodKey;
+  label: string;
+  icon: any;
+  currency: "VES" | "USD";
+  fields: Array<{ label: string; value: string; copy?: boolean }>;
+  note?: string;
+}> = [
+  {
+    key: "pago_movil",
+    label: "Pago Móvil",
+    icon: Smartphone,
+    currency: "VES",
+    fields: [
+      { label: "Banco", value: "0102 — Banco de Venezuela" },
+      { label: "Cédula / RIF", value: "J-501234567", copy: true },
+      { label: "Teléfono", value: "0414-1234567", copy: true },
+      { label: "Titular", value: "RuedaVe C.A." },
+    ],
+    note: "Convierte el monto a Bs. usando la tasa BCV del día del pago.",
+  },
+  {
+    key: "transferencia",
+    label: "Transferencia bancaria",
+    icon: Building2,
+    currency: "VES",
+    fields: [
+      { label: "Banco", value: "Banesco (0134)" },
+      { label: "Cuenta corriente", value: "0134-0000-00-0000000000", copy: true },
+      { label: "RIF", value: "J-501234567", copy: true },
+      { label: "Titular", value: "RuedaVe C.A." },
+    ],
+    note: "Convierte el monto a Bs. usando la tasa BCV del día del pago.",
+  },
+  {
+    key: "zelle",
+    label: "Zelle (USD)",
+    icon: Mail,
+    currency: "USD",
+    fields: [
+      { label: "Correo Zelle", value: "pagos@ruedave.com", copy: true },
+      { label: "Titular", value: "RuedaVe LLC" },
+    ],
+    note: "Envía el monto exacto en USD. Incluye el ID de la reserva en el memo.",
+  },
+  {
+    key: "efectivo",
+    label: "Efectivo (USD o Bs.)",
+    icon: Banknote,
+    currency: "USD",
+    fields: [
+      { label: "Coordinación", value: "Contacta a soporte de RuedaVe" },
+      { label: "WhatsApp", value: "+58 414-1234567", copy: true },
+    ],
+    note: "Solo con cita previa en la oficina de RuedaVe. Se emite recibo firmado.",
+  },
+];
+
+function PaymentMethodsPanel({
+  amount,
+  selected,
+  onSelect,
+}: {
+  amount: number;
+  selected: string;
+  onSelect: (m: string) => void;
+}) {
+  const copy = (val: string) => {
+    navigator.clipboard.writeText(val);
+    toast.success("Copiado al portapapeles");
+  };
+  const openWhatsApp = () => {
+    const msg = encodeURIComponent(
+      `Hola RuedaVe, ya realicé el pago de mi reserva por $${amount.toFixed(2)}. Adjunto el comprobante.`,
+    );
+    window.open(`https://wa.me/584141234567?text=${msg}`, "_blank");
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <p className="text-sm font-semibold">Elige un método de pago</p>
+        <p className="text-xs text-muted-foreground">
+          Paga a nombre de <strong>RuedaVe C.A.</strong> por el monto exacto de{" "}
+          <strong>${amount.toFixed(2)}</strong> y guarda el comprobante.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {PAYMENT_METHODS.map((m) => {
+          const Icon = m.icon;
+          const active = selected === m.key;
+          return (
+            <button
+              key={m.key}
+              type="button"
+              onClick={() => onSelect(m.key)}
+              className={`rounded-lg border p-2 text-left transition-colors ${
+                active
+                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  : "border-border hover:border-primary/40 hover:bg-muted/40"
+              }`}
+            >
+              <Icon className={`h-4 w-4 mb-1 ${active ? "text-primary" : "text-muted-foreground"}`} />
+              <p className="text-xs font-medium leading-tight">{m.label}</p>
+              <p className="text-[10px] text-muted-foreground">{m.currency}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {PAYMENT_METHODS.filter((m) => m.key === selected).map((m) => (
+        <div key={m.key} className="rounded-lg border bg-background p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <m.icon className="h-4 w-4 text-primary" />
+            <p className="text-sm font-semibold">{m.label}</p>
+            <Badge variant="outline" className="ml-auto text-[10px]">{m.currency}</Badge>
+          </div>
+          <div className="grid gap-1.5">
+            {m.fields.map((f) => (
+              <div key={f.label} className="flex items-center justify-between gap-2 text-xs">
+                <span className="text-muted-foreground">{f.label}</span>
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="font-medium truncate">{f.value}</span>
+                  {f.copy && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 shrink-0"
+                      onClick={() => copy(f.value)}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          {m.note && (
+            <p className="text-[11px] text-muted-foreground border-t pt-2">{m.note}</p>
+          )}
+        </div>
+      ))}
+
+      <div className="rounded-lg border border-dashed p-3 space-y-2">
+        <p className="text-xs font-medium">¿Cómo enviar el comprobante?</p>
+        <ul className="text-[11px] text-muted-foreground list-disc pl-4 space-y-0.5">
+          <li>Sube la captura o PDF en el formulario debajo (recomendado).</li>
+          <li>O envíanoslo por WhatsApp para respuesta más rápida.</li>
+        </ul>
+        <Button type="button" variant="outline" size="sm" className="w-full" onClick={openWhatsApp}>
+          <MessageCircle className="h-3.5 w-3.5 mr-1" /> Enviar comprobante por WhatsApp
+        </Button>
+      </div>
+    </div>
   );
 }
