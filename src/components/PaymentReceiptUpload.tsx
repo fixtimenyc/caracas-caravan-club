@@ -18,6 +18,13 @@ type Props = {
   paymentDeadline?: string | null;
 };
 
+const METHOD_LABELS: Record<string, string> = {
+  pago_movil: "Pago Móvil",
+  transferencia: "Transferencia bancaria",
+  zelle: "Zelle (USD)",
+  efectivo: "Efectivo",
+};
+
 export default function PaymentReceiptUpload({ reservationId, totalPrice, paymentDeadline }: Props) {
   const [loading, setLoading] = useState(true);
   const [payment, setPayment] = useState<any>(null);
@@ -176,7 +183,7 @@ export default function PaymentReceiptUpload({ reservationId, totalPrice, paymen
           </AlertDescription>
         </Alert>
 
-        <PaymentMethodsPanel amount={totalPrice} selected={method} onSelect={setMethod} />
+        <PaymentMethodsPanel amount={totalPrice} selected={method} onSelect={setMethod} reservationId={reservationId} />
 
         {wasRejected && payment.rejection_reason && (
           <Alert variant="destructive">
@@ -306,18 +313,22 @@ function PaymentMethodsPanel({
   amount,
   selected,
   onSelect,
+  reservationId,
 }: {
   amount: number;
   selected: string;
   onSelect: (m: string) => void;
+  reservationId: string;
 }) {
   const copy = (val: string) => {
     navigator.clipboard.writeText(val);
     toast.success("Copiado al portapapeles");
   };
+  const shortId = reservationId.slice(0, 8).toUpperCase();
   const openWhatsApp = () => {
+    const methodLabel = METHOD_LABELS[selected] ?? selected;
     const msg = encodeURIComponent(
-      `Hola RuedaVe, ya realicé el pago de mi reserva por $${amount.toFixed(2)}. Adjunto el comprobante.`,
+      `Hola RuedaVe 👋\n\nQuiero enviar el comprobante de pago de mi reserva.\n\n• ID de reserva: ${shortId}\n• Método de pago: ${methodLabel}\n• Monto: $${amount.toFixed(2)}\n\nAdjunto el comprobante a continuación.`,
     );
     window.open(`https://wa.me/584141234567?text=${msg}`, "_blank");
   };
