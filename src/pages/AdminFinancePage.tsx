@@ -678,7 +678,8 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
   };
 
   const downloadProof = (r: any) => {
-    const txt = `RUEDAVE - COMPROBANTE DE PAYOUT\n\nDueño: ${r.owner_name}\nPeríodo: ${period}\nAlquileres: ${r.count}\nIngresos brutos: ${fmt(r.gross)}\nComisión RUEDAVE (20%): -${fmt(r.commission)}\nDevoluciones: -${fmt(r.refunds)}\nMonto neto: ${fmt(r.net)}\nFecha de pago: ${r.pay_date}\n`;
+    const pct = (getCommissionRate() * 100).toFixed(0);
+    const txt = `RUEDAVE - COMPROBANTE DE PAYOUT\n\nDueño: ${r.owner_name}\nPeríodo: ${period}\nAlquileres: ${r.count}\nIngresos brutos: ${fmt(r.gross)}\nComisión RUEDAVE (${pct}%): -${fmt(r.commission)}\nDevoluciones: -${fmt(r.refunds)}\nMonto neto: ${fmt(r.net)}\nFecha de pago: ${r.pay_date}\n`;
     const blob = new Blob([txt], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `payout-${r.owner_name}-${period}.txt`; a.click();
