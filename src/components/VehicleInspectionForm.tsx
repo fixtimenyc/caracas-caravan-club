@@ -354,7 +354,11 @@ export default function VehicleInspectionForm({
                 </div>
               );
             })}
-            <label className="aspect-square rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-muted transition">
+            <button
+              type="button"
+              onClick={() => setCameraOpen(true)}
+              className="aspect-square rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-muted transition"
+            >
               {uploading ? (
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               ) : (
@@ -363,15 +367,15 @@ export default function VehicleInspectionForm({
                   <span className="text-xs text-muted-foreground">Tomar foto</span>
                 </>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                multiple
-                className="hidden"
-                onChange={(e) => handleUpload(e.target.files)}
-              />
-            </label>
+            </button>
+          </div>
+          <LiveCameraCapture
+            open={cameraOpen}
+            onClose={() => setCameraOpen(false)}
+            onCapture={(files) => handleUpload(files)}
+          />
+          <div style={{ display: "none" }}>
+
 
           </div>
         </CardContent>
