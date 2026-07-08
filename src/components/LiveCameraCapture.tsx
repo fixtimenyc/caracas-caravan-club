@@ -54,9 +54,9 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => {});
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (requestId !== startRequestRef.current) return;
-      const msg = e?.message ?? "permiso denegado";
+      const msg = e instanceof Error ? e.message : "permiso denegado";
       toast.error("No se pudo acceder a la cámara: " + msg);
       setDenied(true);
     } finally {
