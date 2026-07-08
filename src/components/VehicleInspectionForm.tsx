@@ -59,6 +59,8 @@ export default function VehicleInspectionForm({
   const [accepted, setAccepted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+
 
   const summary = useMemo(() => summarizeChecklist(checklist), [checklist]);
 
