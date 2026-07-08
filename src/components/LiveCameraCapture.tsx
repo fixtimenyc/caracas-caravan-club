@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Loader2, RefreshCw, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -98,10 +99,23 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
         const file = new File([blob], `foto-${Date.now()}.jpg`, { type: "image/jpeg" });
         const url = URL.createObjectURL(blob);
         setShots((s) => [...s, { file, url }]);
+        void uploadCapturedFiles([file]);
       },
       "image/jpeg",
       0.9
     );
+  };
+
+  const uploadCapturedFiles = async (files: File[]) => {
+    if (!files.length) return;
+    setSaving(true);
+    try {
+      await onCapture(files);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo subir la foto");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addNativeShots = (files: FileList | null) => {
@@ -114,6 +128,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
       const url = URL.createObjectURL(file);
       setShots((s) => [...s, { file, url }]);
     });
+    void uploadCapturedFiles(selected);
   };
 
   const removeShot = (idx: number) => {
@@ -126,19 +141,10 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
   };
 
   const finish = async () => {
-    if (shots.length === 0) {
-      onClose();
-      return;
-    }
-    setSaving(true);
-    try {
-      await onCapture(shots.map((s) => s.file));
-      shots.forEach((s) => URL.revokeObjectURL(s.url));
-      setShots([]);
-      onClose();
-    } finally {
-      setSaving(false);
-    }
+    if (saving) return;
+    shots.forEach((s) => URL.revokeObjectURL(s.url));
+    setShots([]);
+    onClose();
   };
 
   const handleOpenChange = (v: boolean) => {
@@ -154,7 +160,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader className="p-4 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5" /> Tomar fotos en vivo
@@ -180,7 +186,9 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
             <div className="p-6 bg-muted text-center space-y-3">
               <p className="text-sm text-foreground">
                 {shots.length > 0
-                  ? "Foto tomada. Puedes tomar otra o finalizar."
+                  ? saving
+                    ? "Foto tomada. Subiendo..."
+                    : "Foto tomada y subida. Puedes tomar otra o finalizar."
                   : "La cámara en vivo está bloqueada en este navegador."}
               </p>
               <p className="text-xs text-muted-foreground">

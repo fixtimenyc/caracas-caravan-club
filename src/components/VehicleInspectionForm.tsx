@@ -33,6 +33,20 @@ interface Props {
   redirectTo?: string;
 }
 
+type ExistingInspection = {
+  signature_name: string | null;
+  signed_at: string | null;
+  mileage: number | null;
+  fuel_level: string | null;
+  notes: string | null;
+  damage_notes: string | null;
+};
+
+type ReservationCounterpart = {
+  renter_id: string | null;
+  vehicles: { owner_id: string | null } | { owner_id: string | null }[] | null;
+};
+
 const STATES: InspectionItemState[] = ["ok", "minor", "damage", "na"];
 
 export default function VehicleInspectionForm({
@@ -45,7 +59,7 @@ export default function VehicleInspectionForm({
 }: Props) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [existing, setExisting] = useState<any>(null);
+  const [existing, setExisting] = useState<ExistingInspection | null>(null);
   const [checklist, setChecklist] = useState<Record<string, InspectionItemState>>(
     buildEmptyChecklist()
   );
@@ -81,14 +95,17 @@ export default function VehicleInspectionForm({
     setChecklist((c) => ({ ...c, [key]: value }));
 
   const handleUpload = async (files: FileList | File[] | null) => {
-    if (!files || (files as any).length === 0) return;
+    const selected = Array.from(files ?? []);
+    if (selected.length === 0) return;
 
     setUploading(true);
     try {
       const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
+      let lastError: string | null = null;
+      for (const file of selected) {
         if (file.size > 8 * 1024 * 1024) {
-          toast.error(`${file.name} supera 8MB`);
+          lastError = `${file.name} supera 8MB`;
+          toast.error(lastError);
           continue;
         }
         const ext = file.name.split(".").pop() || "jpg";
@@ -97,7 +114,8 @@ export default function VehicleInspectionForm({
           .from("inspection-photos")
           .upload(path, file, { upsert: false });
         if (error) {
-          toast.error(`Error: ${error.message}`);
+          lastError = `Error: ${error.message}`;
+          toast.error(lastError);
           continue;
         }
         uploaded.push(path);
@@ -113,6 +131,7 @@ export default function VehicleInspectionForm({
         setPhotoUrls((prev) => ({ ...prev, ...urlMap }));
       }
       setPhotos((p) => [...p, ...uploaded]);
+      if (!uploaded.length && lastError) throw new Error(lastError);
     } finally {
       setUploading(false);
     }
@@ -179,8 +198,10 @@ export default function VehicleInspectionForm({
       .select("renter_id, vehicle_id, vehicles(owner_id)")
       .eq("id", reservationId)
       .maybeSingle();
-    const renterId = (resData as any)?.renter_id;
-    const ownerId = (resData as any)?.vehicles?.owner_id;
+    const reservationCounterpart = resData as ReservationCounterpart | null;
+    const renterId = reservationCounterpart?.renter_id;
+    const vehicleData = reservationCounterpart?.vehicles;
+    const ownerId = Array.isArray(vehicleData) ? vehicleData[0]?.owner_id : vehicleData?.owner_id;
     const recipient = type === "pickup" ? ownerId : renterId;
     if (recipient) {
       await supabase.from("notifications").insert({
