@@ -129,7 +129,7 @@ export default function ReservationContractPage() {
       lugar_devolucion: v?.location ?? v?.zone ?? "—",
       tarifa_dia: fmt(tarifaDia),
       subtotal: fmt(subtotal),
-      comision: fmt(serviceFee),
+      comision: `${fmt(serviceFee)} (${commissionPct}%)`,
       seguro: fmt(insuranceFee),
       deposito: fmt(securityDeposit),
       total: fmt(totalMostrar),
