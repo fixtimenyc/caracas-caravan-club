@@ -374,10 +374,6 @@ export default function VehicleInspectionForm({
             onClose={() => setCameraOpen(false)}
             onCapture={(files) => handleUpload(files)}
           />
-          <div style={{ display: "none" }}>
-
-
-          </div>
         </CardContent>
       </Card>
 
