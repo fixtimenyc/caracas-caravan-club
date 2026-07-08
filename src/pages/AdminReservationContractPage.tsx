@@ -103,18 +103,11 @@ export default function AdminReservationContractPage() {
   const rendered = useMemo(() => {
     if (!data || !settings) return "";
     const { r, v, renter, renterProfile, ownerProfile, payment, pickup } = data;
-    const days = Math.max(
-      1,
-      differenceInCalendarDays(parseISO(r.end_date), parseISO(r.start_date)),
-    );
-    const securityDeposit = Number((v?.house_rules as any)?.securityDeposit ?? 200);
-    const insuranceFee = days * 8;
-    const tarifaDia = Number(v?.price_per_day ?? 0);
-    const subtotal = tarifaDia * days;
-    const serviceFee = Math.round(subtotal * 0.1 * 100) / 100;
+    const sys = loadSystemSettings();
+    const bd = computePriceBreakdown(sys, v, r.start_date, r.end_date);
+    const { days, pricePerDay: tarifaDia, subtotal, commissionPct, commission: serviceFee, insurance: insuranceFee, deposit: securityDeposit, totalWithDeposit } = bd;
     const totalCharged = Number(r.total_price);
-    const totalConDeposito = subtotal + serviceFee + insuranceFee + securityDeposit;
-    const totalMostrar = totalCharged >= totalConDeposito - 1 ? totalCharged : totalConDeposito;
+    const totalMostrar = totalCharged >= totalWithDeposit - 1 ? totalCharged : totalWithDeposit;
     const dash = (val: any) => (val === null || val === undefined || val === "" ? "—" : String(val));
     const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
     const accepted = r.created_at;
