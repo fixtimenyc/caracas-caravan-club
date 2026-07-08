@@ -216,7 +216,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
             <RefreshCw className="h-4 w-4 mr-1" /> Cambiar cámara
           </Button>
           <div className="flex gap-2">
-            <Button type="button" size="lg" onClick={takeShot} disabled={starting}>
+            <Button type="button" size="lg" onClick={takeShot} disabled={starting || denied}>
               <Camera className="h-5 w-5 mr-2" /> Capturar
             </Button>
             <Button type="button" variant="default" size="lg" onClick={finish} disabled={saving}>
