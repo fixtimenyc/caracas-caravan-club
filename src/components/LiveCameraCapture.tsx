@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Loader2, RefreshCw, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -18,12 +17,14 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const nativeInputRef = useRef<HTMLInputElement>(null);
   const [starting, setStarting] = useState(false);
   const [shots, setShots] = useState<{ file: File; url: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [facing, setFacing] = useState<"environment" | "user">("environment");
 
   const [denied, setDenied] = useState(false);
+  const [nativeMode, setNativeMode] = useState(false);
   const startRequestRef = useRef(0);
 
   const stop = useCallback(() => {
@@ -36,6 +37,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
     startRequestRef.current = requestId;
     setStarting(true);
     setDenied(false);
+    setNativeMode(false);
     try {
       stop();
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -56,9 +58,8 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
       }
     } catch (e: unknown) {
       if (requestId !== startRequestRef.current) return;
-      const msg = e instanceof Error ? e.message : "permiso denegado";
-      toast.error("No se pudo acceder a la cámara: " + msg);
       setDenied(true);
+      setNativeMode(true);
     } finally {
       if (requestId === startRequestRef.current) setStarting(false);
     }
@@ -78,6 +79,10 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
   }, []);
 
   const takeShot = () => {
+    if (denied || nativeMode) {
+      nativeInputRef.current?.click();
+      return;
+    }
     setDenied(false);
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -97,6 +102,18 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
       "image/jpeg",
       0.9
     );
+  };
+
+  const addNativeShots = (files: FileList | null) => {
+    const selected = Array.from(files ?? []);
+    if (!selected.length) return;
+    stop();
+    setDenied(false);
+    setNativeMode(true);
+    selected.forEach((file) => {
+      const url = URL.createObjectURL(file);
+      setShots((s) => [...s, { file, url }]);
+    });
   };
 
   const removeShot = (idx: number) => {
@@ -129,6 +146,8 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
       stop();
       shots.forEach((s) => URL.revokeObjectURL(s.url));
       setShots([]);
+      setDenied(false);
+      setNativeMode(false);
       onClose();
     }
   };
@@ -150,28 +169,44 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
             playsInline
             muted
             autoPlay
-            className={`w-full max-h-[60vh] object-contain bg-black ${denied ? "hidden" : ""}`}
+            className={`w-full max-h-[60vh] object-contain bg-black ${denied || nativeMode ? "hidden" : ""}`}
           />
           {starting && !denied && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <Loader2 className="h-6 w-6 animate-spin text-white" />
             </div>
           )}
-          {denied && (
+          {(denied || nativeMode) && (
             <div className="p-6 bg-muted text-center space-y-3">
               <p className="text-sm text-foreground">
-                No se pudo acceder a la cámara en vivo.
+                {shots.length > 0
+                  ? "Foto tomada. Puedes tomar otra o finalizar."
+                  : "La cámara en vivo está bloqueada en este navegador."}
               </p>
               <p className="text-xs text-muted-foreground">
-                Consejo: si estás en el navegador, verifica los permisos de cámara en la barra de direcciones.
+                Usaremos la cámara del dispositivo para tomar fotos en vivo sin seleccionar archivos guardados.
               </p>
               <div className="flex gap-2 justify-center flex-wrap">
                 <Button type="button" variant="outline" size="sm" onClick={start}>
                   <RefreshCw className="h-4 w-4 mr-1" /> Reintentar
                 </Button>
+                <Button type="button" size="sm" onClick={() => nativeInputRef.current?.click()}>
+                  <Camera className="h-4 w-4 mr-1" /> Tomar foto
+                </Button>
               </div>
             </div>
           )}
+          <input
+            ref={nativeInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              addNativeShots(e.currentTarget.files);
+              e.currentTarget.value = "";
+            }}
+          />
           <canvas ref={canvasRef} className="hidden" />
         </div>
 
@@ -197,20 +232,22 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-2 p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setFacing((f) => (f === "environment" ? "user" : "environment"))}
+            disabled={nativeMode}
+            className="w-full sm:w-auto"
           >
             <RefreshCw className="h-4 w-4 mr-1" /> Cambiar cámara
           </Button>
-          <div className="flex gap-2">
-            <Button type="button" size="lg" onClick={takeShot} disabled={starting || denied}>
-              <Camera className="h-5 w-5 mr-2" /> Capturar
+          <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto">
+            <Button type="button" size="lg" onClick={takeShot} disabled={starting || saving} className="px-3">
+              <Camera className="h-5 w-5 mr-2" /> {nativeMode ? "Tomar foto" : "Capturar"}
             </Button>
-            <Button type="button" variant="default" size="lg" onClick={finish} disabled={saving}>
+            <Button type="button" variant="default" size="lg" onClick={finish} disabled={saving} className="px-3">
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
               Listo ({shots.length})
             </Button>
