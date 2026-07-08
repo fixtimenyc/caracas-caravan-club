@@ -10,28 +10,37 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
-const STORAGE_KEY = "ruedave_system_settings_v1";
+import { loadSystemSettings, computePriceBreakdown } from "@/lib/systemSettings";
 
 const loadContractSettings = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return {
-      version: parsed?.contract?.version ?? "1.0",
-      company_legal_name: parsed?.contract?.company_legal_name ?? "RUEDAVE C.A.",
-      company_rif: parsed?.contract?.company_rif ?? "J-XXXXXXXX-X",
-      company_address: parsed?.contract?.company_address ?? "Caracas, Venezuela",
-      jurisdiction:
-        parsed?.contract?.jurisdiction ??
-        "Tribunales de la República Bolivariana de Venezuela, con sede en Caracas",
-      website: parsed?.business?.website ?? "https://ruedave.com",
-      body: parsed?.contract?.body ?? "",
-      enabled: parsed?.contract?.enabled ?? true,
-    };
-  } catch {
-    return null;
-  }
+  const s = loadSystemSettings();
+  return {
+    version: s.contract.version,
+    company_legal_name: s.contract.company_legal_name,
+    company_rif: s.contract.company_rif,
+    company_address: s.contract.company_address,
+    jurisdiction: s.contract.jurisdiction,
+    website: s.business.website,
+    body: s.contract.body,
+    enabled: s.contract.enabled,
+  };
 };
+
+const DEFAULT_BODY = `CONTRATO DE ARRENDAMIENTO DE VEHÍCULO
+
+Entre {{empresa_razon_social}} (RIF {{empresa_rif}}), con domicilio en {{empresa_direccion}}, actuando como intermediario de la plataforma {{empresa_sitio}}, y el ARRENDATARIO {{arrendatario_nombre}}, C.I. {{arrendatario_cedula}}, con licencia de conducir N° {{arrendatario_licencia}} y domicilio en {{arrendatario_direccion}}, y el PROPIETARIO {{propietario_nombre}}, C.I. {{propietario_cedula}}, se celebra el presente contrato de arrendamiento del vehículo {{vehiculo_marca}} {{vehiculo_modelo}} {{vehiculo_anio}}, color {{vehiculo_color}}, placa {{vehiculo_placa}}, VIN {{vehiculo_vin}}.
+
+PERÍODO: Desde {{inicio}} hasta {{fin}} ({{dias}} día(s)).
+LUGAR DE ENTREGA: {{lugar_entrega}}.
+LUGAR DE DEVOLUCIÓN: {{lugar_devolucion}}.
+KM INICIAL: {{km_inicio}} — KM MÁX POR DÍA: {{km_max_dia}}.
+
+VALOR TOTAL: {{total}} {{moneda}}. Tarifa/día: {{tarifa_dia}}. Comisión plataforma: {{comision}}. Seguro: {{seguro}}. Depósito: {{deposito}}.
+MÉTODO DE PAGO: {{metodo_pago}} — REF: {{referencia_pago}} — FECHA: {{fecha_pago}}.
+
+JURISDICCIÓN: {{jurisdiccion}}.
+
+Contrato versión {{contrato_version}} — Aceptado el {{fecha_aceptacion}} desde {{ip_aceptacion}} / {{dispositivo}}.`;
 
 export default function AdminReservationContractPage() {
   const { id } = useParams<{ id: string }>();
@@ -94,18 +103,11 @@ export default function AdminReservationContractPage() {
   const rendered = useMemo(() => {
     if (!data || !settings) return "";
     const { r, v, renter, renterProfile, ownerProfile, payment, pickup } = data;
-    const days = Math.max(
-      1,
-      differenceInCalendarDays(parseISO(r.end_date), parseISO(r.start_date)),
-    );
-    const securityDeposit = Number((v?.house_rules as any)?.securityDeposit ?? 200);
-    const insuranceFee = days * 8;
-    const tarifaDia = Number(v?.price_per_day ?? 0);
-    const subtotal = tarifaDia * days;
-    const serviceFee = Math.round(subtotal * 0.1 * 100) / 100;
+    const sys = loadSystemSettings();
+    const bd = computePriceBreakdown(sys, v, r.start_date, r.end_date);
+    const { days, pricePerDay: tarifaDia, subtotal, commissionPct, commission: serviceFee, insurance: insuranceFee, deposit: securityDeposit, totalWithDeposit } = bd;
     const totalCharged = Number(r.total_price);
-    const totalConDeposito = subtotal + serviceFee + insuranceFee + securityDeposit;
-    const totalMostrar = totalCharged >= totalConDeposito - 1 ? totalCharged : totalConDeposito;
+    const totalMostrar = totalCharged >= totalWithDeposit - 1 ? totalCharged : totalWithDeposit;
     const dash = (val: any) => (val === null || val === undefined || val === "" ? "—" : String(val));
     const fmt = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
     const accepted = r.created_at;
@@ -132,7 +134,7 @@ export default function AdminReservationContractPage() {
       lugar_devolucion: v?.location ?? v?.zone ?? "—",
       tarifa_dia: fmt(tarifaDia),
       subtotal: fmt(subtotal),
-      comision: fmt(serviceFee),
+      comision: `${fmt(serviceFee)} (${commissionPct}%)`,
       seguro: fmt(insuranceFee),
       deposito: fmt(securityDeposit),
       total: fmt(totalMostrar),
@@ -153,7 +155,8 @@ export default function AdminReservationContractPage() {
       ip_aceptacion: "—",
       dispositivo: "—",
     };
-    return settings.body.replace(/\{\{(\w+)\}\}/g, (_, k) => map[k] ?? `{{${k}}}`);
+    const body = settings.body && settings.body.trim().length > 0 ? settings.body : DEFAULT_BODY;
+    return body.replace(/\{\{(\w+)\}\}/g, (_, k) => map[k] ?? `{{${k}}}`);
   }, [data, settings]);
 
   return (

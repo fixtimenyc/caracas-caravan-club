@@ -34,8 +34,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import PayoutMethodsTab from "@/components/admin/PayoutMethodsTab";
+import { loadSystemSettings, INSURANCE_PER_DAY } from "@/lib/systemSettings";
 
-const COMMISSION_RATE = 0.20;
+const getCommissionRate = () =>
+  Number(loadSystemSettings().policies.commission_pct ?? 20) / 100;
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--secondary))", "hsl(var(--muted))", "#f59e0b", "#10b981", "#6366f1", "#ec4899"];
 const fmt = (n: number) => `$${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const txId = (id: string) => `RV-TX-${id.slice(0, 6).toUpperCase()}`;
@@ -127,9 +129,10 @@ function DashboardTab({ loading, payments, reservations, vehicles, vMap, pMap }:
       const ingresos = monthRes.reduce((s: number, r: Reservation) => s + Number(r.total_price || 0), 0);
       const gastos = monthRes.reduce((s: number, r: Reservation) => {
         const days = Math.max(differenceInDays(new Date(r.end_date), new Date(r.start_date)), 1);
-        return s + days * 8; // insurance approx
+        return s + days * INSURANCE_PER_DAY; // insurance per day (config)
       }, 0);
-      const comision = ingresos * COMMISSION_RATE;
+      const commissionRate = getCommissionRate();
+      const comision = ingresos * commissionRate;
       return { mes: format(m, "MMM yy", { locale: es }), ingresos, gastos, comision, neto: ingresos - gastos };
     });
 
@@ -180,7 +183,7 @@ function DashboardTab({ loading, payments, reservations, vehicles, vMap, pMap }:
       const hasPaid = payments.some((p: Payment) => p.reservation_id === r.id && p.status === "completed");
       if (!hasPaid) {
         const owner = vMap[r.vehicle_id]?.owner_id;
-        if (owner) ownerPending[owner] = (ownerPending[owner] || 0) + Number(r.total_price || 0) * (1 - COMMISSION_RATE);
+        if (owner) ownerPending[owner] = (ownerPending[owner] || 0) + Number(r.total_price || 0) * (1 - getCommissionRate());
       }
     });
 
@@ -640,7 +643,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
       byOwner[v.owner_id].refunds += refunded;
     });
     return Object.values(byOwner).map((row: any) => {
-      const commission = row.gross * COMMISSION_RATE;
+      const commission = row.gross * getCommissionRate();
       const net = row.gross - commission - row.refunds;
       // status heuristic: if all reservations have a paid payment -> paid, else pending
       const owner = pMap[row.owner_id];
@@ -675,7 +678,8 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
   };
 
   const downloadProof = (r: any) => {
-    const txt = `RUEDAVE - COMPROBANTE DE PAYOUT\n\nDueño: ${r.owner_name}\nPeríodo: ${period}\nAlquileres: ${r.count}\nIngresos brutos: ${fmt(r.gross)}\nComisión RUEDAVE (20%): -${fmt(r.commission)}\nDevoluciones: -${fmt(r.refunds)}\nMonto neto: ${fmt(r.net)}\nFecha de pago: ${r.pay_date}\n`;
+    const pct = (getCommissionRate() * 100).toFixed(0);
+    const txt = `RUEDAVE - COMPROBANTE DE PAYOUT\n\nDueño: ${r.owner_name}\nPeríodo: ${period}\nAlquileres: ${r.count}\nIngresos brutos: ${fmt(r.gross)}\nComisión RUEDAVE (${pct}%): -${fmt(r.commission)}\nDevoluciones: -${fmt(r.refunds)}\nMonto neto: ${fmt(r.net)}\nFecha de pago: ${r.pay_date}\n`;
     const blob = new Blob([txt], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `payout-${r.owner_name}-${period}.txt`; a.click();
