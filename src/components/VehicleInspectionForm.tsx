@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Upload, X, ClipboardCheck, AlertTriangle, Camera } from "lucide-react";
+import { Loader2, X, ClipboardCheck, AlertTriangle, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import LiveCameraCapture from "@/components/LiveCameraCapture";
 import {
   INSPECTION_SECTIONS,
   FUEL_LEVELS,
@@ -21,6 +22,7 @@ import {
   summarizeChecklist,
   InspectionItemState,
 } from "@/lib/inspectionChecklist";
+
 
 interface Props {
   reservationId: string;
