@@ -354,18 +354,20 @@ export default function VehicleInspectionForm({
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               ) : (
                 <>
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Subir</span>
+                  <Camera className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Tomar foto</span>
                 </>
               )}
               <input
                 type="file"
                 accept="image/*"
+                capture="environment"
                 multiple
                 className="hidden"
                 onChange={(e) => handleUpload(e.target.files)}
               />
             </label>
+
           </div>
         </CardContent>
       </Card>
