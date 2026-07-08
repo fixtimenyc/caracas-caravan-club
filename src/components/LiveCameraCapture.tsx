@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Loader2, RefreshCw, X, Check } from "lucide-react";
+import { Camera, Loader2, RefreshCw, X, Check, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -23,6 +23,9 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
   const [saving, setSaving] = useState(false);
   const [facing, setFacing] = useState<"environment" | "user">("environment");
 
+  const [denied, setDenied] = useState(false);
+  const fallbackRef = useRef<HTMLInputElement>(null);
+
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -30,8 +33,12 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
 
   const start = useCallback(async () => {
     setStarting(true);
+    setDenied(false);
     try {
       stop();
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Cámara no disponible en este navegador");
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false,
@@ -42,12 +49,13 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
         await videoRef.current.play().catch(() => {});
       }
     } catch (e: any) {
-      toast.error("No se pudo acceder a la cámara: " + (e?.message ?? "permiso denegado"));
-      onClose();
+      const msg = e?.message ?? "permiso denegado";
+      toast.error("No se pudo acceder a la cámara: " + msg);
+      setDenied(true);
     } finally {
       setStarting(false);
     }
-  }, [facing, stop, onClose]);
+  }, [facing, stop]);
 
   useEffect(() => {
     if (open) start();
@@ -131,11 +139,46 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
             playsInline
             muted
             autoPlay
-            className="w-full max-h-[60vh] object-contain bg-black"
+            className={`w-full max-h-[60vh] object-contain bg-black ${denied ? "hidden" : ""}`}
           />
-          {starting && (
+          {starting && !denied && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <Loader2 className="h-6 w-6 animate-spin text-white" />
+            </div>
+          )}
+          {denied && (
+            <div className="p-6 bg-muted text-center space-y-3">
+              <p className="text-sm text-foreground">
+                No se pudo acceder a la cámara en vivo. Puedes usar la cámara del dispositivo como alternativa.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Consejo: si estás en el navegador, verifica los permisos de cámara en la barra de direcciones.
+              </p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Button type="button" variant="outline" size="sm" onClick={start}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> Reintentar
+                </Button>
+                <Button type="button" size="sm" onClick={() => fallbackRef.current?.click()}>
+                  <Upload className="h-4 w-4 mr-1" /> Usar cámara del dispositivo
+                </Button>
+              </div>
+              <input
+                ref={fallbackRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (!files) return;
+                  Array.from(files).forEach((file) => {
+                    const url = URL.createObjectURL(file);
+                    setShots((s) => [...s, { file, url }]);
+                  });
+                  e.target.value = "";
+                }}
+              />
             </div>
           )}
           <canvas ref={canvasRef} className="hidden" />
@@ -173,7 +216,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
             <RefreshCw className="h-4 w-4 mr-1" /> Cambiar cámara
           </Button>
           <div className="flex gap-2">
-            <Button type="button" size="lg" onClick={takeShot} disabled={starting}>
+            <Button type="button" size="lg" onClick={takeShot} disabled={starting || denied}>
               <Camera className="h-5 w-5 mr-2" /> Capturar
             </Button>
             <Button type="button" variant="default" size="lg" onClick={finish} disabled={saving}>
