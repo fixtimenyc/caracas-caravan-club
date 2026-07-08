@@ -81,14 +81,17 @@ export default function VehicleInspectionForm({
     setChecklist((c) => ({ ...c, [key]: value }));
 
   const handleUpload = async (files: FileList | File[] | null) => {
-    if (!files || (files as any).length === 0) return;
+    const selected = Array.from(files ?? []);
+    if (selected.length === 0) return;
 
     setUploading(true);
     try {
       const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
+      let lastError: string | null = null;
+      for (const file of selected) {
         if (file.size > 8 * 1024 * 1024) {
-          toast.error(`${file.name} supera 8MB`);
+          lastError = `${file.name} supera 8MB`;
+          toast.error(lastError);
           continue;
         }
         const ext = file.name.split(".").pop() || "jpg";
@@ -97,7 +100,8 @@ export default function VehicleInspectionForm({
           .from("inspection-photos")
           .upload(path, file, { upsert: false });
         if (error) {
-          toast.error(`Error: ${error.message}`);
+          lastError = `Error: ${error.message}`;
+          toast.error(lastError);
           continue;
         }
         uploaded.push(path);
@@ -113,6 +117,7 @@ export default function VehicleInspectionForm({
         setPhotoUrls((prev) => ({ ...prev, ...urlMap }));
       }
       setPhotos((p) => [...p, ...uploaded]);
+      if (!uploaded.length && lastError) throw new Error(lastError);
     } finally {
       setUploading(false);
     }
