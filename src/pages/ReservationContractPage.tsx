@@ -11,27 +11,20 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-const STORAGE_KEY = "ruedave_system_settings_v1";
+import { loadSystemSettings, computePriceBreakdown } from "@/lib/systemSettings";
 
 const loadContractSettings = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return {
-      version: parsed?.contract?.version ?? "1.0",
-      company_legal_name: parsed?.contract?.company_legal_name ?? "RUEDAVE C.A.",
-      company_rif: parsed?.contract?.company_rif ?? "J-XXXXXXXX-X",
-      company_address: parsed?.contract?.company_address ?? "Caracas, Venezuela",
-      jurisdiction:
-        parsed?.contract?.jurisdiction ??
-        "Tribunales de la República Bolivariana de Venezuela, con sede en Caracas",
-      website: parsed?.business?.website ?? "https://ruedave.com",
-      body: parsed?.contract?.body ?? "",
-      enabled: parsed?.contract?.enabled ?? true,
-    };
-  } catch {
-    return null;
-  }
+  const s = loadSystemSettings();
+  return {
+    version: s.contract.version,
+    company_legal_name: s.contract.company_legal_name,
+    company_rif: s.contract.company_rif,
+    company_address: s.contract.company_address,
+    jurisdiction: s.contract.jurisdiction,
+    website: s.business.website,
+    body: s.contract.body,
+    enabled: s.contract.enabled,
+  };
 };
 
 const DEFAULT_BODY = `CONTRATO DE ARRENDAMIENTO DE VEHÍCULO
