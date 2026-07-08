@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, DollarSign, Clock, AlertCircle, CheckCircle2, Loader2, ImageIcon } from "lucide-react";
+import { Upload, DollarSign, Clock, AlertCircle, CheckCircle2, Loader2, ImageIcon, Copy, Smartphone, Building2, Mail, Banknote, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { es } from "date-fns/locale";
