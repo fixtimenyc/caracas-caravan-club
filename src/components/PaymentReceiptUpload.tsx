@@ -18,6 +18,13 @@ type Props = {
   paymentDeadline?: string | null;
 };
 
+const METHOD_LABELS: Record<string, string> = {
+  pago_movil: "Pago Móvil",
+  transferencia: "Transferencia bancaria",
+  zelle: "Zelle (USD)",
+  efectivo: "Efectivo",
+};
+
 export default function PaymentReceiptUpload({ reservationId, totalPrice, paymentDeadline }: Props) {
   const [loading, setLoading] = useState(true);
   const [payment, setPayment] = useState<any>(null);
