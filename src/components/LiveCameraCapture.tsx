@@ -139,11 +139,46 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
             playsInline
             muted
             autoPlay
-            className="w-full max-h-[60vh] object-contain bg-black"
+            className={`w-full max-h-[60vh] object-contain bg-black ${denied ? "hidden" : ""}`}
           />
-          {starting && (
+          {starting && !denied && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <Loader2 className="h-6 w-6 animate-spin text-white" />
+            </div>
+          )}
+          {denied && (
+            <div className="p-6 bg-muted text-center space-y-3">
+              <p className="text-sm text-foreground">
+                No se pudo acceder a la cámara en vivo. Puedes usar la cámara del dispositivo como alternativa.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Consejo: si estás en el navegador, verifica los permisos de cámara en la barra de direcciones.
+              </p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Button type="button" variant="outline" size="sm" onClick={start}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> Reintentar
+                </Button>
+                <Button type="button" size="sm" onClick={() => fallbackRef.current?.click()}>
+                  <Upload className="h-4 w-4 mr-1" /> Usar cámara del dispositivo
+                </Button>
+              </div>
+              <input
+                ref={fallbackRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (!files) return;
+                  Array.from(files).forEach((file) => {
+                    const url = URL.createObjectURL(file);
+                    setShots((s) => [...s, { file, url }]);
+                  });
+                  e.target.value = "";
+                }}
+              />
             </div>
           )}
           <canvas ref={canvasRef} className="hidden" />
