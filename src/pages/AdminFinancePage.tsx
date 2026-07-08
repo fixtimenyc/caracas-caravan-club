@@ -129,7 +129,7 @@ function DashboardTab({ loading, payments, reservations, vehicles, vMap, pMap }:
       const ingresos = monthRes.reduce((s: number, r: Reservation) => s + Number(r.total_price || 0), 0);
       const gastos = monthRes.reduce((s: number, r: Reservation) => {
         const days = Math.max(differenceInDays(new Date(r.end_date), new Date(r.start_date)), 1);
-        return s + days * 8; // insurance approx
+        return s + days * INSURANCE_PER_DAY; // insurance per day (config)
       }, 0);
       const commissionRate = getCommissionRate();
       const comision = ingresos * commissionRate;
