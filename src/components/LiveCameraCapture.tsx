@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Loader2, RefreshCw, X, Check, Upload } from "lucide-react";
+import { Camera, Loader2, RefreshCw, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface Props {
@@ -24,7 +24,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
   const [facing, setFacing] = useState<"environment" | "user">("environment");
 
   const [denied, setDenied] = useState(false);
-  const fallbackRef = useRef<HTMLInputElement>(null);
+  const startRequestRef = useRef(0);
 
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -32,6 +32,8 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
   }, []);
 
   const start = useCallback(async () => {
+    const requestId = startRequestRef.current + 1;
+    startRequestRef.current = requestId;
     setStarting(true);
     setDenied(false);
     try {
@@ -43,17 +45,22 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
         video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false,
       });
+      if (requestId !== startRequestRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => {});
       }
     } catch (e: any) {
+      if (requestId !== startRequestRef.current) return;
       const msg = e?.message ?? "permiso denegado";
       toast.error("No se pudo acceder a la cámara: " + msg);
       setDenied(true);
     } finally {
-      setStarting(false);
+      if (requestId === startRequestRef.current) setStarting(false);
     }
   }, [facing, stop]);
 
@@ -71,6 +78,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
   }, []);
 
   const takeShot = () => {
+    setDenied(false);
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || !video.videoWidth) return;
@@ -132,6 +140,9 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
           <DialogTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5" /> Tomar fotos en vivo
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Cámara en vivo para capturar varias fotos del vehículo sin salir de la página.
+          </DialogDescription>
         </DialogHeader>
         <div className="relative bg-black">
           <video
@@ -149,7 +160,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
           {denied && (
             <div className="p-6 bg-muted text-center space-y-3">
               <p className="text-sm text-foreground">
-                No se pudo acceder a la cámara en vivo. Puedes usar la cámara del dispositivo como alternativa.
+                No se pudo acceder a la cámara en vivo.
               </p>
               <p className="text-xs text-muted-foreground">
                 Consejo: si estás en el navegador, verifica los permisos de cámara en la barra de direcciones.
@@ -158,27 +169,7 @@ export default function LiveCameraCapture({ open, onClose, onCapture }: Props) {
                 <Button type="button" variant="outline" size="sm" onClick={start}>
                   <RefreshCw className="h-4 w-4 mr-1" /> Reintentar
                 </Button>
-                <Button type="button" size="sm" onClick={() => fallbackRef.current?.click()}>
-                  <Upload className="h-4 w-4 mr-1" /> Usar cámara del dispositivo
-                </Button>
               </div>
-              <input
-                ref={fallbackRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const files = e.target.files;
-                  if (!files) return;
-                  Array.from(files).forEach((file) => {
-                    const url = URL.createObjectURL(file);
-                    setShots((s) => [...s, { file, url }]);
-                  });
-                  e.target.value = "";
-                }}
-              />
             </div>
           )}
           <canvas ref={canvasRef} className="hidden" />
