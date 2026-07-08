@@ -170,13 +170,13 @@ export default function VehicleInspectionForm({
     setSubmitting(false);
     if (error) return toast.error(error.message);
 
-    // Sync mileage on the reservation, and activate on renter pickup
+    // Sync mileage on the reservation, activate on renter pickup, complete on owner return
     await supabase
       .from("reservations")
       .update(
         type === "pickup"
           ? { start_mileage: Number(mileage), status: "active" }
-          : { end_mileage: Number(mileage) }
+          : { end_mileage: Number(mileage), status: "completed" }
       )
       .eq("id", reservationId);
 
