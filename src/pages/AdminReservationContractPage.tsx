@@ -155,7 +155,8 @@ export default function AdminReservationContractPage() {
       ip_aceptacion: "—",
       dispositivo: "—",
     };
-    return settings.body.replace(/\{\{(\w+)\}\}/g, (_, k) => map[k] ?? `{{${k}}}`);
+    const body = settings.body && settings.body.trim().length > 0 ? settings.body : DEFAULT_BODY;
+    return body.replace(/\{\{(\w+)\}\}/g, (_, k) => map[k] ?? `{{${k}}}`);
   }, [data, settings]);
 
   return (
