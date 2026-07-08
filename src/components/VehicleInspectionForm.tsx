@@ -389,6 +389,22 @@ export default function VehicleInspectionForm({
                 </>
               )}
             </button>
+            <label
+              className="aspect-square rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-muted transition"
+            >
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground text-center px-1">Subir del dispositivo</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  void handleUpload(e.currentTarget.files);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
           </div>
           <LiveCameraCapture
             open={cameraOpen}
