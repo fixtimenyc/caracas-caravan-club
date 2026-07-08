@@ -643,7 +643,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
       byOwner[v.owner_id].refunds += refunded;
     });
     return Object.values(byOwner).map((row: any) => {
-      const commission = row.gross * COMMISSION_RATE;
+      const commission = row.gross * getCommissionRate();
       const net = row.gross - commission - row.refunds;
       // status heuristic: if all reservations have a paid payment -> paid, else pending
       const owner = pMap[row.owner_id];
