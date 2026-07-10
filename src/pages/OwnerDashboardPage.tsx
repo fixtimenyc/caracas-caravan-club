@@ -462,7 +462,7 @@ const OwnerDashboardPage = () => {
               Panel del anfitrión
             </h1>
             <p className="text-muted-foreground mt-1">
-              Administra tus vehículos, reservas e ingresos
+              Administra tus vehículos
             </p>
           </div>
           <Button
