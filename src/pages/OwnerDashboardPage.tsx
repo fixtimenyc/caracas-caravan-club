@@ -474,24 +474,6 @@ const OwnerDashboardPage = () => {
           </Button>
         </div>
 
-        {/* Earnings moved to /mis-ganancias */}
-        <Card className="p-5 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-foreground">Ingresos y ganancias</p>
-              <p className="text-sm text-muted-foreground">
-                Consulta el detalle de tus ingresos, comisiones y pagos en Mis ganancias.
-              </p>
-            </div>
-          </div>
-          <Button variant="outline" onClick={() => navigate("/mis-ganancias")} className="gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Ver mis ganancias
-          </Button>
-        </Card>
 
 
         {/* Pending applications */}
