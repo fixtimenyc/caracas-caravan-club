@@ -21,6 +21,7 @@ import AdminUserDetailPage from "./pages/AdminUserDetailPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
 import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import EditVehiclePage from "./pages/EditVehiclePage";
+import NewVehiclePage from "./pages/NewVehiclePage";
 import RenterVerificationPage from "./pages/RenterVerificationPage";
 import ProfilePage from "./pages/ProfilePage";
 import HelpPage from "./pages/HelpPage";
