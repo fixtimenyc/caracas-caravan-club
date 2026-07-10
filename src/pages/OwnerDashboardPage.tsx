@@ -172,21 +172,8 @@ const OwnerDashboardPage = () => {
     load();
   }, [user]);
 
-  const earnings = useMemo(() => {
-    const completed = reservations.filter((r) => r.status === "completed");
-    const approved = reservations.filter((r) => r.status === "approved");
-    const total = completed.reduce((s, r) => s + Number(r.total_price), 0);
-    const pending = approved.reduce((s, r) => s + Number(r.total_price), 0);
-    const ownerNet = total * 0.7; // 30% commission
-    const now = new Date();
-    const monthEarnings = completed
-      .filter((r) => {
-        const d = new Date(r.end_date);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      })
-      .reduce((s, r) => s + Number(r.total_price) * 0.7, 0);
-    return { total, pending, ownerNet, monthEarnings };
-  }, [reservations]);
+
+
 
   const upcomingByVehicle = (vehicleId: string) =>
     reservations.filter(
@@ -487,66 +474,25 @@ const OwnerDashboardPage = () => {
           </Button>
         </div>
 
-        {/* Earnings Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Ingresos netos</span>
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-primary" />
-              </div>
+        {/* Earnings moved to /mis-ganancias */}
+        <Card className="p-5 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-2xl font-bold text-foreground">
-              ${earnings.ownerNet.toFixed(2)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Después de comisión 30%
-            </p>
-          </Card>
+            <div>
+              <p className="font-semibold text-foreground">Ingresos y ganancias</p>
+              <p className="text-sm text-muted-foreground">
+                Consulta el detalle de tus ingresos, comisiones y pagos en Mis ganancias.
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/mis-ganancias")} className="gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Ver mis ganancias
+          </Button>
+        </Card>
 
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Este mes</span>
-              <div className="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-accent" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              ${earnings.monthEarnings.toFixed(2)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Ingresos del mes
-            </p>
-          </Card>
-
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Pendiente</span>
-              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                <Clock className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              ${(earnings.pending * 0.7).toFixed(2)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Reservas aprobadas sin completar
-            </p>
-          </Card>
-
-          <Card className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Vehículos</span>
-              <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
-                <Car className="w-4 h-4 text-secondary-foreground" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{vehicles.length}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {vehicles.filter((v) => v.active && v.available).length} activos
-            </p>
-          </Card>
-        </div>
 
         {/* Pending applications */}
         {pendingApps.length > 0 && (
