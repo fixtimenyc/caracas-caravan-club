@@ -466,7 +466,7 @@ const OwnerDashboardPage = () => {
             </p>
           </div>
           <Button
-            onClick={() => navigate("/aliado/solicitud")}
+            onClick={() => navigate("/my-vehicles/nuevo")}
             className="gap-2"
           >
             <Plus className="w-4 h-4" />

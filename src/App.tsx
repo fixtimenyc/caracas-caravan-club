@@ -21,6 +21,7 @@ import AdminUserDetailPage from "./pages/AdminUserDetailPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
 import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import EditVehiclePage from "./pages/EditVehiclePage";
+import NewVehiclePage from "./pages/NewVehiclePage";
 import RenterVerificationPage from "./pages/RenterVerificationPage";
 import ProfilePage from "./pages/ProfilePage";
 import HelpPage from "./pages/HelpPage";
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/admin/usuarios/:userId" element={<AdminUserDetailPage />} />
             <Route path="/vehiculo/:id" element={<VehicleDetailPage />} />
             <Route path="/my-vehicles" element={<OwnerDashboardPage />} />
+            <Route path="/my-vehicles/nuevo" element={<NewVehiclePage />} />
             <Route path="/my-vehicles/:id/editar" element={<EditVehiclePage />} />
             <Route path="/arrendatario/verificacion" element={<RenterVerificationPage />} />
             <Route path="/profile" element={<ProfilePage />} />
