@@ -172,21 +172,8 @@ const OwnerDashboardPage = () => {
     load();
   }, [user]);
 
-  const earnings = useMemo(() => {
-    const completed = reservations.filter((r) => r.status === "completed");
-    const approved = reservations.filter((r) => r.status === "approved");
-    const total = completed.reduce((s, r) => s + Number(r.total_price), 0);
-    const pending = approved.reduce((s, r) => s + Number(r.total_price), 0);
-    const ownerNet = total * 0.7; // 30% commission
-    const now = new Date();
-    const monthEarnings = completed
-      .filter((r) => {
-        const d = new Date(r.end_date);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      })
-      .reduce((s, r) => s + Number(r.total_price) * 0.7, 0);
-    return { total, pending, ownerNet, monthEarnings };
-  }, [reservations]);
+
+
 
   const upcomingByVehicle = (vehicleId: string) =>
     reservations.filter(
