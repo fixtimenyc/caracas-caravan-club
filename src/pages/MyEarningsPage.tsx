@@ -151,20 +151,27 @@ const MyEarningsPage = () => {
   }, [enriched]);
 
   const exportCsv = () => {
-    const rows = enriched.map((x) => ({
-      reserva: x.r.id.slice(0, 8),
-      vehiculo: `${vMap[x.r.vehicle_id]?.brand ?? ""} ${vMap[x.r.vehicle_id]?.model ?? ""}`.trim(),
-      arrendatario: pMap[x.r.renter_id]?.full_name ?? "—",
-      inicio: x.r.start_date,
-      fin: x.r.end_date,
-      dias: x.days,
-      total_cobrado: x.total.toFixed(2),
-      comision: x.commission.toFixed(2),
-      seguro: x.insurance.toFixed(2),
-      neto_dueno: x.ownerNet.toFixed(2),
-      estado: x.r.status,
-      pagado: paidResIds.has(x.r.id) ? "sí" : "no",
-    }));
+    const header = [
+      "reserva", "vehiculo", "arrendatario", "inicio", "fin", "dias",
+      "total_cobrado", "comision", "seguro", "neto_dueno", "estado", "pagado",
+    ];
+    const rows: unknown[][] = [
+      header,
+      ...enriched.map((x) => [
+        x.r.id.slice(0, 8),
+        `${vMap[x.r.vehicle_id]?.brand ?? ""} ${vMap[x.r.vehicle_id]?.model ?? ""}`.trim(),
+        pMap[x.r.renter_id]?.full_name ?? "—",
+        x.r.start_date,
+        x.r.end_date,
+        x.days,
+        x.total.toFixed(2),
+        x.commission.toFixed(2),
+        x.insurance.toFixed(2),
+        x.ownerNet.toFixed(2),
+        x.r.status,
+        paidResIds.has(x.r.id) ? "sí" : "no",
+      ]),
+    ];
     const blob = new Blob([toCSV(rows)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
