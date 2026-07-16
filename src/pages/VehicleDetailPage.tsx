@@ -306,7 +306,7 @@ const VehicleDetailPage = () => {
         description: "El anfitrión tiene 24 horas para responder",
       });
       setConfirmOpen(false);
-      navigate("/my-vehicles");
+      navigate("/mis-reservas");
     } catch (e: any) {
       toast.error("No se pudo crear la reserva", { description: e.message });
     } finally {
