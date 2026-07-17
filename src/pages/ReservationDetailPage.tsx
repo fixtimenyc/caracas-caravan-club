@@ -19,6 +19,7 @@ import { getOrCreateConversation } from "@/lib/conversations";
 import PaymentReceiptUpload from "@/components/PaymentReceiptUpload";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { loadSystemSettings, computeRenterCharges, computeOwnerBreakdown } from "@/lib/systemSettings";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
