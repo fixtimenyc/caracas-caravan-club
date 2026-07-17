@@ -430,6 +430,57 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_payouts: {
+        Row: {
+          commission: number
+          created_at: string
+          gross: number
+          id: string
+          net: number
+          notes: string | null
+          owner_id: string
+          paid_at: string | null
+          paid_by: string | null
+          period: string
+          proof_url: string | null
+          refunds: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          commission?: number
+          created_at?: string
+          gross?: number
+          id?: string
+          net?: number
+          notes?: string | null
+          owner_id: string
+          paid_at?: string | null
+          paid_by?: string | null
+          period: string
+          proof_url?: string | null
+          refunds?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          commission?: number
+          created_at?: string
+          gross?: number
+          id?: string
+          net?: number
+          notes?: string | null
+          owner_id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          period?: string
+          proof_url?: string | null
+          refunds?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number

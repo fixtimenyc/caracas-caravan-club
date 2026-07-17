@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import {
   DollarSign, TrendingUp, AlertTriangle, Download, Bell, RefreshCw,
-  CheckCircle2, Clock, XCircle, Search, FileText, MessageSquare, Send,
+  CheckCircle2, Clock, XCircle, Search, FileText, MessageSquare, Send, Upload, ImageIcon,
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -612,6 +612,29 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
   const [minAmt, setMinAmt] = useState("");
   const [maxAmt, setMaxAmt] = useState("");
   const [contactOwner, setContactOwner] = useState<string | null>(null);
+  const [proofPayout, setProofPayout] = useState<any | null>(null);
+  const [savedPayouts, setSavedPayouts] = useState<any[]>([]);
+  const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
+
+  const loadSaved = async () => {
+    const { data } = await supabase.from("owner_payouts").select("*").eq("period", period);
+    setSavedPayouts(data || []);
+    // sign proof URLs
+    const map: Record<string, string> = {};
+    await Promise.all(
+      (data || [])
+        .filter((p: any) => p.proof_url)
+        .map(async (p: any) => {
+          const { data: signed } = await supabase.storage
+            .from("payout-proofs")
+            .createSignedUrl(p.proof_url, 60 * 60);
+          if (signed?.signedUrl) map[p.id] = signed.signedUrl;
+        })
+    );
+    setProofUrls(map);
+  };
+
+  useEffect(() => { loadSaved(); }, [period]);
 
   const periodOptions = useMemo(() => {
     return Array.from({ length: 6 }, (_, i) => {
@@ -619,6 +642,11 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
       return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy", { locale: es }) };
     });
   }, []);
+
+  const savedByOwner = useMemo(
+    () => Object.fromEntries(savedPayouts.map((p) => [p.owner_id, p])),
+    [savedPayouts]
+  );
 
   const payouts = useMemo(() => {
     const [y, m] = period.split("-").map(Number);
@@ -637,7 +665,6 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
       }
       byOwner[v.owner_id].count++;
       byOwner[v.owner_id].gross += Number(r.total_price || 0);
-      // refunds = payments refunded for this reservation
       const refunded = payments.filter((p: Payment) => p.reservation_id === r.id && p.status === "refunded")
         .reduce((s: number, p: Payment) => s + Number(p.amount), 0);
       byOwner[v.owner_id].refunds += refunded;
@@ -645,15 +672,17 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
     return Object.values(byOwner).map((row: any) => {
       const commission = row.gross * getCommissionRate();
       const net = row.gross - commission - row.refunds;
-      // status heuristic: if all reservations have a paid payment -> paid, else pending
       const owner = pMap[row.owner_id];
-      // simple status
-      const status = net <= 0 ? "pending" : (row.count >= 1 ? "pending" : "pending");
+      const saved = savedByOwner[row.owner_id];
+      const status = saved?.status || "pending";
       return {
         ...row, commission, net, status,
+        saved,
         owner_name: owner?.full_name || "—",
         owner_phone: owner?.phone || "",
-        pay_date: format(new Date(y, m, 5), "dd/MM/yyyy"),
+        pay_date: saved?.paid_at
+          ? format(new Date(saved.paid_at), "dd/MM/yyyy")
+          : format(new Date(y, m, 5), "dd/MM/yyyy"),
       };
     }).filter((row: any) => {
       if (statusF !== "all" && row.status !== statusF) return false;
@@ -661,7 +690,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
       if (maxAmt && row.net > Number(maxAmt)) return false;
       return true;
     }).sort((a: any, b: any) => b.net - a.net);
-  }, [period, reservations, payments, vMap, pMap, statusF, minAmt, maxAmt]);
+  }, [period, reservations, payments, vMap, pMap, statusF, minAmt, maxAmt, savedByOwner]);
 
   const totalNet = payouts.reduce((s: number, r: any) => s + r.net, 0);
 
@@ -701,8 +730,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
               <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="completed">Pagado</SelectItem>
-                <SelectItem value="processing">En proceso</SelectItem>
+                <SelectItem value="paid">Pagado</SelectItem>
                 <SelectItem value="pending">Pendiente</SelectItem>
               </SelectContent>
             </Select>
@@ -733,40 +761,56 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
                   <TableHead className="text-right">Neto</TableHead>
                   <TableHead>Método</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Comprobante</TableHead>
                   <TableHead>Fecha pago</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {payouts.length === 0 && (
-                  <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-8">Sin payouts en este período</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground py-8">Sin payouts en este período</TableCell></TableRow>
                 )}
-                {payouts.map((r: any) => (
-                  <TableRow key={r.owner_id}>
-                    <TableCell>
-                      <Link to={`/admin/usuarios/${r.owner_id}`} className="text-primary hover:underline text-sm font-medium">{r.owner_name}</Link>
-                    </TableCell>
-                    <TableCell className="text-xs">{period}</TableCell>
-                    <TableCell className="text-right">{r.count}</TableCell>
-                    <TableCell className="text-right">{fmt(r.gross)}</TableCell>
-                    <TableCell className="text-right text-destructive">-{fmt(r.commission)}</TableCell>
-                    <TableCell className="text-right text-destructive">-{fmt(r.refunds)}</TableCell>
-                    <TableCell className="text-right font-semibold">{fmt(r.net)}</TableCell>
-                    <TableCell><Badge variant="outline" className="text-xs">Transferencia</Badge></TableCell>
-                    <TableCell><PayoutStatusBadge status={r.status} /></TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{r.pay_date}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button size="sm" variant="ghost" title="Comprobante" onClick={() => downloadProof(r)}>
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" title="Contactar" onClick={() => setContactOwner(r.owner_id)}>
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {payouts.map((r: any) => {
+                  const proofUrl = r.saved?.id ? proofUrls[r.saved.id] : null;
+                  return (
+                    <TableRow key={r.owner_id}>
+                      <TableCell>
+                        <Link to={`/admin/usuarios/${r.owner_id}`} className="text-primary hover:underline text-sm font-medium">{r.owner_name}</Link>
+                      </TableCell>
+                      <TableCell className="text-xs">{period}</TableCell>
+                      <TableCell className="text-right">{r.count}</TableCell>
+                      <TableCell className="text-right">{fmt(r.gross)}</TableCell>
+                      <TableCell className="text-right text-destructive">-{fmt(r.commission)}</TableCell>
+                      <TableCell className="text-right text-destructive">-{fmt(r.refunds)}</TableCell>
+                      <TableCell className="text-right font-semibold">{fmt(r.net)}</TableCell>
+                      <TableCell><Badge variant="outline" className="text-xs">Transferencia</Badge></TableCell>
+                      <TableCell><PayoutStatusBadge status={r.status} /></TableCell>
+                      <TableCell>
+                        {proofUrl ? (
+                          <a href={proofUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                            <ImageIcon className="h-3 w-3" /> Ver
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{r.pay_date}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button size="sm" variant={r.status === "paid" ? "ghost" : "default"} title={r.status === "paid" ? "Actualizar comprobante" : "Enviar comprobante y marcar pagado"} onClick={() => setProofPayout(r)}>
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" title="Recibo" onClick={() => downloadProof(r)}>
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" title="Contactar" onClick={() => setContactOwner(r.owner_id)}>
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -774,9 +818,117 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
       </Card>
 
       <ContactOwnerDialog ownerId={contactOwner} onClose={() => setContactOwner(null)} pMap={pMap} />
+      <SendProofDialog
+        payout={proofPayout}
+        period={period}
+        onClose={() => setProofPayout(null)}
+        onSaved={() => { setProofPayout(null); loadSaved(); }}
+      />
     </div>
   );
 }
+
+function SendProofDialog({ payout, period, onClose, onSaved }: { payout: any | null; period: string; onClose: () => void; onSaved: () => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (payout) { setFile(null); setNotes(payout.saved?.notes || ""); }
+  }, [payout]);
+
+  const submit = async () => {
+    if (!payout) return;
+    setBusy(true);
+    try {
+      let proofPath: string | null = payout.saved?.proof_url ?? null;
+      if (file) {
+        const ext = file.name.split(".").pop() || "bin";
+        proofPath = `${payout.owner_id}/${period}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("payout-proofs")
+          .upload(proofPath, file, { upsert: true, contentType: file.type });
+        if (upErr) throw upErr;
+      }
+      if (!proofPath) {
+        toast({ title: "Adjunta el comprobante", variant: "destructive" });
+        setBusy(false);
+        return;
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      const payload = {
+        owner_id: payout.owner_id,
+        period,
+        gross: payout.gross,
+        commission: payout.commission,
+        refunds: payout.refunds,
+        net: payout.net,
+        status: "paid",
+        proof_url: proofPath,
+        paid_at: new Date().toISOString(),
+        paid_by: userData.user?.id ?? null,
+        notes: notes || null,
+      };
+      const { error: upsertErr } = await supabase
+        .from("owner_payouts")
+        .upsert(payload, { onConflict: "owner_id,period" });
+      if (upsertErr) throw upsertErr;
+
+      // Notify owner
+      await supabase.from("notifications").insert({
+        user_id: payout.owner_id,
+        type: "payout_paid",
+        title: `Payout ${period} realizado`,
+        message: `Se realizó el pago de ${fmt(payout.net)} correspondiente al período ${period}. Revisa el comprobante en tu panel.`,
+      });
+
+      toast({ title: "Comprobante enviado", description: "El payout quedó marcado como pagado." });
+      onSaved();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={!!payout} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Enviar comprobante de transferencia</DialogTitle>
+          <DialogDescription>
+            {payout ? `${payout.owner_name} · ${period} · Neto ${fmt(payout.net)}` : ""}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Comprobante (imagen o PDF)</Label>
+            <Input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+            {payout?.saved?.proof_url && !file && (
+              <p className="text-xs text-muted-foreground mt-1">Ya hay un comprobante cargado; sube uno nuevo para reemplazarlo.</p>
+            )}
+          </div>
+          <div>
+            <Label>Notas (opcional)</Label>
+            <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ref. de la transferencia, banco, etc." />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>Cancelar</Button>
+          <Button onClick={submit} disabled={busy}>
+            {busy ? "Enviando..." : (<><CheckCircle2 className="h-4 w-4 mr-2" />Marcar pagado</>)}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function PayoutStatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
