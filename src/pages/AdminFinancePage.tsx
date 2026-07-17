@@ -653,7 +653,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
         ...row, commission, net, status,
         owner_name: owner?.full_name || "—",
         owner_phone: owner?.phone || "",
-        pay_date: format(addMonths(start, 1).setDate(5) as any, "dd/MM/yyyy"),
+        pay_date: format(new Date(y, m, 5), "dd/MM/yyyy"),
       };
     }).filter((row: any) => {
       if (statusF !== "all" && row.status !== statusF) return false;
