@@ -118,6 +118,8 @@ const DEFAULTS: Settings = {
   },
   policies: {
     commission_pct: 20,
+    renter_commission: { mode: "pct", value: 20 },
+    owner_commission: { mode: "pct", value: 15 },
     cancel_lt_24h_refund: 0, cancel_24_48h_refund: 50, cancel_gt_48h_refund: 100,
     security_deposits: { economy: 100, sedan: 150, suv: 250, pickup: 250, luxury: 500, sports: 600, van: 300 },
     deposit_pct_of_value: 5,
