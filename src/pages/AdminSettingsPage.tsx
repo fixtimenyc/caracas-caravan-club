@@ -497,7 +497,6 @@ export default function AdminSettingsPage() {
           <Card>
             <CardHeader><CardTitle>Políticas y reglas</CardTitle><CardDescription>Comisión, cancelación y verificación.</CardDescription></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <NumField label="Comisión RUEDAVE (%)" value={settings.policies.commission_pct} onChange={(v) => save({ ...settings, policies: { ...settings.policies, commission_pct: v } })} />
               
               <div className="md:col-span-2 grid md:grid-cols-2 gap-4 border rounded-md p-4 bg-muted/20">
                 <div className="md:col-span-2 mb-1">
