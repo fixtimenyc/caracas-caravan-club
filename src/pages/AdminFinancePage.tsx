@@ -805,7 +805,10 @@ function ContactOwnerDialog({ ownerId, onClose, pMap }: { ownerId: string | null
   return (
     <Dialog open={!!ownerId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Contactar a {owner?.full_name || "dueño"}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Contactar a {owner?.full_name || "dueño"}</DialogTitle>
+          <DialogDescription>Envía un mensaje interno al aliado sobre el payout.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-3">
           <Label>Mensaje</Label>
           <Textarea rows={4} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Escribe un mensaje sobre el payout..." />
