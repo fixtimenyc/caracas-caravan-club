@@ -692,7 +692,8 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
     }).sort((a: any, b: any) => b.net - a.net);
   }, [period, reservations, payments, vMap, pMap, statusF, minAmt, maxAmt, savedByOwner]);
 
-  const totalNet = payouts.reduce((s: number, r: any) => s + r.net, 0);
+  const totalNet = payouts.reduce((s: number, r: any) => s + (r.status === "paid" ? 0 : r.net), 0);
+  const totalPaid = payouts.reduce((s: number, r: any) => s + (r.status === "paid" ? r.net : 0), 0);
 
   const downloadReport = () => {
     const rows = [
@@ -737,7 +738,8 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
             <Input type="number" placeholder="Min $" className="w-[100px]" value={minAmt} onChange={(e) => setMinAmt(e.target.value)} />
             <Input type="number" placeholder="Max $" className="w-[100px]" value={maxAmt} onChange={(e) => setMaxAmt(e.target.value)} />
             <div className="ml-auto flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">Total a pagar: <span className="font-bold text-foreground">{fmt(totalNet)}</span></span>
+              <span className="text-sm text-muted-foreground">Pagado: <span className="font-semibold text-emerald-700">{fmt(totalPaid)}</span></span>
+              <span className="text-sm text-muted-foreground">Pendiente: <span className="font-bold text-foreground">{fmt(totalNet)}</span></span>
               <Button variant="outline" size="sm" onClick={downloadReport}>
                 <FileText className="h-4 w-4 mr-2" /> Reporte contable
               </Button>
