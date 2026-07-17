@@ -250,6 +250,14 @@ const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
     policies: {
       ...DEFAULTS.policies,
       ...policies,
+      renter_commission: {
+        ...DEFAULTS.policies.renter_commission,
+        ...((policies as any).renter_commission ?? {}),
+      },
+      owner_commission: {
+        ...DEFAULTS.policies.owner_commission,
+        ...((policies as any).owner_commission ?? {}),
+      },
       security_deposits: {
         ...DEFAULTS.policies.security_deposits,
         ...securityDeposits,
