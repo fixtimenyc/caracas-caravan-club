@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import {
   DollarSign, TrendingUp, AlertTriangle, Download, Bell, RefreshCw,
-  CheckCircle2, Clock, XCircle, Search, FileText, MessageSquare, Send,
+  CheckCircle2, Clock, XCircle, Search, FileText, MessageSquare, Send, Upload, ImageIcon,
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
