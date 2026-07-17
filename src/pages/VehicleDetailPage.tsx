@@ -56,6 +56,7 @@ import ReviewsSection from "@/components/ReviewsSection";
 import ReviewDialog from "@/components/ReviewDialog";
 import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 import { captureFraudSignal } from "@/lib/fraudCapture";
+import { loadSystemSettings, computeRenterCharges } from "@/lib/systemSettings";
 
 type HouseRules = {
   noSmoking?: boolean;
@@ -215,18 +216,24 @@ const VehicleDetailPage = () => {
     return ["/placeholder.svg"];
   }, [resolvedPhotos]);
 
-  const days =
-    dateRange?.from && dateRange?.to
-      ? Math.max(differenceInDays(dateRange.to, dateRange.from), 1)
-      : 0;
-  const dailyRate = Number(vehicle?.price_per_day || 0);
-  const subtotal = days * dailyRate;
-  const serviceFee = Math.round(subtotal * 0.1);
-  const insuranceFee = days * 8;
-  const securityDeposit = Number(
-    (vehicle?.house_rules as any)?.securityDeposit ?? 200,
-  );
-  const total = subtotal + serviceFee + insuranceFee + securityDeposit;
+  const sysSettings = useMemo(() => loadSystemSettings(), []);
+  const priceBreakdown = useMemo(() => {
+    if (!vehicle || !dateRange?.from || !dateRange?.to) return null;
+    return computeRenterCharges(
+      sysSettings,
+      vehicle,
+      format(dateRange.from, "yyyy-MM-dd"),
+      format(dateRange.to, "yyyy-MM-dd"),
+    );
+  }, [sysSettings, vehicle, dateRange?.from, dateRange?.to]);
+  const days = priceBreakdown?.days ?? 0;
+  const dailyRate = priceBreakdown?.pricePerDay ?? Number(vehicle?.price_per_day || 0);
+  const subtotal = priceBreakdown?.subtotal ?? 0;
+  const serviceFee = priceBreakdown?.commission ?? 0;
+  const serviceFeeLabel = priceBreakdown?.commissionLabel ?? "";
+  const insuranceFee = priceBreakdown?.insurance ?? 0;
+  const securityDeposit = priceBreakdown?.deposit ?? 0;
+  const total = priceBreakdown?.totalWithDeposit ?? 0;
 
   const isDateBlocked = (date: Date) => {
     if (date < new Date(new Date().setHours(0, 0, 0, 0))) return true;
@@ -864,7 +871,7 @@ const VehicleDetailPage = () => {
                       <span>${subtotal}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
-                      <span>Tarifa de servicio (10%)</span>
+                      <span>Tarifa de servicio{serviceFeeLabel ? ` (${serviceFeeLabel})` : ""}</span>
                       <span>${serviceFee}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">

@@ -19,6 +19,7 @@ import { getOrCreateConversation } from "@/lib/conversations";
 import PaymentReceiptUpload from "@/components/PaymentReceiptUpload";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { loadSystemSettings, computeRenterCharges, computeOwnerBreakdown } from "@/lib/systemSettings";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
@@ -249,63 +250,95 @@ export default function ReservationDetailPage() {
           </Card>
 
           {(() => {
-            const dailyRate = Number(vehicle.price_per_day || 0);
-            const subtotal = Math.round(dailyRate * days * 100) / 100;
-            const insuranceFee = days * 8;
-            const securityDeposit = Number((vehicle.house_rules as any)?.securityDeposit ?? 0);
-            // Derive service fee from stored total so we always match what was charged
-            const derivedFee = Math.max(
-              0,
-              Math.round((total - subtotal - insuranceFee - securityDeposit) * 100) / 100,
-            );
+            const sys = loadSystemSettings();
+            const renter = computeRenterCharges(sys, vehicle, reservation.start_date, reservation.end_date);
+            const owner = computeOwnerBreakdown(sys, vehicle, reservation.start_date, reservation.end_date);
             return (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" /> Pago
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tarifa/día</span>
-                    <span>${dailyRate.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Días</span>
-                    <span>{days}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
-                  {derivedFee > 0 && (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      {isOwnerView ? "Resumen del arrendatario" : "Pago"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Comisión de servicio</span>
-                      <span>${derivedFee.toFixed(2)}</span>
+                      <span className="text-muted-foreground">Tarifa/día</span>
+                      <span>${renter.pricePerDay.toFixed(2)}</span>
                     </div>
-                  )}
-                  {insuranceFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Días</span>
+                      <span>{renter.days}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>${renter.subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Comisión de servicio ({renter.commissionLabel})</span>
+                      <span>${renter.commission.toFixed(2)}</span>
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Seguro</span>
-                      <span>${insuranceFee.toFixed(2)}</span>
+                      <span>${renter.insurance.toFixed(2)}</span>
                     </div>
-                  )}
-                  {securityDeposit > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Depósito reembolsable</span>
-                      <span>${securityDeposit.toFixed(2)}</span>
+                      <span>${renter.deposit.toFixed(2)}</span>
                     </div>
-                  )}
-                  <Separator />
-                  <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-                  {payment?.payment_method && (
-                    <p className="text-xs text-muted-foreground pt-1">Método: {payment.payment_method}</p>
-                  )}
-                </CardContent>
-              </Card>
+                    <Separator />
+                    <div className="flex justify-between font-semibold">
+                      <span>Total al arrendatario</span>
+                      <span>${renter.totalWithDeposit.toFixed(2)}</span>
+                    </div>
+                    {payment?.payment_method && (
+                      <p className="text-xs text-muted-foreground pt-1">Método: {payment.payment_method}</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {isOwnerView && (
+                  <Card className="md:col-span-3 border-primary/40">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-primary" /> Tus ganancias si apruebas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Subtotal ({owner.days} × ${owner.pricePerDay.toFixed(2)})</span>
+                          <span>${owner.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">− Comisión plataforma ({owner.ownerCommissionLabel})</span>
+                          <span className="text-red-600">−${owner.ownerCommission.toFixed(2)}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between font-semibold">
+                          <span>Ganancia neta</span>
+                          <span className="text-primary">${owner.netEarnings.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2 text-xs text-muted-foreground bg-muted/30 rounded-md p-3">
+                        <p className="font-medium text-foreground">Retenciones informativas</p>
+                        <div className="flex justify-between">
+                          <span>Seguro (retenido por la plataforma)</span>
+                          <span>${owner.insurance.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Depósito reembolsable (en garantía)</span>
+                          <span>${owner.deposit.toFixed(2)}</span>
+                        </div>
+                        <p className="pt-1">
+                          El seguro cubre la reserva. El depósito se libera tras la devolución si no hay incidencias.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             );
           })()}
 

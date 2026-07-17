@@ -31,6 +31,8 @@ type Settings = {
   };
   policies: {
     commission_pct: number;
+    renter_commission: { mode: "pct" | "fixed"; value: number };
+    owner_commission: { mode: "pct" | "fixed"; value: number };
     cancel_lt_24h_refund: number;
     cancel_24_48h_refund: number;
     cancel_gt_48h_refund: number;
@@ -116,6 +118,8 @@ const DEFAULTS: Settings = {
   },
   policies: {
     commission_pct: 20,
+    renter_commission: { mode: "pct", value: 20 },
+    owner_commission: { mode: "pct", value: 15 },
     cancel_lt_24h_refund: 0, cancel_24_48h_refund: 50, cancel_gt_48h_refund: 100,
     security_deposits: { economy: 100, sedan: 150, suv: 250, pickup: 250, luxury: 500, sports: 600, van: 300 },
     deposit_pct_of_value: 5,
@@ -246,6 +250,14 @@ const normalizeSettings = (input?: Partial<Settings> | null): Settings => {
     policies: {
       ...DEFAULTS.policies,
       ...policies,
+      renter_commission: {
+        ...DEFAULTS.policies.renter_commission,
+        ...((policies as any).renter_commission ?? {}),
+      },
+      owner_commission: {
+        ...DEFAULTS.policies.owner_commission,
+        ...((policies as any).owner_commission ?? {}),
+      },
       security_deposits: {
         ...DEFAULTS.policies.security_deposits,
         ...securityDeposits,
@@ -485,8 +497,53 @@ export default function AdminSettingsPage() {
           <Card>
             <CardHeader><CardTitle>Políticas y reglas</CardTitle><CardDescription>Comisión, cancelación y verificación.</CardDescription></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <NumField label="Comisión RUEDAVE (%)" value={settings.policies.commission_pct} onChange={(v) => save({ ...settings, policies: { ...settings.policies, commission_pct: v } })} />
               
+              <div className="md:col-span-2 grid md:grid-cols-2 gap-4 border rounded-md p-4 bg-muted/20">
+                <div className="md:col-span-2 mb-1">
+                  <p className="font-medium">Comisión de servicio</p>
+                  <p className="text-xs text-muted-foreground">
+                    Fuente única para el resumen del arrendatario, el contrato y las ganancias del aliado.
+                    Puedes usar porcentaje sobre el subtotal (días × tarifa) o un monto fijo por reserva.
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm">Al arrendatario — modo</Label>
+                  <Select
+                    value={settings.policies.renter_commission.mode}
+                    onValueChange={(v) => save({ ...settings, policies: { ...settings.policies, renter_commission: { ...settings.policies.renter_commission, mode: v as any } } })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pct">Porcentaje (%)</SelectItem>
+                      <SelectItem value="fixed">Monto fijo (USD)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <NumField
+                  label={settings.policies.renter_commission.mode === "fixed" ? "Al arrendatario — monto (USD)" : "Al arrendatario — porcentaje (%)"}
+                  value={settings.policies.renter_commission.value}
+                  onChange={(v) => save({ ...settings, policies: { ...settings.policies, renter_commission: { ...settings.policies.renter_commission, value: v }, commission_pct: settings.policies.renter_commission.mode === "pct" ? v : settings.policies.commission_pct } })}
+                />
+                <div>
+                  <Label className="text-sm">Al aliado — modo</Label>
+                  <Select
+                    value={settings.policies.owner_commission.mode}
+                    onValueChange={(v) => save({ ...settings, policies: { ...settings.policies, owner_commission: { ...settings.policies.owner_commission, mode: v as any } } })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pct">Porcentaje (%)</SelectItem>
+                      <SelectItem value="fixed">Monto fijo (USD)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <NumField
+                  label={settings.policies.owner_commission.mode === "fixed" ? "Al aliado — monto (USD)" : "Al aliado — porcentaje (%)"}
+                  value={settings.policies.owner_commission.value}
+                  onChange={(v) => save({ ...settings, policies: { ...settings.policies, owner_commission: { ...settings.policies.owner_commission, value: v } } })}
+                />
+              </div>
+
               <NumField label="Reembolso < 24h (%)" value={settings.policies.cancel_lt_24h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_lt_24h_refund: v } })} />
               <NumField label="Reembolso 24-48h (%)" value={settings.policies.cancel_24_48h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_24_48h_refund: v } })} />
               <NumField label="Reembolso > 48h (%)" value={settings.policies.cancel_gt_48h_refund} onChange={(v) => save({ ...settings, policies: { ...settings.policies, cancel_gt_48h_refund: v } })} />
