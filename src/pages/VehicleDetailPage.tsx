@@ -56,6 +56,7 @@ import ReviewsSection from "@/components/ReviewsSection";
 import ReviewDialog from "@/components/ReviewDialog";
 import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 import { captureFraudSignal } from "@/lib/fraudCapture";
+import { loadSystemSettings, computeRenterCharges } from "@/lib/systemSettings";
 
 type HouseRules = {
   noSmoking?: boolean;
