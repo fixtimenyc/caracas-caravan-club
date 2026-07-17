@@ -871,7 +871,7 @@ const VehicleDetailPage = () => {
                       <span>${subtotal}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
-                      <span>Tarifa de servicio (10%)</span>
+                      <span>Tarifa de servicio{serviceFeeLabel ? ` (${serviceFeeLabel})` : ""}</span>
                       <span>${serviceFee}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
