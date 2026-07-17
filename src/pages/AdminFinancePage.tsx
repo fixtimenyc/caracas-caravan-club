@@ -27,7 +27,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -653,7 +653,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
         ...row, commission, net, status,
         owner_name: owner?.full_name || "—",
         owner_phone: owner?.phone || "",
-        pay_date: format(addMonths(start, 1).setDate(5) as any, "dd/MM/yyyy"),
+        pay_date: format(new Date(y, m, 5), "dd/MM/yyyy"),
       };
     }).filter((row: any) => {
       if (statusF !== "all" && row.status !== statusF) return false;
@@ -805,7 +805,10 @@ function ContactOwnerDialog({ ownerId, onClose, pMap }: { ownerId: string | null
   return (
     <Dialog open={!!ownerId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Contactar a {owner?.full_name || "dueño"}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Contactar a {owner?.full_name || "dueño"}</DialogTitle>
+          <DialogDescription>Envía un mensaje interno al aliado sobre el payout.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-3">
           <Label>Mensaje</Label>
           <Textarea rows={4} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Escribe un mensaje sobre el payout..." />
