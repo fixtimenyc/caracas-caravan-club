@@ -31,6 +31,8 @@ type Settings = {
   };
   policies: {
     commission_pct: number;
+    renter_commission: { mode: "pct" | "fixed"; value: number };
+    owner_commission: { mode: "pct" | "fixed"; value: number };
     cancel_lt_24h_refund: number;
     cancel_24_48h_refund: number;
     cancel_gt_48h_refund: number;
