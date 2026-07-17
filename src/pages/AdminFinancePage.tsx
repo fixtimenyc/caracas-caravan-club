@@ -692,7 +692,8 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
     }).sort((a: any, b: any) => b.net - a.net);
   }, [period, reservations, payments, vMap, pMap, statusF, minAmt, maxAmt, savedByOwner]);
 
-  const totalNet = payouts.reduce((s: number, r: any) => s + r.net, 0);
+  const totalNet = payouts.reduce((s: number, r: any) => s + (r.status === "paid" ? 0 : r.net), 0);
+  const totalPaid = payouts.reduce((s: number, r: any) => s + (r.status === "paid" ? r.net : 0), 0);
 
   const downloadReport = () => {
     const rows = [
