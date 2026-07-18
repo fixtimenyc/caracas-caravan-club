@@ -4,7 +4,6 @@ import {
   User as UserIcon,
   FileText,
   Phone,
-  Globe,
   Users,
   Check,
   ArrowLeft,
@@ -12,7 +11,8 @@ import {
   Loader2,
   ShieldCheck,
   Upload,
-  ShieldCheck as ShieldCheckIcon,
+  Mail,
+  UserCheck,
 } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -42,13 +42,14 @@ import {
   sendVerificationCode,
   checkVerificationCode,
 } from '@/lib/phoneVerification';
+import { linkSocialInPopup, type LinkedIdentity } from '@/lib/socialIdentity';
 
 const VENEZUELAN_CITIES = [
   'Caracas', 'Maracaibo', 'Valencia', 'Barquisimeto', 'Maracay',
   'Ciudad Guayana', 'Maturín', 'Barcelona', 'Mérida', 'San Cristóbal', 'Otra',
 ];
 
-const SOCIAL_PLATFORMS = ['Instagram', 'Facebook', 'LinkedIn', 'X (Twitter)', 'TikTok', 'Otra'];
+
 
 const personalSchema = z.object({
   fullName: z.string().trim().min(2, 'Nombre muy corto').max(100),
@@ -82,22 +83,11 @@ const licenseSchema = z.object({
   drivingLicenseExpiry: z.string().min(1, 'Fecha de vencimiento requerida'),
 });
 
-const socialsSchema = z.object({
-  ownSocialPlatform: z.string().min(1, 'Selecciona la plataforma'),
-  ownSocialUrl: z.string().trim().url('URL inválida'),
-  ownSocialAgeMonths: z.coerce.number().min(12, 'Debe tener al menos 12 meses'),
-  referenceName: z.string().trim().min(2, 'Nombre requerido').max(100),
-  referenceRelationship: z.string().trim().min(2, 'Parentesco requerido').max(40),
-  referencePhone: z.string().trim().regex(/^(\+\d{1,3})?\d{7,15}$/, 'Teléfono inválido'),
-  referenceSocialPlatform: z.string().min(1, 'Selecciona la plataforma'),
-  referenceSocialUrl: z.string().trim().url('URL inválida'),
-  referenceSocialAgeMonths: z.coerce.number().min(12, 'Debe tener al menos 12 meses'),
-});
 
 type PersonalData = z.infer<typeof personalSchema>;
 type ContactData = z.infer<typeof contactSchema>;
 type LicenseData = z.infer<typeof licenseSchema>;
-type SocialsData = z.infer<typeof socialsSchema>;
+const refEmailSchema = z.string().trim().email('Correo inválido').max(255);
 
 const RenterVerificationPage = () => {
   const navigate = useNavigate();
@@ -123,11 +113,11 @@ const RenterVerificationPage = () => {
     drivingLicenseNumber: '', drivingLicenseExpiry: '',
   });
   const [hasMedical, setHasMedical] = useState(false);
-  const [socials, setSocials] = useState<SocialsData>({
-    ownSocialPlatform: '', ownSocialUrl: '', ownSocialAgeMonths: 12,
-    referenceName: '', referenceRelationship: '', referencePhone: '',
-    referenceSocialPlatform: '', referenceSocialUrl: '', referenceSocialAgeMonths: 12,
-  });
+  const [linkedSocial, setLinkedSocial] = useState<LinkedIdentity | null>(null);
+  const [socialLinking, setSocialLinking] = useState<'google' | 'apple' | null>(null);
+  const [declaredAgeMonths, setDeclaredAgeMonths] = useState<number>(12);
+  const [noSocialAcknowledged, setNoSocialAcknowledged] = useState<boolean>(false);
+  const [refEmail, setRefEmail] = useState<string>('');
 
   const [identityDoc, setIdentityDoc] = useState<File | null>(null);
   const [licenseDoc, setLicenseDoc] = useState<File | null>(null);
@@ -222,6 +212,30 @@ const RenterVerificationPage = () => {
     toast.success('Teléfono verificado');
   };
 
+  const handleLinkSocial = async (provider: 'google' | 'apple') => {
+    setSocialLinking(provider);
+    try {
+      const identity = await linkSocialInPopup(provider);
+      setLinkedSocial(identity);
+      setNoSocialAcknowledged(false);
+      toast.success(
+        `Identidad verificada con ${provider === 'google' ? 'Google' : 'Apple'}`,
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'No se pudo verificar';
+      if (/manual linking/i.test(msg)) {
+        toast.error(
+          'Función deshabilitada. Un administrador debe habilitar "Manual Linking" en la configuración de Auth.',
+        );
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setSocialLinking(null);
+    }
+  };
+
+
   const handleNext = () => {
     if (step === 0 && !runValidation(personalSchema, personal)) return;
     if (step === 1) {
@@ -242,7 +256,24 @@ const RenterVerificationPage = () => {
         return;
       }
     }
-    if (step === 4 && !runValidation(socialsSchema, socials)) return;
+    if (step === 4) {
+      if (!linkedSocial && !noSocialAcknowledged) {
+        toast.error('Verifica con Google/Apple o marca "No dispongo de red"');
+        return;
+      }
+      if (declaredAgeMonths < 6) {
+        setErrors({ declaredAgeMonths: 'La cuenta debe tener al menos 6 meses' });
+        return;
+      }
+      if (refEmail.trim().length > 0) {
+        const parsed = refEmailSchema.safeParse(refEmail);
+        if (!parsed.success) {
+          setErrors({ refEmail: parsed.error.errors[0]?.message ?? 'Correo inválido' });
+          return;
+        }
+      }
+      setErrors({});
+    }
     setStep((s) => Math.min(s + 1, steps.length - 1));
   };
 
@@ -274,50 +305,55 @@ const RenterVerificationPage = () => {
         bankReference ? uploadFile(bankReference, 'bank') : Promise.resolve(null),
       ]);
 
-      const { error } = await supabase.from('renter_verifications').insert({
-        user_id: user.id,
-        full_name: personal.fullName,
-        document_type: personal.documentType,
-        document_number: personal.documentNumber,
-        birth_date: personal.birthDate,
-        nationality: personal.nationality,
-        gender: personal.gender,
-        occupation: personal.occupation,
-        employer: personal.employer || null,
-        phone: contact.phone,
-        phone_secondary: contact.phoneSecondary || null,
-        contact_email: contact.contactEmail || null,
-        address: contact.address,
-        city: contact.city,
-        state: contact.state || null,
-        country: contact.country,
-        emergency_contact_name: contact.emergencyContactName,
-        emergency_contact_relationship: contact.emergencyContactRelationship,
-        emergency_contact_phone: contact.emergencyContactPhone,
-        driving_license_number: license.drivingLicenseNumber,
-        driving_license_expiry: license.drivingLicenseExpiry,
-        has_medical_condition: hasMedical,
-        identity_doc_url: identityPath,
-        driving_license_doc_url: licensePath,
-        medical_certificate_url: medicalPath,
-        utility_bill_url: utilityPath,
-        bank_reference_url: bankPath,
-        selfie_url: selfiePath,
-        own_social_platform: socials.ownSocialPlatform,
-        own_social_url: socials.ownSocialUrl,
-        own_social_age_months: socials.ownSocialAgeMonths,
-        reference_name: socials.referenceName,
-        reference_relationship: socials.referenceRelationship,
-        reference_phone: socials.referencePhone,
-        reference_social_platform: socials.referenceSocialPlatform,
-        reference_social_url: socials.referenceSocialUrl,
-        reference_social_age_months: socials.referenceSocialAgeMonths,
-        accepted_terms: acceptedTerms,
-      });
+      const { data: inserted, error } = await supabase
+        .from('renter_verifications')
+        .insert({
+          user_id: user.id,
+          full_name: personal.fullName,
+          document_type: personal.documentType,
+          document_number: personal.documentNumber,
+          birth_date: personal.birthDate,
+          nationality: personal.nationality,
+          gender: personal.gender,
+          occupation: personal.occupation,
+          employer: personal.employer || null,
+          phone: contact.phone,
+          phone_secondary: contact.phoneSecondary || null,
+          contact_email: contact.contactEmail || null,
+          address: contact.address,
+          city: contact.city,
+          state: contact.state || null,
+          country: contact.country,
+          emergency_contact_name: contact.emergencyContactName,
+          emergency_contact_relationship: contact.emergencyContactRelationship,
+          emergency_contact_phone: contact.emergencyContactPhone,
+          driving_license_number: license.drivingLicenseNumber,
+          driving_license_expiry: license.drivingLicenseExpiry,
+          has_medical_condition: hasMedical,
+          identity_doc_url: identityPath,
+          driving_license_doc_url: licensePath,
+          medical_certificate_url: medicalPath,
+          utility_bill_url: utilityPath,
+          bank_reference_url: bankPath,
+          selfie_url: selfiePath,
+          own_social_provider: linkedSocial?.provider ?? null,
+          own_social_provider_user_id: linkedSocial?.providerUserId ?? null,
+          own_social_verified_at: linkedSocial ? new Date().toISOString() : null,
+          own_social_verified_name: linkedSocial?.name ?? null,
+          own_social_verified_email: linkedSocial?.email ?? null,
+          own_social_declared_age_months: declaredAgeMonths,
+          accepted_terms: acceptedTerms,
+        })
+        .select('id')
+        .single();
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('Ya enviaste tu verificación anteriormente');
+          if (error.message.includes('renter_verifications_social_provider_unique')) {
+            toast.error('Esta cuenta social ya fue usada por otro usuario');
+          } else {
+            toast.error('Ya enviaste tu verificación anteriormente');
+          }
         } else {
           toast.error(error.message);
         }
@@ -332,7 +368,27 @@ const RenterVerificationPage = () => {
         birth_date: personal.birthDate,
       }).eq('user_id', user.id);
 
+      // Optional: send personal reference request
+      if (refEmail.trim().length > 0 && inserted?.id) {
+        const { error: refError } = await supabase.rpc(
+          'request_personal_reference',
+          {
+            _verification_id: inserted.id,
+            _email: refEmail.trim(),
+            _message: null,
+          },
+        );
+        if (refError) {
+          toast.error(
+            `Verificación enviada, pero la referencia no se envió: ${refError.message}`,
+          );
+        } else {
+          toast.success('Referencia enviada. Esperando confirmación del referente.');
+        }
+      }
+
       setSubmitted(true);
+
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error inesperado';
       toast.error(msg);
@@ -496,7 +552,7 @@ const RenterVerificationPage = () => {
                     <Label className="text-sm font-semibold">Teléfono principal</Label>
                     {phoneVerified && (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
-                        <ShieldCheckIcon className="w-3.5 h-3.5" /> Verificado
+                        <ShieldCheck className="w-3.5 h-3.5" /> Verificado
                       </span>
                     )}
                   </div>
@@ -735,75 +791,130 @@ const RenterVerificationPage = () => {
               </div>
             )}
 
-            {/* Step 4: Redes y referencia */}
+            {/* Step 4: Red social + referencia */}
             {step === 4 && (
-              <div className="space-y-4">
-                <h3 className="font-semibold text-sm text-foreground">Tu red social comprobable</h3>
-                <p className="text-xs text-muted-foreground -mt-2">
-                  Debe tener más de 1 año de actividad
-                </p>
-                <FieldGroup>
-                  <Field label="Plataforma" error={errors.ownSocialPlatform} htmlFor="osp">
-                    <Select value={socials.ownSocialPlatform}
-                      onValueChange={(v) => setSocials({ ...socials, ownSocialPlatform: v })}>
-                      <SelectTrigger id="osp"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                      <SelectContent>
-                        {SOCIAL_PLATFORMS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field label="Antigüedad (meses)" error={errors.ownSocialAgeMonths} htmlFor="osa">
-                    <Input id="osa" type="number" min={12} value={socials.ownSocialAgeMonths}
-                      onChange={(e) => setSocials({ ...socials, ownSocialAgeMonths: Number(e.target.value) })} />
-                  </Field>
-                </FieldGroup>
-                <Field label="URL del perfil" error={errors.ownSocialUrl} htmlFor="osu">
-                  <Input id="osu" value={socials.ownSocialUrl} placeholder="https://instagram.com/tu_usuario"
-                    onChange={(e) => setSocials({ ...socials, ownSocialUrl: e.target.value })} />
-                </Field>
-
-                <div className="pt-4 border-t border-border">
-                  <h3 className="font-semibold text-sm text-foreground mb-1">Referencia personal</h3>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Verifica tu identidad con una red social
+                  </h3>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Un amigo o familiar con red social activa de más de 1 año
+                    Inicia sesión con Google o Apple para vincular una identidad
+                    digital verificada a tu perfil. La misma cuenta no puede
+                    reutilizarse en otra verificación.
                   </p>
-                  <div className="space-y-4">
-                    <FieldGroup>
-                      <Field label="Nombre completo" error={errors.referenceName} htmlFor="rn">
-                        <Input id="rn" value={socials.referenceName} maxLength={100}
-                          onChange={(e) => setSocials({ ...socials, referenceName: e.target.value })} />
-                      </Field>
-                      <Field label="Parentesco" error={errors.referenceRelationship} htmlFor="rr">
-                        <Input id="rr" value={socials.referenceRelationship} maxLength={40}
-                          onChange={(e) => setSocials({ ...socials, referenceRelationship: e.target.value })}
-                          placeholder="Amigo, primo, etc." />
-                      </Field>
-                    </FieldGroup>
-                    <Field label="Teléfono de la referencia" error={errors.referencePhone} htmlFor="rp">
-                      <Input id="rp" value={socials.referencePhone} maxLength={20}
-                        onChange={(e) => setSocials({ ...socials, referencePhone: e.target.value })} />
-                    </Field>
-                    <FieldGroup>
-                      <Field label="Plataforma" error={errors.referenceSocialPlatform} htmlFor="rsp">
-                        <Select value={socials.referenceSocialPlatform}
-                          onValueChange={(v) => setSocials({ ...socials, referenceSocialPlatform: v })}>
-                          <SelectTrigger id="rsp"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                          <SelectContent>
-                            {SOCIAL_PLATFORMS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                      <Field label="Antigüedad (meses)" error={errors.referenceSocialAgeMonths} htmlFor="rsa">
-                        <Input id="rsa" type="number" min={12} value={socials.referenceSocialAgeMonths}
-                          onChange={(e) => setSocials({ ...socials, referenceSocialAgeMonths: Number(e.target.value) })} />
-                      </Field>
-                    </FieldGroup>
-                    <Field label="URL de la red social" error={errors.referenceSocialUrl} htmlFor="rsu">
-                      <Input id="rsu" value={socials.referenceSocialUrl}
-                        placeholder="https://instagram.com/usuario_referencia"
-                        onChange={(e) => setSocials({ ...socials, referenceSocialUrl: e.target.value })} />
+
+                  {linkedSocial ? (
+                    <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary shrink-0">
+                        <Check className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                          Verificado con{' '}
+                          {linkedSocial.provider === 'google' ? 'Google' : 'Apple'}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {linkedSocial.email || linkedSocial.name || 'Identidad confirmada'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setLinkedSocial(null)}
+                      >
+                        Cambiar
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('google')}
+                      >
+                        {socialLinking === 'google' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span className="mr-2 font-bold text-[#4285F4]">G</span>
+                        )}
+                        Continuar con Google
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('apple')}
+                      >
+                        {socialLinking === 'apple' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span className="mr-2 font-bold text-foreground"></span>
+                        )}
+                        Continuar con Apple
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <Field
+                      label="Antigüedad declarada de tu cuenta (meses)"
+                      hint="Nuestro equipo verificará esta declaración durante la revisión."
+                      error={errors.declaredAgeMonths}
+                      htmlFor="dam"
+                    >
+                      <Input
+                        id="dam"
+                        type="number"
+                        min={6}
+                        value={declaredAgeMonths}
+                        onChange={(e) => setDeclaredAgeMonths(Number(e.target.value))}
+                      />
                     </Field>
                   </div>
+
+                  {!linkedSocial && (
+                    <label className="mt-3 flex items-start gap-2 rounded-lg border border-border p-3 cursor-pointer">
+                      <Checkbox
+                        checked={noSocialAcknowledged}
+                        onCheckedChange={(c) => setNoSocialAcknowledged(!!c)}
+                        className="mt-0.5"
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        No dispongo de una cuenta de Google o Apple para verificar.
+                        Entiendo que mi solicitud quedará en revisión manual del
+                        equipo.
+                      </span>
+                    </label>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Referencia personal (opcional)
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Agrega el correo de alguien que ya use RuedaVe. Recibirá una
+                    notificación para confirmar que te conoce cuando envíes esta
+                    verificación. <b>Es opcional, pero ayuda a acelerar tu
+                    verificación.</b>
+                  </p>
+                  <Field
+                    label="Correo del referente"
+                    error={errors.refEmail}
+                    htmlFor="ref-email"
+                  >
+                    <Input
+                      id="ref-email"
+                      type="email"
+                      placeholder="referente@correo.com"
+                      value={refEmail}
+                      onChange={(e) => setRefEmail(e.target.value)}
+                    />
+                  </Field>
                 </div>
               </div>
             )}
@@ -841,10 +952,34 @@ const RenterVerificationPage = () => {
                   {utilityBill && <ReviewItem label="Factura de servicios" value={utilityBill.name} />}
                   {bankReference && <ReviewItem label="Referencia bancaria" value={bankReference.name} />}
                 </ReviewBlock>
-                <ReviewBlock title="Redes sociales">
-                  <ReviewItem label="Tu red" value={`${socials.ownSocialPlatform} · ${socials.ownSocialAgeMonths} meses`} />
-                  <ReviewItem label="Referencia" value={`${socials.referenceName} (${socials.referenceRelationship})`} />
-                  <ReviewItem label="Red de referencia" value={`${socials.referenceSocialPlatform} · ${socials.referenceSocialAgeMonths} meses`} />
+                <ReviewBlock title="Red social">
+                  {linkedSocial ? (
+                    <>
+                      <ReviewItem
+                        label="Proveedor"
+                        value={linkedSocial.provider === 'google' ? 'Google' : 'Apple'}
+                      />
+                      <ReviewItem
+                        label="Cuenta"
+                        value={linkedSocial.email || linkedSocial.name}
+                      />
+                      <ReviewItem
+                        label="Antigüedad declarada"
+                        value={`${declaredAgeMonths} meses`}
+                      />
+                    </>
+                  ) : (
+                    <ReviewItem
+                      label="Estado"
+                      value="Sin verificar — revisión manual del equipo"
+                    />
+                  )}
+                </ReviewBlock>
+                <ReviewBlock title="Referencia personal">
+                  <ReviewItem
+                    label="Correo"
+                    value={refEmail || 'No agregada (opcional)'}
+                  />
                 </ReviewBlock>
 
                 <label className="flex items-start gap-2 p-4 rounded-lg border border-border cursor-pointer">

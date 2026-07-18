@@ -45,6 +45,8 @@ import ReservationContractPage from "./pages/ReservationContractPage";
 import DemoInspectionPage from "./pages/DemoInspectionPage";
 import PrivacySettingsPage from "./pages/PrivacySettingsPage";
 import AdminDataPage from "./pages/AdminDataPage";
+import RenterReferencesPage from "./pages/RenterReferencesPage";
+import SocialLinkCallback from "./pages/SocialLinkCallback";
 
 import PendingReviewsGate from "./components/PendingReviewsGate";
 import { useFraudFingerprint } from "@/hooks/useFraudFingerprint";
@@ -110,6 +112,8 @@ const App = () => (
             <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/perfil/privacidad" element={<PrivacySettingsPage />} />
+            <Route path="/perfil/referencias" element={<RenterReferencesPage />} />
+            <Route path="/verificacion/social-callback" element={<SocialLinkCallback />} />
             <Route path="/admin/datos" element={<AdminDataPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
