@@ -80,7 +80,7 @@ const MyEarningsPage = () => {
       resIds.length
         ? supabase.from("payments").select("id,reservation_id,status").in("reservation_id", resIds)
         : Promise.resolve({ data: [] as any }),
-      supabase.from("owner_payouts").select("period,status,proof_url").eq("owner_id", user.id),
+      supabase.from("owner_payouts").select("period,status,proof_url,paid_at").eq("owner_id", user.id),
     ]);
     setProfiles((pr.data as any) || []);
     setPayments((pay.data as any) || []);
