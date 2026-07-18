@@ -906,13 +906,30 @@ function SendProofDialog({ payout, period, onClose, onSaved }: { payout: any | n
       }
 
       const { data: userData } = await supabase.auth.getUser();
+
+      // If this is a delta (pending) row for an owner who already had a paid payout
+      // in the same period, aggregate with the existing saved amounts so the
+      // resulting record reflects the full period total.
+      const { data: existing } = await supabase
+        .from("owner_payouts")
+        .select("gross,commission,refunds,net")
+        .eq("owner_id", payout.owner_id)
+        .eq("period", period)
+        .maybeSingle();
+
+      const baseG = existing ? Number(existing.gross || 0) : 0;
+      const baseC = existing ? Number(existing.commission || 0) : 0;
+      const baseR = existing ? Number(existing.refunds || 0) : 0;
+      const baseN = existing ? Number(existing.net || 0) : 0;
+      const isDelta = !payout.saved && existing;
+
       const payload = {
         owner_id: payout.owner_id,
         period,
-        gross: payout.gross,
-        commission: payout.commission,
-        refunds: payout.refunds,
-        net: payout.net,
+        gross: isDelta ? baseG + Number(payout.gross || 0) : Number(payout.gross || 0),
+        commission: isDelta ? baseC + Number(payout.commission || 0) : Number(payout.commission || 0),
+        refunds: isDelta ? baseR + Number(payout.refunds || 0) : Number(payout.refunds || 0),
+        net: isDelta ? baseN + Number(payout.net || 0) : Number(payout.net || 0),
         status: "paid",
         proof_url: proofPath,
         paid_at: new Date().toISOString(),
