@@ -137,6 +137,15 @@ const RenterVerificationPage = () => {
   const [selfie, setSelfie] = useState<File | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // Phone verification (SMS) — currently mocked, see src/lib/phoneVerification.ts
+  const [phoneCountry, setPhoneCountry] = useState<string>('+58');
+  const [phoneLocal, setPhoneLocal] = useState<string>('');
+  const [otpCode, setOtpCode] = useState<string>('');
+  const [otpSent, setOtpSent] = useState<boolean>(false);
+  const [sendingOtp, setSendingOtp] = useState<boolean>(false);
+  const [checkingOtp, setCheckingOtp] = useState<boolean>(false);
+  const [phoneVerified, setPhoneVerified] = useState<boolean>(false);
+
   const isVenezuelan = personal.nationality.trim().toLowerCase().startsWith('venezol');
 
   useEffect(() => {
