@@ -18,7 +18,6 @@ export async function linkSocialInPopup(
 ): Promise<LinkedIdentity> {
   const redirectTo = `${window.location.origin}/verificacion/social-callback`;
 
-  // @ts-expect-error linkIdentity is available at runtime, types may lag
   const { data, error } = await supabase.auth.linkIdentity({
     provider,
     options: { redirectTo, skipBrowserRedirect: true },

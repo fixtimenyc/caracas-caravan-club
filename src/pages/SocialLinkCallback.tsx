@@ -15,7 +15,6 @@ const SocialLinkCallback = () => {
     (async () => {
       // Give supabase-js a moment to finalize any auth exchange in this popup.
       await new Promise((r) => setTimeout(r, 300));
-      // @ts-expect-error getUserIdentities available at runtime
       const { data, error } = await supabase.auth.getUserIdentities();
       if (cancelled) return;
 
