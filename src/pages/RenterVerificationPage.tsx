@@ -189,9 +189,48 @@ const RenterVerificationPage = () => {
     return true;
   };
 
+  const handleSendOtp = async () => {
+    const e164 = toE164(phoneCountry, phoneLocal);
+    if (!isValidE164(e164)) {
+      toast.error('Ingresa un número de teléfono válido');
+      return;
+    }
+    setSendingOtp(true);
+    const res = await sendVerificationCode(e164);
+    setSendingOtp(false);
+    if (!res.ok) {
+      toast.error(res.message ?? 'No se pudo enviar el código');
+      return;
+    }
+    setOtpSent(true);
+    setPhoneVerified(false);
+    setContact((c) => ({ ...c, phone: e164 }));
+    toast.success('Código enviado por SMS (modo demo: usa 123456)');
+  };
+
+  const handleVerifyOtp = async () => {
+    const e164 = toE164(phoneCountry, phoneLocal);
+    setCheckingOtp(true);
+    const res = await checkVerificationCode(e164, otpCode);
+    setCheckingOtp(false);
+    if (!res.ok) {
+      toast.error(res.message ?? 'Código inválido');
+      return;
+    }
+    setPhoneVerified(true);
+    setContact((c) => ({ ...c, phone: e164 }));
+    toast.success('Teléfono verificado');
+  };
+
   const handleNext = () => {
     if (step === 0 && !runValidation(personalSchema, personal)) return;
-    if (step === 1 && !runValidation(contactSchema, contact)) return;
+    if (step === 1) {
+      if (!phoneVerified) {
+        toast.error('Verifica tu teléfono con el código SMS antes de continuar');
+        return;
+      }
+      if (!runValidation(contactSchema, contact)) return;
+    }
     if (step === 2 && !runValidation(licenseSchema, license)) return;
     if (step === 3) {
       if (!identityDoc || !licenseDoc || !selfie) {
