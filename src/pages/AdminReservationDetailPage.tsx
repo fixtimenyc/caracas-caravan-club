@@ -452,11 +452,48 @@ function MileageCard({ reservation, onSaved }: { reservation: any; onSaved: () =
   const [start, setStart] = useState<string>(reservation.start_mileage?.toString() ?? "");
   const [end, setEnd] = useState<string>(reservation.end_mileage?.toString() ?? "");
   const [saving, setSaving] = useState(false);
+  const [pickupMileage, setPickupMileage] = useState<number | null>(null);
+  const [returnMileage, setReturnMileage] = useState<number | null>(null);
 
   useEffect(() => {
     setStart(reservation.start_mileage?.toString() ?? "");
     setEnd(reservation.end_mileage?.toString() ?? "");
   }, [reservation.id, reservation.start_mileage, reservation.end_mileage]);
+
+  // Sync from vehicle_inspections: pickup (renter) -> start, return (owner) -> end
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("vehicle_inspections")
+        .select("type, mileage, signed_at")
+        .eq("reservation_id", reservation.id);
+      if (cancelled || !data) return;
+      const pickup = data.find((d: any) => d.type === "pickup" && d.mileage != null);
+      const ret = data.find((d: any) => d.type === "return" && d.mileage != null);
+      const pkm = pickup?.mileage ?? null;
+      const rkm = ret?.mileage ?? null;
+      setPickupMileage(pkm);
+      setReturnMileage(rkm);
+
+      // Auto-persist to reservation when inspection has value and reservation doesn't match
+      const updates: Record<string, number> = {};
+      if (pkm != null && reservation.start_mileage !== pkm) updates.start_mileage = pkm;
+      if (rkm != null && reservation.end_mileage !== rkm) updates.end_mileage = rkm;
+      if (Object.keys(updates).length > 0) {
+        await supabase.from("reservations").update(updates).eq("id", reservation.id);
+        if (updates.start_mileage != null) setStart(String(updates.start_mileage));
+        if (updates.end_mileage != null) setEnd(String(updates.end_mileage));
+        onSaved();
+      } else {
+        if (pkm != null) setStart(String(pkm));
+        if (rkm != null) setEnd(String(rkm));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [reservation.id]);
 
   const driven =
     start && end && Number(end) >= Number(start) ? Number(end) - Number(start) : null;
@@ -491,8 +528,13 @@ function MileageCard({ reservation, onSaved }: { reservation: any; onSaved: () =
             inputMode="numeric"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-            placeholder="0"
+            placeholder="Pendiente inspección entrega"
           />
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {pickupMileage != null
+              ? `Auto desde inspección de entrega: ${pickupMileage.toLocaleString()} km`
+              : "Se completará cuando el arrendatario firme la inspección de entrega."}
+          </p>
         </div>
         <div>
           <Label className="text-xs text-muted-foreground">Km al final</Label>
@@ -501,8 +543,13 @@ function MileageCard({ reservation, onSaved }: { reservation: any; onSaved: () =
             inputMode="numeric"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
-            placeholder="0"
+            placeholder="Pendiente inspección devolución"
           />
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {returnMileage != null
+              ? `Auto desde inspección de devolución: ${returnMileage.toLocaleString()} km`
+              : "Se completará cuando el aliado firme la inspección de devolución."}
+          </p>
         </div>
         <div className="flex flex-col justify-end">
           <p className="text-xs text-muted-foreground">Km recorridos</p>
@@ -519,4 +566,5 @@ function MileageCard({ reservation, onSaved }: { reservation: any; onSaved: () =
     </Card>
   );
 }
+
 
