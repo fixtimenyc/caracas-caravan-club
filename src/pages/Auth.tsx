@@ -321,47 +321,6 @@ const Auth = () => {
               </div>
             )}
 
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="cedula">Cédula</Label>
-                <div className="relative">
-                  <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="cedula"
-                    type="text"
-                    placeholder="V-12345678"
-                    value={cedula}
-                    onChange={(e) => setCedula(e.target.value)}
-                    className="pl-10"
-                    maxLength={12}
-                  />
-                </div>
-                {errors.cedula && (
-                  <p className="text-sm text-destructive">{errors.cedula}</p>
-                )}
-              </div>
-            )}
-
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="04141234567"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="pl-10"
-                    maxLength={15}
-                  />
-                </div>
-                {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone}</p>
-                )}
-              </div>
-            )}
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
