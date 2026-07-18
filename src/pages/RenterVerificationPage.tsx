@@ -243,6 +243,8 @@ const RenterVerificationPage = () => {
         identity_doc_url: identityPath,
         driving_license_doc_url: licensePath,
         medical_certificate_url: medicalPath,
+        utility_bill_url: utilityPath,
+        bank_reference_url: bankPath,
         selfie_url: selfiePath,
         own_social_platform: socials.ownSocialPlatform,
         own_social_url: socials.ownSocialUrl,
