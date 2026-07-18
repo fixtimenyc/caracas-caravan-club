@@ -349,6 +349,7 @@ const RenterVerificationPage = () => {
           own_social_verified_at: linkedSocial ? new Date().toISOString() : null,
           own_social_verified_name: linkedSocial?.name ?? null,
           own_social_verified_email: linkedSocial?.email ?? null,
+          own_social_verified_picture: linkedSocial?.picture ?? null,
           own_social_declared_age_months: declaredAgeMonths,
           accepted_terms: acceptedTerms,
         })
