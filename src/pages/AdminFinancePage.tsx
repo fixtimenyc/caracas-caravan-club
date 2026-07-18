@@ -660,6 +660,22 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
 
   useEffect(() => { loadSaved(); }, [period]);
 
+  useEffect(() => {
+    let debounce: any;
+    const trigger = () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => loadSaved(), 600);
+    };
+    const channel = supabase
+      .channel(`admin-payouts-live-${period}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "owner_payouts" }, trigger)
+      .subscribe();
+    return () => {
+      clearTimeout(debounce);
+      supabase.removeChannel(channel);
+    };
+  }, [period]);
+
   const periodOptions = useMemo(() => {
     return Array.from({ length: 6 }, (_, i) => {
       const d = subMonths(new Date(), i);
