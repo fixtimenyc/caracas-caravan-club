@@ -29,6 +29,7 @@ type Reservation = {
 type Vehicle = { id: string; brand: string; model: string; year: number | null; price_per_day: number | null; house_rules?: any };
 type Profile = { user_id: string; full_name: string | null };
 type Payment = { id: string; reservation_id: string; status: string };
+type Payout = { period: string; status: string; proof_url: string | null };
 
 const statusLabel: Record<string, { text: string; variant: "default" | "secondary" | "outline" }> = {
   completed: { text: "Completada", variant: "default" },
@@ -43,6 +44,7 @@ const MyEarningsPage = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
   const [period, setPeriod] = useState<"3m" | "6m" | "12m" | "all">("6m");
   const [vehicleFilter, setVehicleFilter] = useState<string>("all");
 
@@ -60,7 +62,7 @@ const MyEarningsPage = () => {
     const vids = (myVehicles || []).map((v) => v.id);
     setVehicles((myVehicles as any) || []);
     if (vids.length === 0) {
-      setReservations([]); setProfiles([]); setPayments([]); setLoading(false); return;
+      setReservations([]); setProfiles([]); setPayments([]); setPayouts([]); setLoading(false); return;
     }
     const { data: res } = await supabase
       .from("reservations")
@@ -71,16 +73,18 @@ const MyEarningsPage = () => {
     setReservations(list);
     const renterIds = Array.from(new Set(list.map((r) => r.renter_id)));
     const resIds = list.map((r) => r.id);
-    const [pr, pay] = await Promise.all([
+    const [pr, pay, po] = await Promise.all([
       renterIds.length
         ? supabase.from("profiles").select("user_id,full_name").in("user_id", renterIds)
         : Promise.resolve({ data: [] as any }),
       resIds.length
         ? supabase.from("payments").select("id,reservation_id,status").in("reservation_id", resIds)
         : Promise.resolve({ data: [] as any }),
+      supabase.from("owner_payouts").select("period,status,proof_url").eq("owner_id", user.id),
     ]);
     setProfiles((pr.data as any) || []);
     setPayments((pay.data as any) || []);
+    setPayouts((po.data as any) || []);
     setLoading(false);
   };
 
@@ -89,9 +93,17 @@ const MyEarningsPage = () => {
   const vMap = useMemo(() => Object.fromEntries(vehicles.map((v) => [v.id, v])), [vehicles]);
   const pMap = useMemo(() => Object.fromEntries(profiles.map((p) => [p.user_id, p])), [profiles]);
 
+  const paidPeriods = useMemo(
+    () => new Set(payouts.filter((p) => p.status === "paid").map((p) => p.period)),
+    [payouts],
+  );
   const paidResIds = useMemo(
-    () => new Set(payments.filter((p) => p.status === "completed").map((p) => p.reservation_id)),
-    [payments],
+    () => new Set(
+      reservations
+        .filter((r) => paidPeriods.has(format(parseISO(r.created_at), "yyyy-MM")))
+        .map((r) => r.id),
+    ),
+    [reservations, paidPeriods],
   );
 
   const earnable = useMemo(() => {
