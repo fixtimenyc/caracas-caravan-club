@@ -669,22 +669,69 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
         .reduce((s: number, p: Payment) => s + Number(p.amount), 0);
       byOwner[v.owner_id].refunds += refunded;
     });
-    return Object.values(byOwner).map((row: any) => {
+    const rows: any[] = [];
+    Object.values(byOwner).forEach((row: any) => {
       const commission = row.gross * getCommissionRate();
       const net = row.gross - commission - row.refunds;
       const owner = pMap[row.owner_id];
       const saved = savedByOwner[row.owner_id];
-      const status = saved?.status || "pending";
-      return {
-        ...row, commission, net, status,
-        saved,
+      const ownerBase = {
+        owner_id: row.owner_id,
         owner_name: owner?.full_name || "—",
         owner_phone: owner?.phone || "",
-        pay_date: saved?.paid_at
-          ? format(new Date(saved.paid_at), "dd/MM/yyyy")
-          : format(new Date(y, m, 5), "dd/MM/yyyy"),
       };
-    }).filter((row: any) => {
+
+      if (saved && saved.status === "paid") {
+        // Show the already-paid payout with its stored amounts
+        rows.push({
+          ...ownerBase,
+          key: `${row.owner_id}-paid`,
+          count: row.count,
+          gross: Number(saved.gross || 0),
+          commission: Number(saved.commission || 0),
+          refunds: Number(saved.refunds || 0),
+          net: Number(saved.net || 0),
+          status: "paid",
+          saved,
+          pay_date: saved.paid_at ? format(new Date(saved.paid_at), "dd/MM/yyyy") : "—",
+        });
+        // If new reservations arrived after the payout, add a pending delta row
+        const deltaGross = row.gross - Number(saved.gross || 0);
+        const deltaRefunds = row.refunds - Number(saved.refunds || 0);
+        if (deltaGross > 0.009 || deltaRefunds > 0.009) {
+          const dCommission = Math.max(0, deltaGross) * getCommissionRate();
+          const dNet = deltaGross - dCommission - Math.max(0, deltaRefunds);
+          rows.push({
+            ...ownerBase,
+            key: `${row.owner_id}-pending`,
+            count: row.count,
+            gross: Math.max(0, deltaGross),
+            commission: dCommission,
+            refunds: Math.max(0, deltaRefunds),
+            net: dNet,
+            status: "pending",
+            saved: null,
+            pay_date: format(new Date(y, m, 5), "dd/MM/yyyy"),
+          });
+        }
+      } else {
+        rows.push({
+          ...ownerBase,
+          key: `${row.owner_id}-${saved?.status || "pending"}`,
+          count: row.count,
+          gross: row.gross,
+          commission,
+          refunds: row.refunds,
+          net,
+          status: saved?.status || "pending",
+          saved,
+          pay_date: saved?.paid_at
+            ? format(new Date(saved.paid_at), "dd/MM/yyyy")
+            : format(new Date(y, m, 5), "dd/MM/yyyy"),
+        });
+      }
+    });
+    return rows.filter((row: any) => {
       if (statusF !== "all" && row.status !== statusF) return false;
       if (minAmt && row.net < Number(minAmt)) return false;
       if (maxAmt && row.net > Number(maxAmt)) return false;
@@ -775,7 +822,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
                 {payouts.map((r: any) => {
                   const proofUrl = r.saved?.id ? proofUrls[r.saved.id] : null;
                   return (
-                    <TableRow key={r.owner_id}>
+                    <TableRow key={r.key || r.owner_id}>
                       <TableCell>
                         <Link to={`/admin/usuarios/${r.owner_id}`} className="text-primary hover:underline text-sm font-medium">{r.owner_name}</Link>
                       </TableCell>
@@ -859,13 +906,30 @@ function SendProofDialog({ payout, period, onClose, onSaved }: { payout: any | n
       }
 
       const { data: userData } = await supabase.auth.getUser();
+
+      // If this is a delta (pending) row for an owner who already had a paid payout
+      // in the same period, aggregate with the existing saved amounts so the
+      // resulting record reflects the full period total.
+      const { data: existing } = await supabase
+        .from("owner_payouts")
+        .select("gross,commission,refunds,net")
+        .eq("owner_id", payout.owner_id)
+        .eq("period", period)
+        .maybeSingle();
+
+      const baseG = existing ? Number(existing.gross || 0) : 0;
+      const baseC = existing ? Number(existing.commission || 0) : 0;
+      const baseR = existing ? Number(existing.refunds || 0) : 0;
+      const baseN = existing ? Number(existing.net || 0) : 0;
+      const isDelta = !payout.saved && existing;
+
       const payload = {
         owner_id: payout.owner_id,
         period,
-        gross: payout.gross,
-        commission: payout.commission,
-        refunds: payout.refunds,
-        net: payout.net,
+        gross: isDelta ? baseG + Number(payout.gross || 0) : Number(payout.gross || 0),
+        commission: isDelta ? baseC + Number(payout.commission || 0) : Number(payout.commission || 0),
+        refunds: isDelta ? baseR + Number(payout.refunds || 0) : Number(payout.refunds || 0),
+        net: isDelta ? baseN + Number(payout.net || 0) : Number(payout.net || 0),
         status: "paid",
         proof_url: proofPath,
         paid_at: new Date().toISOString(),
