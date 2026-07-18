@@ -17,8 +17,6 @@ const loginSchema = z.object({
 
 const signupSchema = z.object({
   fullName: z.string().trim().min(2, 'El nombre debe tener al menos 2 caracteres').max(100, 'Nombre muy largo'),
-  cedula: z.string().trim().regex(/^[VEJvej]-?\d{6,9}$/i, 'Formato: V-12345678'),
-  phone: z.string().trim().regex(/^(\+58|0)?\d{10}$/, 'Teléfono venezolano inválido'),
   email: z.string().trim().email('Email inválido').max(255),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').max(72),
   role: z.enum(['renter', 'owner']),
