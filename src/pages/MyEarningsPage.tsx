@@ -44,6 +44,7 @@ const MyEarningsPage = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
   const [period, setPeriod] = useState<"3m" | "6m" | "12m" | "all">("6m");
   const [vehicleFilter, setVehicleFilter] = useState<string>("all");
 
