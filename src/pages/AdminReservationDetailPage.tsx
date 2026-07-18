@@ -22,6 +22,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { loadSystemSettings, computeRenterCharges, computeOwnerBreakdown } from "@/lib/systemSettings";
 import { toast } from "sonner";
 import ReservationInspectionsPanel from "@/components/admin/ReservationInspectionsPanel";
 import AdminPaymentVerification from "@/components/AdminPaymentVerification";
@@ -96,13 +97,21 @@ export default function AdminReservationDetailPage() {
 
   const finance = useMemo(() => {
     if (!reservation || !vehicle) return null;
-    const dailyRate = Number(vehicle.price_per_day) || 0;
-    const subtotal = dailyRate * days;
-    const insurance = days * 8;
-    const commission = Math.round(subtotal * 0.10 * 100) / 100;
-    const total = Number(reservation.total_price) || (subtotal + insurance + commission);
-    const payout = subtotal - commission;
-    return { dailyRate, subtotal, insurance, commission, total, payout };
+    const settings = loadSystemSettings();
+    const renter = computeRenterCharges(settings, vehicle, reservation.start_date, reservation.end_date);
+    const owner = computeOwnerBreakdown(settings, vehicle, reservation.start_date, reservation.end_date);
+    const total = Number(reservation.total_price) || renter.totalWithDeposit - renter.deposit;
+    return {
+      dailyRate: renter.pricePerDay,
+      subtotal: renter.subtotal,
+      insurance: renter.insurance,
+      commission: renter.commission,
+      commissionLabel: renter.commissionLabel,
+      ownerCommission: owner.ownerCommission,
+      ownerCommissionLabel: owner.ownerCommissionLabel,
+      total,
+      payout: owner.netEarnings,
+    };
   }, [reservation, vehicle, days]);
 
   const currentStep = useMemo(() => {
@@ -375,9 +384,10 @@ export default function AdminReservationDetailPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Días</span><span>{days}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>${finance?.subtotal.toFixed(2)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Seguro ($8/día)</span><span>${finance?.insurance.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Comisión RUEDAVE (10%)</span><span className="text-red-600">−${finance?.commission.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Comisión arrendatario ({finance?.commissionLabel})</span><span>+${finance?.commission.toFixed(2)}</span></div>
                 <Separator />
                 <div className="flex justify-between font-semibold"><span>Total cobrado</span><span>${finance?.total.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Comisión aliado ({finance?.ownerCommissionLabel})</span><span className="text-red-600">−${finance?.ownerCommission.toFixed(2)}</span></div>
                 <div className="flex justify-between font-semibold text-emerald-700"><span>Payout dueño</span><span>${finance?.payout.toFixed(2)}</span></div>
                 {reservation.refund_amount != null && (
                   <>
