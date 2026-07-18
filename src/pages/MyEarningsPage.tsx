@@ -29,7 +29,7 @@ type Reservation = {
 type Vehicle = { id: string; brand: string; model: string; year: number | null; price_per_day: number | null; house_rules?: any };
 type Profile = { user_id: string; full_name: string | null };
 type Payment = { id: string; reservation_id: string; status: string };
-type Payout = { period: string; status: string; proof_url: string | null };
+type Payout = { period: string; status: string; proof_url: string | null; paid_at: string | null };
 
 const statusLabel: Record<string, { text: string; variant: "default" | "secondary" | "outline" }> = {
   completed: { text: "Completada", variant: "default" },
@@ -80,7 +80,7 @@ const MyEarningsPage = () => {
       resIds.length
         ? supabase.from("payments").select("id,reservation_id,status").in("reservation_id", resIds)
         : Promise.resolve({ data: [] as any }),
-      supabase.from("owner_payouts").select("period,status,proof_url").eq("owner_id", user.id),
+      supabase.from("owner_payouts").select("period,status,proof_url,paid_at").eq("owner_id", user.id),
     ]);
     setProfiles((pr.data as any) || []);
     setPayments((pay.data as any) || []);
@@ -93,17 +93,26 @@ const MyEarningsPage = () => {
   const vMap = useMemo(() => Object.fromEntries(vehicles.map((v) => [v.id, v])), [vehicles]);
   const pMap = useMemo(() => Object.fromEntries(profiles.map((p) => [p.user_id, p])), [profiles]);
 
-  const paidPeriods = useMemo(
-    () => new Set(payouts.filter((p) => p.status === "paid").map((p) => p.period)),
-    [payouts],
-  );
+  const paidPeriodCutoff = useMemo(() => {
+    const map: Record<string, number> = {};
+    payouts.forEach((p) => {
+      if (p.status !== "paid" || !p.paid_at) return;
+      const t = new Date(p.paid_at).getTime();
+      if (map[p.period] === undefined || t > map[p.period]) map[p.period] = t;
+    });
+    return map;
+  }, [payouts]);
   const paidResIds = useMemo(
     () => new Set(
       reservations
-        .filter((r) => paidPeriods.has(format(parseISO(r.created_at), "yyyy-MM")))
+        .filter((r) => {
+          const period = format(parseISO(r.created_at), "yyyy-MM");
+          const cutoff = paidPeriodCutoff[period];
+          return cutoff !== undefined && new Date(r.created_at).getTime() <= cutoff;
+        })
         .map((r) => r.id),
     ),
-    [reservations, paidPeriods],
+    [reservations, paidPeriodCutoff],
   );
 
   const earnable = useMemo(() => {
