@@ -331,8 +331,8 @@ const MyEarningsPage = () => {
             </Card>
 
             <p className="text-xs text-muted-foreground mt-4">
-              La ganancia mostrada descuenta la comisión de la plataforma ({commissionPct}%) y el seguro
-              (${INSURANCE_PER_DAY}/día) del monto total cobrado al arrendatario.
+              La ganancia mostrada descuenta la comisión del aliado ({ownerCommissionLabel}) sobre el
+              subtotal (días × tarifa/día) del vehículo, según la configuración del sistema.
             </p>
           </>
         )}
