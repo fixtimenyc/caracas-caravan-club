@@ -192,7 +192,7 @@ const MyEarningsPage = () => {
             <div>
               <h1 className="text-3xl font-bold">Mis ganancias</h1>
               <p className="text-sm text-muted-foreground">
-                Resumen de tus ingresos como aliado. Comisión de la plataforma: {commissionPct}%.
+                Resumen de tus ingresos como aliado. Comisión para el aliado: {ownerCommissionLabel}.
               </p>
             </div>
           </div>
