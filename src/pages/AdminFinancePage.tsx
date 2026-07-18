@@ -76,6 +76,30 @@ export default function AdminFinancePage() {
   };
   useEffect(() => { load(); }, []);
 
+  // Auto-refresh: realtime + polling + visibility
+  useEffect(() => {
+    let debounce: any;
+    const trigger = () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => load(), 600);
+    };
+    const channel = supabase
+      .channel("admin-finance-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, trigger)
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, trigger)
+      .on("postgres_changes", { event: "*", schema: "public", table: "owner_payouts" }, trigger)
+      .subscribe();
+    const interval = setInterval(load, 60_000);
+    const onVis = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearTimeout(debounce);
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVis);
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const vMap = useMemo(() => Object.fromEntries(vehicles.map((v) => [v.id, v])), [vehicles]);
   const pMap = useMemo(() => Object.fromEntries(profiles.map((p) => [p.user_id, p])), [profiles]);
   const rMap = useMemo(() => Object.fromEntries(reservations.map((r) => [r.id, r])), [reservations]);
