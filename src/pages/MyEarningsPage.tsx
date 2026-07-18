@@ -26,7 +26,7 @@ type Reservation = {
   id: string; vehicle_id: string; renter_id: string; total_price: number;
   start_date: string; end_date: string; status: string; created_at: string;
 };
-type Vehicle = { id: string; brand: string; model: string; year: number | null };
+type Vehicle = { id: string; brand: string; model: string; year: number | null; price_per_day: number | null; house_rules?: any };
 type Profile = { user_id: string; full_name: string | null };
 type Payment = { id: string; reservation_id: string; status: string };
 
