@@ -55,7 +55,7 @@ const MyEarningsPage = () => {
     setLoading(true);
     const { data: myVehicles } = await supabase
       .from("vehicles")
-      .select("id,brand,model,year")
+      .select("id,brand,model,year,price_per_day,house_rules")
       .eq("owner_id", user.id);
     const vids = (myVehicles || []).map((v) => v.id);
     setVehicles((myVehicles as any) || []);
