@@ -97,13 +97,21 @@ export default function AdminReservationDetailPage() {
 
   const finance = useMemo(() => {
     if (!reservation || !vehicle) return null;
-    const dailyRate = Number(vehicle.price_per_day) || 0;
-    const subtotal = dailyRate * days;
-    const insurance = days * 8;
-    const commission = Math.round(subtotal * 0.10 * 100) / 100;
-    const total = Number(reservation.total_price) || (subtotal + insurance + commission);
-    const payout = subtotal - commission;
-    return { dailyRate, subtotal, insurance, commission, total, payout };
+    const settings = loadSystemSettings();
+    const renter = computeRenterCharges(settings, vehicle, reservation.start_date, reservation.end_date);
+    const owner = computeOwnerBreakdown(settings, vehicle, reservation.start_date, reservation.end_date);
+    const total = Number(reservation.total_price) || renter.totalWithDeposit - renter.deposit;
+    return {
+      dailyRate: renter.pricePerDay,
+      subtotal: renter.subtotal,
+      insurance: renter.insurance,
+      commission: renter.commission,
+      commissionLabel: renter.commissionLabel,
+      ownerCommission: owner.ownerCommission,
+      ownerCommissionLabel: owner.ownerCommissionLabel,
+      total,
+      payout: owner.netEarnings,
+    };
   }, [reservation, vehicle, days]);
 
   const currentStep = useMemo(() => {
