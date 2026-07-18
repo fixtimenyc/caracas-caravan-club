@@ -85,6 +85,55 @@ async function verifyState(
   return Date.now() - ts < 10 * 60 * 1000;
 }
 
+// Demo-mode state signing uses the service-role key as HMAC secret so we
+// still validate that the callback matches the same user/provider even when
+// Meta credentials are absent.
+async function hmacDemo(state: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(SUPABASE_SERVICE_ROLE_KEY || "ruedave-demo"),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(state),
+  );
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function signStateDemo(userId: string, provider: string): Promise<string> {
+  const payload = `demo.${userId}.${provider}.${Date.now()}.${crypto.randomUUID()}`;
+  const sig = await hmacDemo(payload);
+  return `${btoa(payload)}.${sig}`;
+}
+
+async function verifyStateDemo(
+  state: string,
+  userId: string,
+  provider: string,
+): Promise<boolean> {
+  const [b64, sig] = state.split(".");
+  if (!b64 || !sig) return false;
+  let payload: string;
+  try {
+    payload = atob(b64);
+  } catch {
+    return false;
+  }
+  const expected = await hmacDemo(payload);
+  if (expected !== sig) return false;
+  const [tag, uid, prov, tsStr] = payload.split(".");
+  if (tag !== "demo" || uid !== userId || prov !== provider) return false;
+  const ts = Number(tsStr);
+  if (!Number.isFinite(ts)) return false;
+  return Date.now() - ts < 10 * 60 * 1000;
+}
+
 async function getUserFromRequest(req: Request) {
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace(/^Bearer\s+/i, "");
@@ -103,12 +152,13 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  if (!META_APP_ID || !META_APP_SECRET) {
-    return json(
-      { error: "Meta OAuth no está configurado (META_APP_ID / META_APP_SECRET)" },
-      500,
-    );
-  }
+  // NOTE: When META_APP_ID / META_APP_SECRET are not configured yet the
+  // function runs in DEMO MODE — no real Meta call is made, the "authorize"
+  // popup lands directly on our own callback with a synthetic code, and the
+  // exchange returns a fake identity. Set both secrets and this branch turns
+  // off automatically; the rest of the code below is the real integration
+  // point and does not need to change.
+  const DEMO_MODE = !META_APP_ID || !META_APP_SECRET;
 
   try {
     const parsed = BodySchema.safeParse(await req.json());
@@ -122,6 +172,21 @@ Deno.serve(async (req) => {
 
     // ---- START: build the authorization URL ----
     if (body.action === "start") {
+      if (DEMO_MODE) {
+        // Fake authorize URL: send the popup straight back to our own
+        // callback with a synthetic code + a signed state so the exchange
+        // step still validates state correctly.
+        const state = await signStateDemo(user.id, body.provider);
+        const params = new URLSearchParams({
+          code: `demo_${crypto.randomUUID()}`,
+          state,
+        });
+        return json({
+          authUrl: `${body.redirectUri}?${params.toString()}`,
+          demo: true,
+        });
+      }
+
       const scopes =
         body.provider === "instagram"
           ? [
@@ -145,6 +210,22 @@ Deno.serve(async (req) => {
         authUrl: `${OAUTH_DIALOG}?${params.toString()}`,
       });
     }
+
+    // ---- EXCHANGE: swap code for token, load profile, check uniqueness ----
+    if (DEMO_MODE) {
+      const okState = await verifyStateDemo(body.state, user.id, body.provider);
+      if (!okState) return json({ error: "invalid_state" }, 400);
+      const label = body.provider === "instagram" ? "Instagram" : "Facebook";
+      const identity = {
+        provider: body.provider,
+        providerUserId: `demo-${body.provider}-${user.id.slice(0, 8)}`,
+        name: user.user_metadata?.full_name || user.email || `Usuario ${label}`,
+        email: user.email || "",
+        picture: "",
+      };
+      return json({ ok: true, identity, demo: true });
+    }
+
 
     // ---- EXCHANGE: swap code for token, load profile, check uniqueness ----
     const okState = await verifyState(body.state, user.id, body.provider);
