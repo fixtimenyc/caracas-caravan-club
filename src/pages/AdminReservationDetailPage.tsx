@@ -22,6 +22,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { loadSystemSettings, computeRenterCharges, computeOwnerBreakdown } from "@/lib/systemSettings";
 import { toast } from "sonner";
 import ReservationInspectionsPanel from "@/components/admin/ReservationInspectionsPanel";
 import AdminPaymentVerification from "@/components/AdminPaymentVerification";
