@@ -220,9 +220,15 @@ const RenterVerificationPage = () => {
       const identity = await linkSocialInPopup(provider);
       setLinkedSocial(identity);
       setNoSocialAcknowledged(false);
-      toast.success(
-        `Identidad verificada con ${provider === 'google' ? 'Google' : 'Apple'}`,
-      );
+      const providerLabel =
+        provider === 'google'
+          ? 'Google'
+          : provider === 'apple'
+            ? 'Apple'
+            : provider === 'facebook'
+              ? 'Facebook'
+              : 'Instagram';
+      toast.success(`Identidad verificada con ${providerLabel}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'No se pudo verificar';
       if (/manual linking/i.test(msg)) {
