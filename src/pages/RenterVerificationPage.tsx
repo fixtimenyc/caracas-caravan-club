@@ -544,13 +544,38 @@ const RenterVerificationPage = () => {
                   file={selfie} onChange={setSelfie}
                   accept="image/*"
                 />
-                {hasMedical && (
-                  <FileField
-                    label="Certificado médico"
-                    hint="Documento vigente expedido por médico autorizado"
-                    file={medicalDoc} onChange={setMedicalDoc}
-                  />
-                )}
+
+                <div className="pt-4 border-t border-border">
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Documentos opcionales
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    No son obligatorios, pero ayudan a acelerar tu verificación.
+                  </p>
+                  <div className="space-y-4">
+                    <FileField
+                      label="Factura de servicios (opcional)"
+                      hint="Recibo reciente de luz, agua, internet o teléfono a tu nombre"
+                      file={utilityBill} onChange={setUtilityBill}
+                    />
+                    <FileField
+                      label="Referencia bancaria (opcional)"
+                      hint="Carta o constancia emitida por tu banco"
+                      file={bankReference} onChange={setBankReference}
+                    />
+                    {(hasMedical || isVenezuelan) && (
+                      <FileField
+                        label={
+                          hasMedical
+                            ? 'Certificado médico'
+                            : 'Certificado médico (opcional para venezolanos)'
+                        }
+                        hint="Documento vigente expedido por médico autorizado"
+                        file={medicalDoc} onChange={setMedicalDoc}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
