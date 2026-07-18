@@ -208,11 +208,13 @@ const RenterVerificationPage = () => {
     }
     setSubmitting(true);
     try {
-      const [identityPath, licensePath, selfiePath, medicalPath] = await Promise.all([
+      const [identityPath, licensePath, selfiePath, medicalPath, utilityPath, bankPath] = await Promise.all([
         uploadFile(identityDoc!, 'identity'),
         uploadFile(licenseDoc!, 'license'),
         uploadFile(selfie!, 'selfie'),
         hasMedical && medicalDoc ? uploadFile(medicalDoc, 'medical') : Promise.resolve(null),
+        utilityBill ? uploadFile(utilityBill, 'utility') : Promise.resolve(null),
+        bankReference ? uploadFile(bankReference, 'bank') : Promise.resolve(null),
       ]);
 
       const { error } = await supabase.from('renter_verifications').insert({
