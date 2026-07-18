@@ -212,6 +212,30 @@ const RenterVerificationPage = () => {
     toast.success('Teléfono verificado');
   };
 
+  const handleLinkSocial = async (provider: 'google' | 'apple') => {
+    setSocialLinking(provider);
+    try {
+      const identity = await linkSocialInPopup(provider);
+      setLinkedSocial(identity);
+      setNoSocialAcknowledged(false);
+      toast.success(
+        `Identidad verificada con ${provider === 'google' ? 'Google' : 'Apple'}`,
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'No se pudo verificar';
+      if (/manual linking/i.test(msg)) {
+        toast.error(
+          'Función deshabilitada. Un administrador debe habilitar "Manual Linking" en la configuración de Auth.',
+        );
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setSocialLinking(null);
+    }
+  };
+
+
   const handleNext = () => {
     if (step === 0 && !runValidation(personalSchema, personal)) return;
     if (step === 1) {
@@ -281,47 +305,55 @@ const RenterVerificationPage = () => {
         bankReference ? uploadFile(bankReference, 'bank') : Promise.resolve(null),
       ]);
 
-      const { error } = await supabase.from('renter_verifications').insert({
-        user_id: user.id,
-        full_name: personal.fullName,
-        document_type: personal.documentType,
-        document_number: personal.documentNumber,
-        birth_date: personal.birthDate,
-        nationality: personal.nationality,
-        gender: personal.gender,
-        occupation: personal.occupation,
-        employer: personal.employer || null,
-        phone: contact.phone,
-        phone_secondary: contact.phoneSecondary || null,
-        contact_email: contact.contactEmail || null,
-        address: contact.address,
-        city: contact.city,
-        state: contact.state || null,
-        country: contact.country,
-        emergency_contact_name: contact.emergencyContactName,
-        emergency_contact_relationship: contact.emergencyContactRelationship,
-        emergency_contact_phone: contact.emergencyContactPhone,
-        driving_license_number: license.drivingLicenseNumber,
-        driving_license_expiry: license.drivingLicenseExpiry,
-        has_medical_condition: hasMedical,
-        identity_doc_url: identityPath,
-        driving_license_doc_url: licensePath,
-        medical_certificate_url: medicalPath,
-        utility_bill_url: utilityPath,
-        bank_reference_url: bankPath,
-        selfie_url: selfiePath,
-        own_social_provider: linkedSocial?.provider ?? null,
-        own_social_provider_user_id: linkedSocial?.providerUserId ?? null,
-        own_social_verified_at: linkedSocial ? new Date().toISOString() : null,
-        own_social_verified_name: linkedSocial?.name ?? null,
-        own_social_verified_email: linkedSocial?.email ?? null,
-        own_social_declared_age_months: declaredAgeMonths,
-        accepted_terms: acceptedTerms,
-      }).select('id').single();
+      const { data: inserted, error } = await supabase
+        .from('renter_verifications')
+        .insert({
+          user_id: user.id,
+          full_name: personal.fullName,
+          document_type: personal.documentType,
+          document_number: personal.documentNumber,
+          birth_date: personal.birthDate,
+          nationality: personal.nationality,
+          gender: personal.gender,
+          occupation: personal.occupation,
+          employer: personal.employer || null,
+          phone: contact.phone,
+          phone_secondary: contact.phoneSecondary || null,
+          contact_email: contact.contactEmail || null,
+          address: contact.address,
+          city: contact.city,
+          state: contact.state || null,
+          country: contact.country,
+          emergency_contact_name: contact.emergencyContactName,
+          emergency_contact_relationship: contact.emergencyContactRelationship,
+          emergency_contact_phone: contact.emergencyContactPhone,
+          driving_license_number: license.drivingLicenseNumber,
+          driving_license_expiry: license.drivingLicenseExpiry,
+          has_medical_condition: hasMedical,
+          identity_doc_url: identityPath,
+          driving_license_doc_url: licensePath,
+          medical_certificate_url: medicalPath,
+          utility_bill_url: utilityPath,
+          bank_reference_url: bankPath,
+          selfie_url: selfiePath,
+          own_social_provider: linkedSocial?.provider ?? null,
+          own_social_provider_user_id: linkedSocial?.providerUserId ?? null,
+          own_social_verified_at: linkedSocial ? new Date().toISOString() : null,
+          own_social_verified_name: linkedSocial?.name ?? null,
+          own_social_verified_email: linkedSocial?.email ?? null,
+          own_social_declared_age_months: declaredAgeMonths,
+          accepted_terms: acceptedTerms,
+        })
+        .select('id')
+        .single();
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('Ya enviaste tu verificación anteriormente');
+          if (error.message.includes('renter_verifications_social_provider_unique')) {
+            toast.error('Esta cuenta social ya fue usada por otro usuario');
+          } else {
+            toast.error('Ya enviaste tu verificación anteriormente');
+          }
         } else {
           toast.error(error.message);
         }
@@ -336,7 +368,27 @@ const RenterVerificationPage = () => {
         birth_date: personal.birthDate,
       }).eq('user_id', user.id);
 
+      // Optional: send personal reference request
+      if (refEmail.trim().length > 0 && inserted?.id) {
+        const { error: refError } = await supabase.rpc(
+          'request_personal_reference',
+          {
+            _verification_id: inserted.id,
+            _email: refEmail.trim(),
+            _message: null,
+          },
+        );
+        if (refError) {
+          toast.error(
+            `Verificación enviada, pero la referencia no se envió: ${refError.message}`,
+          );
+        } else {
+          toast.success('Referencia enviada. Esperando confirmación del referente.');
+        }
+      }
+
       setSubmitted(true);
+
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error inesperado';
       toast.error(msg);
