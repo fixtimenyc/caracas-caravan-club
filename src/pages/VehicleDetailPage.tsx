@@ -288,7 +288,7 @@ const VehicleDetailPage = () => {
       navigate(`/arrendatario/verificacion?redirect=/vehiculo/${id}`);
       return;
     }
-    if (rv.status === "pending" || rv.status === "submitted") {
+    if ((rv.status as string) === "pending" || (rv.status as string) === "submitted") {
       toast.error("Verificación en revisión", {
         description: "Un administrador debe aprobar tu perfil antes de que puedas reservar.",
       });
