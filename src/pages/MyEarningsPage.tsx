@@ -46,8 +46,9 @@ const MyEarningsPage = () => {
   const [period, setPeriod] = useState<"3m" | "6m" | "12m" | "all">("6m");
   const [vehicleFilter, setVehicleFilter] = useState<string>("all");
 
-  const commissionPct = Number(loadSystemSettings().policies.commission_pct ?? 20);
-  const commissionRate = commissionPct / 100;
+  const settings = loadSystemSettings();
+  const ownerRule = settings.policies.owner_commission;
+  const ownerCommissionLabel = describeCommission(ownerRule);
 
   const load = async () => {
     if (!user) return;
