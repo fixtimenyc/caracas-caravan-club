@@ -1,95 +1,110 @@
-# Verificación por red social + referido de usuario
 
 ## Objetivo
 
-Reemplazar en el paso "Redes y referencia" del cuestionario de verificación de arrendatario:
+Añadir Facebook e Instagram como opciones para vincular una identidad social verificada en el Paso 4 de la verificación de arrendatario, junto a Google y Apple que ya existen.
 
-1. La declaración manual de plataforma/URL/antigüedad → **login OAuth real** que devuelva un token verificado. Solo cuenta si el proveedor expone antigüedad ≥ **6 meses** (Facebook / Instagram / LinkedIn). Google/Apple se aceptan como capa extra pero **no cumplen** el requisito de antigüedad por sí solos.
-2. La referencia personal libre → **referencia opcional a otro usuario ya registrado** en RuedaVe, verificada por email y con notificación al referente para que confirme.
+## Limitaciones importantes a decidir antes de empezar
+
+Meta (Facebook/Instagram) no está entre los proveedores nativos de Lovable Cloud (solo Google y Apple), y no existe un App User Connector para Meta. Por lo tanto **hay que implementar OAuth manual con la Graph API de Meta**. Antes de construir, es importante que sepas:
+
+1. **Necesitas una cuenta Meta Developer y crear una App** en https://developers.facebook.com/. Sin eso, no podemos probar el flujo.
+2. **Facebook Login para verificar la persona**: devuelve `id`, `name`, `email` (si el usuario lo autoriza) y foto de perfil. Es suficiente para "la cuenta existe y pertenece a la persona".
+3. **Instagram**: Meta deprecó la Instagram Basic Display API en diciembre de 2024. Hoy solo se puede acceder vía **Instagram Login (con cuentas Business/Creator)** o via **Facebook Login cuando la cuenta de Instagram está enlazada a una página de Facebook**. Cuentas personales de Instagram (Personal) **no se pueden verificar** por API pública. Propuesta: ofrecer "Instagram" como opción secundaria que use Facebook Login y lea la cuenta de IG conectada; si el usuario no tiene IG-Business enlazado a FB, mostrar mensaje explicando la limitación y sugerir Facebook o Google.
+4. **Antigüedad de la cuenta**: Meta **no expone** la fecha de creación de la cuenta por privacidad. La declaración de antigüedad seguirá siendo manual (ya la tienes con `declaredAgeMonths`), sujeta a revisión del admin.
+5. **App Review de Meta**: Facebook Login básico (`public_profile`, `email`) funciona en modo desarrollo sin revisión. Para producción pública se requiere App Review de Meta (proceso de 1–2 semanas). Mientras tanto, solo los usuarios agregados como testers en tu Meta App podrán vincular.
+
+Si aceptas estas limitaciones, el plan continúa así.
 
 ## Cambios
 
-### 1. Base de datos (1 migración)
+### 1. Base de datos (migración)
 
-Nuevas columnas en `renter_verifications`:
-- `own_social_provider` (text) — `facebook`, `instagram`, `linkedin`, `google`, `apple`
-- `own_social_provider_user_id` (text) — id devuelto por el proveedor
-- `own_social_verified_at` (timestamptz)
-- `own_social_verified_name`, `own_social_verified_email` (text) — payload firmado que se cruza con lo que declaró el usuario
-- `own_social_account_created_at` (timestamptz, nullable) — solo si el proveedor la expone
-- `own_social_age_verified` (boolean) — true solo si `account_created_at ≤ now() - 6 months`
-- `personal_reference_user_id` (uuid → auth.users, nullable) — reemplaza los campos de nombre/parentesco/redes del referente
-- `personal_reference_confirmed_at` (timestamptz)
-- Se mantienen los antiguos campos como legacy para no romper solicitudes en curso.
+Extender `renter_verifications` para soportar Meta:
 
-Nueva tabla `renter_reference_requests` (referente confirma o rechaza):
-- `verification_id`, `requester_user_id`, `referent_user_id`, `referent_email`, `status` (`pending`/`confirmed`/`declined`), `responded_at`.
-- RLS: requester y referent ven su propia fila; admin ve todo.
-- Trigger: al crear, inserta notificación in-app al referent con acción `/perfil/referencias/{id}`.
+- `own_social_provider` ya existe como texto libre; añadir `'facebook'` e `'instagram'` como valores válidos en la app.
+- Añadir columna `own_social_verified_picture text` para guardar el avatar devuelto por Meta (útil para revisión visual del admin cuando cruce con la selfie).
+- El resto (`own_social_provider_user_id`, `own_social_verified_name`, `own_social_verified_email`, `own_social_verified_at`) se reutiliza tal cual.
 
-Nueva función `request_personal_reference(_verification_id, _email)`:
-- Valida que el email pertenezca a un usuario existente (`auth.users`) y distinto del solicitante.
-- Crea la fila `renter_reference_requests` y devuelve el `referent_user_id`.
+### 2. Secretos (workflow con el usuario)
 
-Nueva función `confirm_personal_reference(_request_id, _accept)`:
-- Solo el `referent_user_id = auth.uid()` puede llamarla.
-- Marca `confirmed` / `declined` y, si `confirmed`, actualiza `renter_verifications.personal_reference_user_id` y `personal_reference_confirmed_at`.
+Después de que apruebes el plan, cuando entremos en implementación te pediré vía `add_secret`:
 
-Ajuste a `get_renter_profile_for_owner`: expone `social_verified`, `social_provider`, `social_age_verified`, `personal_reference_confirmed` para que el aliado vea la señal.
+- `META_APP_ID` (público, se puede exponer al cliente)
+- `META_APP_SECRET` (secreto, solo en edge function)
 
-### 2. Auth social (Google + Apple + Facebook)
+Y te daré la URL de callback exacta para que la configures en la Meta App como "Valid OAuth Redirect URI".
 
-- Google y Apple ya están soportados por Lovable Cloud → activar ambos con `configure_social_auth` (`providers: ["google","apple"]`).
-- Facebook/Instagram **no** están soportados nativamente por Lovable Cloud. Se conecta vía **App User Connector** (`connector_app_user--list_connectors` → cliente Facebook/Instagram Basic Display). El builder deberá crear una app en Meta y añadir el redirect del gateway de Lovable.
-- LinkedIn queda disponible como fallback vía connector (opcional, se puede activar en el mismo paso si el usuario lo pide después).
+### 3. Edge function `meta-oauth-verify`
 
-### 3. Frontend — Paso 5 "Redes y referencia" en `RenterVerificationPage.tsx`
+Función Deno que hace:
 
-Nuevo bloque **"Verifica tu identidad con una red social"**:
-- 4 botones: *Continuar con Facebook*, *Continuar con Instagram*, *Continuar con Google*, *Continuar con Apple*.
-- Al aprobar, se llama:
-  - Google/Apple → `lovable.auth.signInWithOAuth` en un popup lateral que no toca la sesión principal (usa `redirect_uri` a `/verificacion/social-callback`). Guardamos payload como capa adicional, con badge "Identidad verificada" pero **advertencia** de que no cuenta como antigüedad ≥6 meses.
-  - Facebook/Instagram → hook `useSocialAgeVerification` que abre el OAuth del connector, lee `me?fields=id,name,email,account_created_time` en un edge function (`verify-social-age`) y actualiza `renter_verifications`.
-- Muestra estado en vivo: proveedor, nombre devuelto, fecha estimada de creación, badge verde si ≥6 meses, badge amarillo si no.
-- Bloquea "Continuar" hasta tener al menos una red con `own_social_age_verified = true` **o** hasta que el usuario marque explícitamente "No dispongo de redes con esa antigüedad" (queda pendiente de revisión manual del admin).
+1. **Endpoint `POST /start`**: recibe el `user_id` autenticado (via JWT), genera un `state` firmado (nonce + user_id + timestamp) usando `META_APP_SECRET`, y devuelve la URL de autorización de Facebook con `scope=public_profile,email`. Para Instagram usa `scope=public_profile,email,instagram_basic,pages_show_list` (requiere IG-Business).
+2. **Endpoint `GET /callback`**: recibe `code` y `state` de Meta:
+   - Valida `state` (firma + antigüedad < 5 min).
+   - Intercambia `code` por `access_token` (llamada a `graph.facebook.com/v21.0/oauth/access_token`).
+   - Llama `graph.facebook.com/me?fields=id,name,email,picture` con el token.
+   - (Para Instagram) llama `me/accounts` → toma el primer `instagram_business_account`.
+   - Verifica que el `provider_user_id` no esté ya usado por otro `user_id` en `renter_verifications` (unicidad, para evitar reutilización de la misma cuenta social por varias personas).
+   - Devuelve un HTML mínimo que hace `window.opener.postMessage({...})` con el resultado y cierra la ventana (mismo patrón que ya usa `SocialLinkCallback.tsx`).
+3. CORS estándar, validación de input con Zod, uso de `SUPABASE_SERVICE_ROLE_KEY` para el chequeo de unicidad.
 
-Nuevo bloque **"Referencia personal (opcional)"**:
-- Sustituye los campos previos por un solo input de correo + botón "Enviar solicitud".
-- Antes de enviar, hint claro: *"Debe ser el correo de alguien ya registrado en RuedaVe. Es opcional, pero acelera tu verificación."*
-- Al enviar, llama `request_personal_reference`. Feedback:
-  - "Usuario no encontrado" si el email no existe → sugiere invitarlo por WhatsApp.
-  - "Solicitud enviada, esperando confirmación" si existe → muestra estado en vivo con `useReferenceRequests`.
-- El bloque de "Continuar" no depende de la referencia (es opcional).
+### 4. Cliente — `src/lib/socialIdentity.ts`
 
-Nueva página `/perfil/referencias` (para el referente):
-- Lista de solicitudes pendientes con nombre y foto del solicitante.
-- Botones **Confirmar** / **Rechazar** → llaman `confirm_personal_reference`.
+Extender `linkSocialInPopup(provider)` para aceptar `'facebook' | 'instagram'` además de `'google' | 'apple'`. Para Meta:
 
-### 4. Edge function `verify-social-age`
+- No usa `supabase.auth.linkIdentity` (Meta no está en Supabase Auth).
+- Llama al edge function `meta-oauth-verify/start`, abre popup en la URL devuelta.
+- Escucha `postMessage` del callback y resuelve con el mismo shape `LinkedIdentity`.
 
-- Recibe `provider`, `provider_access_token`, `verification_id`.
-- Verifica el token con el connector gateway (Facebook Graph `/me?fields=id,name,email` + endpoint de account age; Instagram Basic Display para `account_created_time`).
-- Escribe en `renter_verifications` con `service_role`.
-- Devuelve `{ verified, account_age_months, meets_threshold }`.
+### 5. UI — `src/pages/RenterVerificationPage.tsx` (Paso 4)
 
-### 5. Compatibilidad y datos legacy
+Añadir 2 botones más en el grid de opciones OAuth, debajo de Google y Apple:
 
-- Formularios ya enviados con red social manual siguen mostrando su información antigua en el bloque de revisión (`own_social_platform`, `own_social_url`, `own_social_age_months`) pero con badge "Método antiguo — pendiente de revisión manual".
-- Las nuevas solicitudes solo se aprueban si `own_social_age_verified = true` o si el admin sube una anotación manual (mantiene poder de excepción).
+- **Continuar con Facebook** (color de marca Meta azul)
+- **Continuar con Instagram** (con nota "requiere cuenta Business enlazada a Facebook")
 
-## Preguntas para el usuario tras aprobar el plan
+Cuando `linkedSocial` está presente, la tarjeta verde de "Verificado con X" ya muestra el proveedor genéricamente. Añadir el ícono correcto según el provider.
 
-- **Facebook/Instagram OAuth app**: necesitas crear la app en Meta Developers y darme las credenciales (Client ID + Secret) cuando llegue el momento. Puedo indicarte el redirect URI exacto del gateway de Lovable cuando activemos el connector.
-- **Apple Sign In**: se activa con el modo gestionado por defecto (sin credenciales propias). ¿Ok?
+### 6. Panel admin (opcional, mismo turno)
 
-## Notas técnicas
+En `AdminRenterVerificationsPage` mostrar el proveedor social y el link al perfil (si Meta devolvió `link`) para que el admin pueda hacer verificación cruzada rápida.
 
-- Todos los OAuth se hacen en popup separado; no rompen la sesión Supabase del arrendatario.
-- El referente recibe notificación in-app + email (via función existente de notificaciones).
-- El requisito de ≥6 meses queda en el frontend **y** en un check server-side en la función que aprueba solicitudes (`handle_renter_verification_approved` se amplía para bloquear aprobación automática si el social_age_verified es false y no hay override admin).
+## Detalles técnicos
+
+```text
+Flujo:
+Usuario clic "Continuar con Facebook"
+   │
+   ▼
+POST /functions/v1/meta-oauth-verify/start
+  Body: { provider: "facebook" }
+  Auth: sesión Supabase del usuario
+   │
+   ▼ devuelve { authUrl }
+Popup abre authUrl (facebook.com/v21.0/dialog/oauth?...)
+   │
+   ▼ usuario autoriza
+Meta redirige a GET /functions/v1/meta-oauth-verify/callback?code=...&state=...
+   │
+   ▼ edge function intercambia code → token → me
+   ▼ devuelve HTML con postMessage({ ok, identity })
+   ▼
+Cliente recibe postMessage, guarda linkedSocial, cierra popup
+```
+
+**Unicidad**: índice único parcial en `renter_verifications(own_social_provider, own_social_provider_user_id) WHERE own_social_provider IS NOT NULL` para bloquear que dos personas usen la misma cuenta FB.
+
+**Instagram sin Business account**: si `me/accounts` no devuelve ninguna IG-Business, el callback responde con `{ ok: false, reason: "instagram_not_business" }` y el cliente muestra: "Tu cuenta de Instagram debe estar enlazada a una página de Facebook como cuenta Business/Creator. Prueba con Facebook directamente."
+
+**Preservación de sesión**: como es un popup + `postMessage` (mismo patrón actual), la sesión Supabase del usuario nunca se toca; no hay riesgo de log-out.
 
 ## Fuera de alcance
 
-- Verificación por Twitter/X (X connector es solo lectura pública, no hace login como usuario).
-- WhatsApp OAuth (no existe).
-- Restauración retroactiva de antigüedad para usuarios ya aprobados con método antiguo.
+- Verificar TikTok/Snapchat/LinkedIn (no lo pediste).
+- Automatizar App Review de Meta.
+- Estimar la antigüedad real de la cuenta (Meta no lo expone).
+
+## Preguntas antes de implementar
+
+1. ¿Confirmas que ya tienes o vas a crear una Meta App para poder darme `META_APP_ID` y `META_APP_SECRET` cuando lleguemos al paso de secretos?
+2. Para Instagram, ¿te parece bien la limitación de "solo cuentas Business/Creator enlazadas a Facebook", o prefieres ocultar el botón de Instagram por ahora y dejar solo Facebook?

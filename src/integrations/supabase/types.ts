@@ -678,6 +678,7 @@ export type Database = {
           own_social_verified_at: string | null
           own_social_verified_email: string | null
           own_social_verified_name: string | null
+          own_social_verified_picture: string | null
           personal_reference_confirmed_at: string | null
           personal_reference_user_id: string | null
           phone: string
@@ -731,6 +732,7 @@ export type Database = {
           own_social_verified_at?: string | null
           own_social_verified_email?: string | null
           own_social_verified_name?: string | null
+          own_social_verified_picture?: string | null
           personal_reference_confirmed_at?: string | null
           personal_reference_user_id?: string | null
           phone: string
@@ -784,6 +786,7 @@ export type Database = {
           own_social_verified_at?: string | null
           own_social_verified_email?: string | null
           own_social_verified_name?: string | null
+          own_social_verified_picture?: string | null
           personal_reference_confirmed_at?: string | null
           personal_reference_user_id?: string | null
           phone?: string
