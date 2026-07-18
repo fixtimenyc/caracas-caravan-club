@@ -384,9 +384,10 @@ export default function AdminReservationDetailPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Días</span><span>{days}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>${finance?.subtotal.toFixed(2)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Seguro ($8/día)</span><span>${finance?.insurance.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Comisión RUEDAVE (10%)</span><span className="text-red-600">−${finance?.commission.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Comisión arrendatario ({finance?.commissionLabel})</span><span>+${finance?.commission.toFixed(2)}</span></div>
                 <Separator />
                 <div className="flex justify-between font-semibold"><span>Total cobrado</span><span>${finance?.total.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Comisión aliado ({finance?.ownerCommissionLabel})</span><span className="text-red-600">−${finance?.ownerCommission.toFixed(2)}</span></div>
                 <div className="flex justify-between font-semibold text-emerald-700"><span>Payout dueño</span><span>${finance?.payout.toFixed(2)}</span></div>
                 {reservation.refund_amount != null && (
                   <>
