@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { loadSystemSettings, INSURANCE_PER_DAY } from "@/lib/systemSettings";
+import { loadSystemSettings, computeOwnerBreakdown, describeCommission } from "@/lib/systemSettings";
 import { toCSV } from "@/lib/csv";
 
 const fmt = (n: number) =>
@@ -26,7 +26,7 @@ type Reservation = {
   id: string; vehicle_id: string; renter_id: string; total_price: number;
   start_date: string; end_date: string; status: string; created_at: string;
 };
-type Vehicle = { id: string; brand: string; model: string; year: number | null };
+type Vehicle = { id: string; brand: string; model: string; year: number | null; price_per_day: number | null; house_rules?: any };
 type Profile = { user_id: string; full_name: string | null };
 type Payment = { id: string; reservation_id: string; status: string };
 
@@ -46,15 +46,16 @@ const MyEarningsPage = () => {
   const [period, setPeriod] = useState<"3m" | "6m" | "12m" | "all">("6m");
   const [vehicleFilter, setVehicleFilter] = useState<string>("all");
 
-  const commissionPct = Number(loadSystemSettings().policies.commission_pct ?? 20);
-  const commissionRate = commissionPct / 100;
+  const settings = loadSystemSettings();
+  const ownerRule = settings.policies.owner_commission;
+  const ownerCommissionLabel = describeCommission(ownerRule);
 
   const load = async () => {
     if (!user) return;
     setLoading(true);
     const { data: myVehicles } = await supabase
       .from("vehicles")
-      .select("id,brand,model,year")
+      .select("id,brand,model,year,price_per_day,house_rules")
       .eq("owner_id", user.id);
     const vids = (myVehicles || []).map((v) => v.id);
     setVehicles((myVehicles as any) || []);
@@ -109,18 +110,20 @@ const MyEarningsPage = () => {
 
   const enriched = useMemo(() => {
     return earnable.map((r) => {
-      const days = Math.max(differenceInDays(parseISO(r.end_date), parseISO(r.start_date)), 1);
+      const v = vehicles.find((x) => x.id === r.vehicle_id);
+      const b = computeOwnerBreakdown(settings, v ?? { price_per_day: 0 }, r.start_date, r.end_date);
       const total = Number(r.total_price || 0);
-      // total_price includes subtotal + commission + insurance (see enforce_reservation_price trigger).
-      // Owner earns the subtotal only.
-      const insurance = days * INSURANCE_PER_DAY;
-      // Recover subtotal: total = subtotal * (1 + commissionRate) + insurance
-      const subtotal = (total - insurance) / (1 + commissionRate);
-      const commission = subtotal * commissionRate;
-      const ownerNet = Math.max(0, subtotal);
-      return { r, days, total, subtotal, commission, insurance, ownerNet };
+      return {
+        r,
+        days: b.days,
+        total,
+        subtotal: b.subtotal,
+        commission: b.ownerCommission,
+        insurance: b.insurance,
+        ownerNet: b.netEarnings,
+      };
     });
-  }, [earnable, commissionRate]);
+  }, [earnable, vehicles, settings]);
 
   const totals = useMemo(() => {
     const gross = enriched.reduce((s, x) => s + x.subtotal, 0);
@@ -189,7 +192,7 @@ const MyEarningsPage = () => {
             <div>
               <h1 className="text-3xl font-bold">Mis ganancias</h1>
               <p className="text-sm text-muted-foreground">
-                Resumen de tus ingresos como aliado. Comisión de la plataforma: {commissionPct}%.
+                Resumen de tus ingresos como aliado. Comisión para el aliado: {ownerCommissionLabel}.
               </p>
             </div>
           </div>
@@ -328,8 +331,8 @@ const MyEarningsPage = () => {
             </Card>
 
             <p className="text-xs text-muted-foreground mt-4">
-              La ganancia mostrada descuenta la comisión de la plataforma ({commissionPct}%) y el seguro
-              (${INSURANCE_PER_DAY}/día) del monto total cobrado al arrendatario.
+              La ganancia mostrada descuenta la comisión del aliado ({ownerCommissionLabel}) sobre el
+              subtotal (días × tarifa/día) del vehículo, según la configuración del sistema.
             </p>
           </>
         )}
