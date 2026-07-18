@@ -681,6 +681,9 @@ const RenterVerificationPage = () => {
                   <ReviewItem label="Licencia" value={licenseDoc?.name} />
                   <ReviewItem label="Selfie" value={selfie?.name} />
                   {hasMedical && <ReviewItem label="Médico" value={medicalDoc?.name} />}
+                  {!hasMedical && medicalDoc && <ReviewItem label="Médico (opcional)" value={medicalDoc.name} />}
+                  {utilityBill && <ReviewItem label="Factura de servicios" value={utilityBill.name} />}
+                  {bankReference && <ReviewItem label="Referencia bancaria" value={bankReference.name} />}
                 </ReviewBlock>
                 <ReviewBlock title="Redes sociales">
                   <ReviewItem label="Tu red" value={`${socials.ownSocialPlatform} · ${socials.ownSocialAgeMonths} meses`} />
