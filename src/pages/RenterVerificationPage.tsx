@@ -114,7 +114,7 @@ const RenterVerificationPage = () => {
   });
   const [hasMedical, setHasMedical] = useState(false);
   const [linkedSocial, setLinkedSocial] = useState<LinkedIdentity | null>(null);
-  const [socialLinking, setSocialLinking] = useState<'google' | 'apple' | null>(null);
+  const [socialLinking, setSocialLinking] = useState<'google' | 'apple' | 'facebook' | 'instagram' | null>(null);
   const [declaredAgeMonths, setDeclaredAgeMonths] = useState<number>(12);
   const [noSocialAcknowledged, setNoSocialAcknowledged] = useState<boolean>(false);
   const [refEmail, setRefEmail] = useState<string>('');
@@ -212,7 +212,9 @@ const RenterVerificationPage = () => {
     toast.success('Teléfono verificado');
   };
 
-  const handleLinkSocial = async (provider: 'google' | 'apple') => {
+  const handleLinkSocial = async (
+    provider: 'google' | 'apple' | 'facebook' | 'instagram',
+  ) => {
     setSocialLinking(provider);
     try {
       const identity = await linkSocialInPopup(provider);
