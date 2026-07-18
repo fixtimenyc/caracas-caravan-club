@@ -123,8 +123,12 @@ const RenterVerificationPage = () => {
   const [identityDoc, setIdentityDoc] = useState<File | null>(null);
   const [licenseDoc, setLicenseDoc] = useState<File | null>(null);
   const [medicalDoc, setMedicalDoc] = useState<File | null>(null);
+  const [utilityBill, setUtilityBill] = useState<File | null>(null);
+  const [bankReference, setBankReference] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const isVenezuelan = personal.nationality.trim().toLowerCase().startsWith('venezol');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -204,11 +208,13 @@ const RenterVerificationPage = () => {
     }
     setSubmitting(true);
     try {
-      const [identityPath, licensePath, selfiePath, medicalPath] = await Promise.all([
+      const [identityPath, licensePath, selfiePath, medicalPath, utilityPath, bankPath] = await Promise.all([
         uploadFile(identityDoc!, 'identity'),
         uploadFile(licenseDoc!, 'license'),
         uploadFile(selfie!, 'selfie'),
         hasMedical && medicalDoc ? uploadFile(medicalDoc, 'medical') : Promise.resolve(null),
+        utilityBill ? uploadFile(utilityBill, 'utility') : Promise.resolve(null),
+        bankReference ? uploadFile(bankReference, 'bank') : Promise.resolve(null),
       ]);
 
       const { error } = await supabase.from('renter_verifications').insert({
@@ -237,6 +243,8 @@ const RenterVerificationPage = () => {
         identity_doc_url: identityPath,
         driving_license_doc_url: licensePath,
         medical_certificate_url: medicalPath,
+        utility_bill_url: utilityPath,
+        bank_reference_url: bankPath,
         selfie_url: selfiePath,
         own_social_platform: socials.ownSocialPlatform,
         own_social_url: socials.ownSocialUrl,
@@ -536,13 +544,38 @@ const RenterVerificationPage = () => {
                   file={selfie} onChange={setSelfie}
                   accept="image/*"
                 />
-                {hasMedical && (
-                  <FileField
-                    label="Certificado médico"
-                    hint="Documento vigente expedido por médico autorizado"
-                    file={medicalDoc} onChange={setMedicalDoc}
-                  />
-                )}
+
+                <div className="pt-4 border-t border-border">
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Documentos opcionales
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    No son obligatorios, pero ayudan a acelerar tu verificación.
+                  </p>
+                  <div className="space-y-4">
+                    <FileField
+                      label="Factura de servicios (opcional)"
+                      hint="Recibo reciente de luz, agua, internet o teléfono a tu nombre"
+                      file={utilityBill} onChange={setUtilityBill}
+                    />
+                    <FileField
+                      label="Referencia bancaria (opcional)"
+                      hint="Carta o constancia emitida por tu banco"
+                      file={bankReference} onChange={setBankReference}
+                    />
+                    {(hasMedical || isVenezuelan) && (
+                      <FileField
+                        label={
+                          hasMedical
+                            ? 'Certificado médico'
+                            : 'Certificado médico (opcional para venezolanos)'
+                        }
+                        hint="Documento vigente expedido por médico autorizado"
+                        file={medicalDoc} onChange={setMedicalDoc}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -648,6 +681,9 @@ const RenterVerificationPage = () => {
                   <ReviewItem label="Licencia" value={licenseDoc?.name} />
                   <ReviewItem label="Selfie" value={selfie?.name} />
                   {hasMedical && <ReviewItem label="Médico" value={medicalDoc?.name} />}
+                  {!hasMedical && medicalDoc && <ReviewItem label="Médico (opcional)" value={medicalDoc.name} />}
+                  {utilityBill && <ReviewItem label="Factura de servicios" value={utilityBill.name} />}
+                  {bankReference && <ReviewItem label="Referencia bancaria" value={bankReference.name} />}
                 </ReviewBlock>
                 <ReviewBlock title="Redes sociales">
                   <ReviewItem label="Tu red" value={`${socials.ownSocialPlatform} · ${socials.ownSocialAgeMonths} meses`} />
