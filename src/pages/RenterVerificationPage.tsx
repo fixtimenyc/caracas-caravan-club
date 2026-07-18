@@ -123,8 +123,12 @@ const RenterVerificationPage = () => {
   const [identityDoc, setIdentityDoc] = useState<File | null>(null);
   const [licenseDoc, setLicenseDoc] = useState<File | null>(null);
   const [medicalDoc, setMedicalDoc] = useState<File | null>(null);
+  const [utilityBill, setUtilityBill] = useState<File | null>(null);
+  const [bankReference, setBankReference] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const isVenezuelan = personal.nationality.trim().toLowerCase().startsWith('venezol');
 
   useEffect(() => {
     if (!loading && !user) {
