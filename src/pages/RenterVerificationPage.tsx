@@ -500,7 +500,7 @@ const RenterVerificationPage = () => {
                     <Label className="text-sm font-semibold">Teléfono principal</Label>
                     {phoneVerified && (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
-                        <ShieldCheckIcon className="w-3.5 h-3.5" /> Verificado
+                        <ShieldCheck className="w-3.5 h-3.5" /> Verificado
                       </span>
                     )}
                   </div>
@@ -739,75 +739,130 @@ const RenterVerificationPage = () => {
               </div>
             )}
 
-            {/* Step 4: Redes y referencia */}
+            {/* Step 4: Red social + referencia */}
             {step === 4 && (
-              <div className="space-y-4">
-                <h3 className="font-semibold text-sm text-foreground">Tu red social comprobable</h3>
-                <p className="text-xs text-muted-foreground -mt-2">
-                  Debe tener más de 1 año de actividad
-                </p>
-                <FieldGroup>
-                  <Field label="Plataforma" error={errors.ownSocialPlatform} htmlFor="osp">
-                    <Select value={socials.ownSocialPlatform}
-                      onValueChange={(v) => setSocials({ ...socials, ownSocialPlatform: v })}>
-                      <SelectTrigger id="osp"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                      <SelectContent>
-                        {SOCIAL_PLATFORMS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field label="Antigüedad (meses)" error={errors.ownSocialAgeMonths} htmlFor="osa">
-                    <Input id="osa" type="number" min={12} value={socials.ownSocialAgeMonths}
-                      onChange={(e) => setSocials({ ...socials, ownSocialAgeMonths: Number(e.target.value) })} />
-                  </Field>
-                </FieldGroup>
-                <Field label="URL del perfil" error={errors.ownSocialUrl} htmlFor="osu">
-                  <Input id="osu" value={socials.ownSocialUrl} placeholder="https://instagram.com/tu_usuario"
-                    onChange={(e) => setSocials({ ...socials, ownSocialUrl: e.target.value })} />
-                </Field>
-
-                <div className="pt-4 border-t border-border">
-                  <h3 className="font-semibold text-sm text-foreground mb-1">Referencia personal</h3>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Verifica tu identidad con una red social
+                  </h3>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Un amigo o familiar con red social activa de más de 1 año
+                    Inicia sesión con Google o Apple para vincular una identidad
+                    digital verificada a tu perfil. La misma cuenta no puede
+                    reutilizarse en otra verificación.
                   </p>
-                  <div className="space-y-4">
-                    <FieldGroup>
-                      <Field label="Nombre completo" error={errors.referenceName} htmlFor="rn">
-                        <Input id="rn" value={socials.referenceName} maxLength={100}
-                          onChange={(e) => setSocials({ ...socials, referenceName: e.target.value })} />
-                      </Field>
-                      <Field label="Parentesco" error={errors.referenceRelationship} htmlFor="rr">
-                        <Input id="rr" value={socials.referenceRelationship} maxLength={40}
-                          onChange={(e) => setSocials({ ...socials, referenceRelationship: e.target.value })}
-                          placeholder="Amigo, primo, etc." />
-                      </Field>
-                    </FieldGroup>
-                    <Field label="Teléfono de la referencia" error={errors.referencePhone} htmlFor="rp">
-                      <Input id="rp" value={socials.referencePhone} maxLength={20}
-                        onChange={(e) => setSocials({ ...socials, referencePhone: e.target.value })} />
-                    </Field>
-                    <FieldGroup>
-                      <Field label="Plataforma" error={errors.referenceSocialPlatform} htmlFor="rsp">
-                        <Select value={socials.referenceSocialPlatform}
-                          onValueChange={(v) => setSocials({ ...socials, referenceSocialPlatform: v })}>
-                          <SelectTrigger id="rsp"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                          <SelectContent>
-                            {SOCIAL_PLATFORMS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-                      <Field label="Antigüedad (meses)" error={errors.referenceSocialAgeMonths} htmlFor="rsa">
-                        <Input id="rsa" type="number" min={12} value={socials.referenceSocialAgeMonths}
-                          onChange={(e) => setSocials({ ...socials, referenceSocialAgeMonths: Number(e.target.value) })} />
-                      </Field>
-                    </FieldGroup>
-                    <Field label="URL de la red social" error={errors.referenceSocialUrl} htmlFor="rsu">
-                      <Input id="rsu" value={socials.referenceSocialUrl}
-                        placeholder="https://instagram.com/usuario_referencia"
-                        onChange={(e) => setSocials({ ...socials, referenceSocialUrl: e.target.value })} />
+
+                  {linkedSocial ? (
+                    <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary shrink-0">
+                        <Check className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                          Verificado con{' '}
+                          {linkedSocial.provider === 'google' ? 'Google' : 'Apple'}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {linkedSocial.email || linkedSocial.name || 'Identidad confirmada'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setLinkedSocial(null)}
+                      >
+                        Cambiar
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('google')}
+                      >
+                        {socialLinking === 'google' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span className="mr-2 font-bold text-[#4285F4]">G</span>
+                        )}
+                        Continuar con Google
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('apple')}
+                      >
+                        {socialLinking === 'apple' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span className="mr-2 font-bold text-foreground"></span>
+                        )}
+                        Continuar con Apple
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <Field
+                      label="Antigüedad declarada de tu cuenta (meses)"
+                      hint="Nuestro equipo verificará esta declaración durante la revisión."
+                      error={errors.declaredAgeMonths}
+                      htmlFor="dam"
+                    >
+                      <Input
+                        id="dam"
+                        type="number"
+                        min={6}
+                        value={declaredAgeMonths}
+                        onChange={(e) => setDeclaredAgeMonths(Number(e.target.value))}
+                      />
                     </Field>
                   </div>
+
+                  {!linkedSocial && (
+                    <label className="mt-3 flex items-start gap-2 rounded-lg border border-border p-3 cursor-pointer">
+                      <Checkbox
+                        checked={noSocialAcknowledged}
+                        onCheckedChange={(c) => setNoSocialAcknowledged(!!c)}
+                        className="mt-0.5"
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        No dispongo de una cuenta de Google o Apple para verificar.
+                        Entiendo que mi solicitud quedará en revisión manual del
+                        equipo.
+                      </span>
+                    </label>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Referencia personal (opcional)
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Agrega el correo de alguien que ya use RuedaVe. Recibirá una
+                    notificación para confirmar que te conoce cuando envíes esta
+                    verificación. <b>Es opcional, pero ayuda a acelerar tu
+                    verificación.</b>
+                  </p>
+                  <Field
+                    label="Correo del referente"
+                    error={errors.refEmail}
+                    htmlFor="ref-email"
+                  >
+                    <Input
+                      id="ref-email"
+                      type="email"
+                      placeholder="referente@correo.com"
+                      value={refEmail}
+                      onChange={(e) => setRefEmail(e.target.value)}
+                    />
+                  </Field>
                 </div>
               </div>
             )}
@@ -845,10 +900,34 @@ const RenterVerificationPage = () => {
                   {utilityBill && <ReviewItem label="Factura de servicios" value={utilityBill.name} />}
                   {bankReference && <ReviewItem label="Referencia bancaria" value={bankReference.name} />}
                 </ReviewBlock>
-                <ReviewBlock title="Redes sociales">
-                  <ReviewItem label="Tu red" value={`${socials.ownSocialPlatform} · ${socials.ownSocialAgeMonths} meses`} />
-                  <ReviewItem label="Referencia" value={`${socials.referenceName} (${socials.referenceRelationship})`} />
-                  <ReviewItem label="Red de referencia" value={`${socials.referenceSocialPlatform} · ${socials.referenceSocialAgeMonths} meses`} />
+                <ReviewBlock title="Red social">
+                  {linkedSocial ? (
+                    <>
+                      <ReviewItem
+                        label="Proveedor"
+                        value={linkedSocial.provider === 'google' ? 'Google' : 'Apple'}
+                      />
+                      <ReviewItem
+                        label="Cuenta"
+                        value={linkedSocial.email || linkedSocial.name}
+                      />
+                      <ReviewItem
+                        label="Antigüedad declarada"
+                        value={`${declaredAgeMonths} meses`}
+                      />
+                    </>
+                  ) : (
+                    <ReviewItem
+                      label="Estado"
+                      value="Sin verificar — revisión manual del equipo"
+                    />
+                  )}
+                </ReviewBlock>
+                <ReviewBlock title="Referencia personal">
+                  <ReviewItem
+                    label="Correo"
+                    value={refEmail || 'No agregada (opcional)'}
+                  />
                 </ReviewBlock>
 
                 <label className="flex items-start gap-2 p-4 rounded-lg border border-border cursor-pointer">
