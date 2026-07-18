@@ -62,7 +62,7 @@ const MyEarningsPage = () => {
     const vids = (myVehicles || []).map((v) => v.id);
     setVehicles((myVehicles as any) || []);
     if (vids.length === 0) {
-      setReservations([]); setProfiles([]); setPayments([]); setLoading(false); return;
+      setReservations([]); setProfiles([]); setPayments([]); setPayouts([]); setLoading(false); return;
     }
     const { data: res } = await supabase
       .from("reservations")
@@ -73,16 +73,18 @@ const MyEarningsPage = () => {
     setReservations(list);
     const renterIds = Array.from(new Set(list.map((r) => r.renter_id)));
     const resIds = list.map((r) => r.id);
-    const [pr, pay] = await Promise.all([
+    const [pr, pay, po] = await Promise.all([
       renterIds.length
         ? supabase.from("profiles").select("user_id,full_name").in("user_id", renterIds)
         : Promise.resolve({ data: [] as any }),
       resIds.length
         ? supabase.from("payments").select("id,reservation_id,status").in("reservation_id", resIds)
         : Promise.resolve({ data: [] as any }),
+      supabase.from("owner_payouts").select("period,status,proof_url").eq("owner_id", user.id),
     ]);
     setProfiles((pr.data as any) || []);
     setPayments((pay.data as any) || []);
+    setPayouts((po.data as any) || []);
     setLoading(false);
   };
 
