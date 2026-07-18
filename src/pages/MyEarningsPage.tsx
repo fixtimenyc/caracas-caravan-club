@@ -110,18 +110,20 @@ const MyEarningsPage = () => {
 
   const enriched = useMemo(() => {
     return earnable.map((r) => {
-      const days = Math.max(differenceInDays(parseISO(r.end_date), parseISO(r.start_date)), 1);
+      const v = vehicles.find((x) => x.id === r.vehicle_id);
+      const b = computeOwnerBreakdown(settings, v ?? { price_per_day: 0 }, r.start_date, r.end_date);
       const total = Number(r.total_price || 0);
-      // total_price includes subtotal + commission + insurance (see enforce_reservation_price trigger).
-      // Owner earns the subtotal only.
-      const insurance = days * INSURANCE_PER_DAY;
-      // Recover subtotal: total = subtotal * (1 + commissionRate) + insurance
-      const subtotal = (total - insurance) / (1 + commissionRate);
-      const commission = subtotal * commissionRate;
-      const ownerNet = Math.max(0, subtotal);
-      return { r, days, total, subtotal, commission, insurance, ownerNet };
+      return {
+        r,
+        days: b.days,
+        total,
+        subtotal: b.subtotal,
+        commission: b.ownerCommission,
+        insurance: b.insurance,
+        ownerNet: b.netEarnings,
+      };
     });
-  }, [earnable, commissionRate]);
+  }, [earnable, vehicles, settings]);
 
   const totals = useMemo(() => {
     const gross = enriched.reduce((s, x) => s + x.subtotal, 0);
