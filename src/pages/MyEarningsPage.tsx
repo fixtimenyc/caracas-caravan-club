@@ -93,9 +93,17 @@ const MyEarningsPage = () => {
   const vMap = useMemo(() => Object.fromEntries(vehicles.map((v) => [v.id, v])), [vehicles]);
   const pMap = useMemo(() => Object.fromEntries(profiles.map((p) => [p.user_id, p])), [profiles]);
 
+  const paidPeriods = useMemo(
+    () => new Set(payouts.filter((p) => p.status === "paid").map((p) => p.period)),
+    [payouts],
+  );
   const paidResIds = useMemo(
-    () => new Set(payments.filter((p) => p.status === "completed").map((p) => p.reservation_id)),
-    [payments],
+    () => new Set(
+      reservations
+        .filter((r) => paidPeriods.has(format(parseISO(r.created_at), "yyyy-MM")))
+        .map((r) => r.id),
+    ),
+    [reservations, paidPeriods],
   );
 
   const earnable = useMemo(() => {
