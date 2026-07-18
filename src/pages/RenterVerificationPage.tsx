@@ -12,6 +12,7 @@ import {
   Loader2,
   ShieldCheck,
   Upload,
+  ShieldCheck as ShieldCheckIcon,
 } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -30,9 +31,17 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  COUNTRY_CODES,
+  toE164,
+  isValidE164,
+  sendVerificationCode,
+  checkVerificationCode,
+} from '@/lib/phoneVerification';
 
 const VENEZUELAN_CITIES = [
   'Caracas', 'Maracaibo', 'Valencia', 'Barquisimeto', 'Maracay',
@@ -56,7 +65,7 @@ const personalSchema = z.object({
 });
 
 const contactSchema = z.object({
-  phone: z.string().trim().regex(/^(\+58|0)?\d{10}$/, 'Teléfono venezolano inválido'),
+  phone: z.string().trim().refine(isValidE164, 'Teléfono inválido (formato internacional)'),
   phoneSecondary: z.string().trim().max(20).optional(),
   contactEmail: z.string().trim().email('Email inválido').max(255).optional().or(z.literal('')),
   address: z.string().trim().min(5, 'Dirección muy corta').max(300),
@@ -128,6 +137,15 @@ const RenterVerificationPage = () => {
   const [selfie, setSelfie] = useState<File | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // Phone verification (SMS) — currently mocked, see src/lib/phoneVerification.ts
+  const [phoneCountry, setPhoneCountry] = useState<string>('+58');
+  const [phoneLocal, setPhoneLocal] = useState<string>('');
+  const [otpCode, setOtpCode] = useState<string>('');
+  const [otpSent, setOtpSent] = useState<boolean>(false);
+  const [sendingOtp, setSendingOtp] = useState<boolean>(false);
+  const [checkingOtp, setCheckingOtp] = useState<boolean>(false);
+  const [phoneVerified, setPhoneVerified] = useState<boolean>(false);
+
   const isVenezuelan = personal.nationality.trim().toLowerCase().startsWith('venezol');
 
   useEffect(() => {
@@ -171,9 +189,48 @@ const RenterVerificationPage = () => {
     return true;
   };
 
+  const handleSendOtp = async () => {
+    const e164 = toE164(phoneCountry, phoneLocal);
+    if (!isValidE164(e164)) {
+      toast.error('Ingresa un número de teléfono válido');
+      return;
+    }
+    setSendingOtp(true);
+    const res = await sendVerificationCode(e164);
+    setSendingOtp(false);
+    if (!res.ok) {
+      toast.error(res.message ?? 'No se pudo enviar el código');
+      return;
+    }
+    setOtpSent(true);
+    setPhoneVerified(false);
+    setContact((c) => ({ ...c, phone: e164 }));
+    toast.success('Código enviado por SMS (modo demo: usa 123456)');
+  };
+
+  const handleVerifyOtp = async () => {
+    const e164 = toE164(phoneCountry, phoneLocal);
+    setCheckingOtp(true);
+    const res = await checkVerificationCode(e164, otpCode);
+    setCheckingOtp(false);
+    if (!res.ok) {
+      toast.error(res.message ?? 'Código inválido');
+      return;
+    }
+    setPhoneVerified(true);
+    setContact((c) => ({ ...c, phone: e164 }));
+    toast.success('Teléfono verificado');
+  };
+
   const handleNext = () => {
     if (step === 0 && !runValidation(personalSchema, personal)) return;
-    if (step === 1 && !runValidation(contactSchema, contact)) return;
+    if (step === 1) {
+      if (!phoneVerified) {
+        toast.error('Verifica tu teléfono con el código SMS antes de continuar');
+        return;
+      }
+      if (!runValidation(contactSchema, contact)) return;
+    }
     if (step === 2 && !runValidation(licenseSchema, license)) return;
     if (step === 3) {
       if (!identityDoc || !licenseDoc || !selfie) {
@@ -434,17 +491,116 @@ const RenterVerificationPage = () => {
             {/* Step 1: Contacto */}
             {step === 1 && (
               <div className="space-y-4">
-                <FieldGroup>
-                  <Field label="Teléfono principal" error={errors.phone} htmlFor="phone" hint="Verificable por WhatsApp">
-                    <Input id="phone" value={contact.phone} maxLength={15}
-                      onChange={(e) => setContact({ ...contact, phone: e.target.value })}
-                      placeholder="04141234567" />
-                  </Field>
-                  <Field label="Teléfono secundario (opcional)" htmlFor="phoneSecondary">
-                    <Input id="phoneSecondary" value={contact.phoneSecondary} maxLength={20}
-                      onChange={(e) => setContact({ ...contact, phoneSecondary: e.target.value })} />
-                  </Field>
-                </FieldGroup>
+                <div className="rounded-lg border border-border p-4 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-sm font-semibold">Teléfono principal</Label>
+                    {phoneVerified && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                        <ShieldCheckIcon className="w-3.5 h-3.5" /> Verificado
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-[140px_1fr] gap-2">
+                    <Select
+                      value={phoneCountry}
+                      onValueChange={(v) => {
+                        setPhoneCountry(v);
+                        setPhoneVerified(false);
+                        setOtpSent(false);
+                      }}
+                      disabled={phoneVerified}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {COUNTRY_CODES.map((c) => (
+                          <SelectItem key={c.iso} value={c.code}>
+                            <span className="mr-2">{c.flag}</span>
+                            {c.code} <span className="text-muted-foreground ml-1">{c.label}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      id="phone"
+                      inputMode="tel"
+                      value={phoneLocal}
+                      maxLength={15}
+                      onChange={(e) => {
+                        setPhoneLocal(e.target.value.replace(/[^\d]/g, ''));
+                        setPhoneVerified(false);
+                        setOtpSent(false);
+                      }}
+                      placeholder={
+                        COUNTRY_CODES.find((c) => c.code === phoneCountry)?.example ?? '4141234567'
+                      }
+                      disabled={phoneVerified}
+                    />
+                  </div>
+                  {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+
+                  {!phoneVerified && (
+                    <div className="space-y-3">
+                      {!otpSent ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={handleSendOtp}
+                          disabled={sendingOtp || phoneLocal.length < 7}
+                        >
+                          {sendingOtp ? (
+                            <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Enviando...</>
+                          ) : (
+                            'Enviar código SMS'
+                          )}
+                        </Button>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">
+                            Ingresa el código de 6 dígitos que recibiste por SMS.{' '}
+                            <span className="italic">(Modo demo: usa <code className="font-mono">123456</code>)</span>
+                          </p>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                              <InputOTPGroup>
+                                {[0, 1, 2, 3, 4, 5].map((i) => (
+                                  <InputOTPSlot key={i} index={i} />
+                                ))}
+                              </InputOTPGroup>
+                            </InputOTP>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleVerifyOtp}
+                              disabled={checkingOtp || otpCode.length !== 6}
+                            >
+                              {checkingOtp ? (
+                                <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Verificando...</>
+                              ) : (
+                                'Verificar'
+                              )}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleSendOtp}
+                              disabled={sendingOtp}
+                            >
+                              Reenviar
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <Field label="Teléfono secundario (opcional)" htmlFor="phoneSecondary">
+                  <Input id="phoneSecondary" value={contact.phoneSecondary} maxLength={20}
+                    onChange={(e) => setContact({ ...contact, phoneSecondary: e.target.value })}
+                    placeholder="+58 4141234567" />
+                </Field>
                 <Field label="Email de contacto (opcional)" error={errors.contactEmail} htmlFor="contactEmail"
                   hint="Si difiere de tu email de cuenta">
                   <Input id="contactEmail" type="email" value={contact.contactEmail} maxLength={255}
