@@ -139,7 +139,7 @@ const Auth = () => {
           navigate('/');
         }
       } else {
-        const validation = signupSchema.safeParse({ fullName, cedula, phone, email, password, role, acceptedTerms, acceptedPrivacy, acceptedCancellation });
+        const validation = signupSchema.safeParse({ fullName, email, password, role, acceptedTerms, acceptedPrivacy, acceptedCancellation });
         if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
           validation.error.errors.forEach((err) => {
@@ -150,7 +150,7 @@ const Auth = () => {
           return;
         }
 
-        const { error } = await signUp(email, password, fullName, role, { cedula, phone });
+        const { error } = await signUp(email, password, fullName, role);
         if (error) {
           if (error.message.includes('User already registered')) {
             toast.error('Este email ya está registrado');
