@@ -12,6 +12,7 @@ import {
   Loader2,
   ShieldCheck,
   Upload,
+  ShieldCheck as ShieldCheckIcon,
 } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -30,9 +31,17 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  COUNTRY_CODES,
+  toE164,
+  isValidE164,
+  sendVerificationCode,
+  checkVerificationCode,
+} from '@/lib/phoneVerification';
 
 const VENEZUELAN_CITIES = [
   'Caracas', 'Maracaibo', 'Valencia', 'Barquisimeto', 'Maracay',
