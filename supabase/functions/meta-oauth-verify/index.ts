@@ -85,6 +85,55 @@ async function verifyState(
   return Date.now() - ts < 10 * 60 * 1000;
 }
 
+// Demo-mode state signing uses the service-role key as HMAC secret so we
+// still validate that the callback matches the same user/provider even when
+// Meta credentials are absent.
+async function hmacDemo(state: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(SUPABASE_SERVICE_ROLE_KEY || "ruedave-demo"),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(state),
+  );
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function signStateDemo(userId: string, provider: string): Promise<string> {
+  const payload = `demo.${userId}.${provider}.${Date.now()}.${crypto.randomUUID()}`;
+  const sig = await hmacDemo(payload);
+  return `${btoa(payload)}.${sig}`;
+}
+
+async function verifyStateDemo(
+  state: string,
+  userId: string,
+  provider: string,
+): Promise<boolean> {
+  const [b64, sig] = state.split(".");
+  if (!b64 || !sig) return false;
+  let payload: string;
+  try {
+    payload = atob(b64);
+  } catch {
+    return false;
+  }
+  const expected = await hmacDemo(payload);
+  if (expected !== sig) return false;
+  const [tag, uid, prov, tsStr] = payload.split(".");
+  if (tag !== "demo" || uid !== userId || prov !== provider) return false;
+  const ts = Number(tsStr);
+  if (!Number.isFinite(ts)) return false;
+  return Date.now() - ts < 10 * 60 * 1000;
+}
+
 async function getUserFromRequest(req: Request) {
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace(/^Bearer\s+/i, "");
