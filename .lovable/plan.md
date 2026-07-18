@@ -1,101 +1,95 @@
+# Verificación por red social + referido de usuario
+
 ## Objetivo
 
-Construir un sistema legal y modular para recolectar datos de uso de la plataforma RuedaVe, organizado en 4 categorías monetizables. Todo se basa en **consentimientos granulares opt-in** alineados con la LOPDP venezolana, ya documentada en `/politica-privacidad`.
+Reemplazar en el paso "Redes y referencia" del cuestionario de verificación de arrendatario:
 
-## Alcance del cambio
+1. La declaración manual de plataforma/URL/antigüedad → **login OAuth real** que devuelva un token verificado. Solo cuenta si el proveedor expone antigüedad ≥ **6 meses** (Facebook / Instagram / LinkedIn). Google/Apple se aceptan como capa extra pero **no cumplen** el requisito de antigüedad por sí solos.
+2. La referencia personal libre → **referencia opcional a otro usuario ya registrado** en RuedaVe, verificada por email y con notificación al referente para que confirme.
 
-### 1. Esquema de base de datos (1 migración)
+## Cambios
 
-Nuevas tablas:
+### 1. Base de datos (1 migración)
 
-- **`user_data_consents`** — un registro por usuario y por tipo de consentimiento, con timestamp de aceptación/revocación e IP.
-  - Tipos: `telemetry`, `dynamic_pricing`, `fraud_prevention`, `ai_training`
-  - Permite revocar en cualquier momento (derecho LOPDP)
+Nuevas columnas en `renter_verifications`:
+- `own_social_provider` (text) — `facebook`, `instagram`, `linkedin`, `google`, `apple`
+- `own_social_provider_user_id` (text) — id devuelto por el proveedor
+- `own_social_verified_at` (timestamptz)
+- `own_social_verified_name`, `own_social_verified_email` (text) — payload firmado que se cruza con lo que declaró el usuario
+- `own_social_account_created_at` (timestamptz, nullable) — solo si el proveedor la expone
+- `own_social_age_verified` (boolean) — true solo si `account_created_at ≤ now() - 6 months`
+- `personal_reference_user_id` (uuid → auth.users, nullable) — reemplaza los campos de nombre/parentesco/redes del referente
+- `personal_reference_confirmed_at` (timestamptz)
+- Se mantienen los antiguos campos como legacy para no romper solicitudes en curso.
 
-- **`telemetry_events`** — eventos crudos del móvil durante una reserva activa.
-  - Campos: `reservation_id`, `event_type` (harsh_brake, speeding, night_drive, phone_use, trip_segment), `value` numérico, `lat`/`lng` redondeados, `recorded_at`
-  - Solo se inserta si el usuario tiene consentimiento `telemetry` activo
+Nueva tabla `renter_reference_requests` (referente confirma o rechaza):
+- `verification_id`, `requester_user_id`, `referent_user_id`, `referent_email`, `status` (`pending`/`confirmed`/`declined`), `responded_at`.
+- RLS: requester y referent ven su propia fila; admin ve todo.
+- Trigger: al crear, inserta notificación in-app al referent con acción `/perfil/referencias/{id}`.
 
-- **`trip_summaries`** — resumen agregado por viaje (km, velocidad media, score de riesgo 0-100, eventos contados). Pensado para aseguradoras.
+Nueva función `request_personal_reference(_verification_id, _email)`:
+- Valida que el email pertenezca a un usuario existente (`auth.users`) y distinto del solicitante.
+- Crea la fila `renter_reference_requests` y devuelve el `referent_user_id`.
 
-- **`demand_signals`** — agregado horario por zona (vista materializada o tabla incremental) con búsquedas, reservas, ocupación. Alimenta pricing dinámico.
+Nueva función `confirm_personal_reference(_request_id, _accept)`:
+- Solo el `referent_user_id = auth.uid()` puede llamarla.
+- Marca `confirmed` / `declined` y, si `confirmed`, actualiza `renter_verifications.personal_reference_user_id` y `personal_reference_confirmed_at`.
 
-- **`fraud_signals`** — huella digital por sesión de registro/login: `user_id`, `device_fingerprint_hash`, `ip_hash`, `geo_country`, `signal_type` (multi_account, cancel_pattern, identity_mismatch, dispute), `risk_score`.
+Ajuste a `get_renter_profile_for_owner`: expone `social_verified`, `social_provider`, `social_age_verified`, `personal_reference_confirmed` para que el aliado vea la señal.
 
-- **`ai_training_datasets`** — registro de exports anonimizados (no almacena PII): nombre, descripción, filas, hash, fecha.
+### 2. Auth social (Google + Apple + Facebook)
 
-Funciones SECURITY DEFINER:
-- `has_consent(_user_id, _consent_type)` — usada por RLS y triggers
-- `compute_trip_risk_score(_reservation_id)` — al cerrar viaje
-- `record_consent(_type, _granted, _ip)` — endpoint canónico para grabar/revocar
+- Google y Apple ya están soportados por Lovable Cloud → activar ambos con `configure_social_auth` (`providers: ["google","apple"]`).
+- Facebook/Instagram **no** están soportados nativamente por Lovable Cloud. Se conecta vía **App User Connector** (`connector_app_user--list_connectors` → cliente Facebook/Instagram Basic Display). El builder deberá crear una app en Meta y añadir el redirect del gateway de Lovable.
+- LinkedIn queda disponible como fallback vía connector (opcional, se puede activar en el mismo paso si el usuario lo pide después).
 
-RLS:
-- Usuario ve y revoca sus propios consentimientos
-- Usuario ve sus propios eventos y resúmenes de viaje
-- Admin ve todo
-- Aseguradoras (rol futuro) ven solo `trip_summaries` agregados, nunca eventos crudos
+### 3. Frontend — Paso 5 "Redes y referencia" en `RenterVerificationPage.tsx`
 
-### 2. UI — Pantalla de consentimientos (`/perfil/privacidad`)
+Nuevo bloque **"Verifica tu identidad con una red social"**:
+- 4 botones: *Continuar con Facebook*, *Continuar con Instagram*, *Continuar con Google*, *Continuar con Apple*.
+- Al aprobar, se llama:
+  - Google/Apple → `lovable.auth.signInWithOAuth` en un popup lateral que no toca la sesión principal (usa `redirect_uri` a `/verificacion/social-callback`). Guardamos payload como capa adicional, con badge "Identidad verificada" pero **advertencia** de que no cuenta como antigüedad ≥6 meses.
+  - Facebook/Instagram → hook `useSocialAgeVerification` que abre el OAuth del connector, lee `me?fields=id,name,email,account_created_time` en un edge function (`verify-social-age`) y actualiza `renter_verifications`.
+- Muestra estado en vivo: proveedor, nombre devuelto, fecha estimada de creación, badge verde si ≥6 meses, badge amarillo si no.
+- Bloquea "Continuar" hasta tener al menos una red con `own_social_age_verified = true` **o** hasta que el usuario marque explícitamente "No dispongo de redes con esa antigüedad" (queda pendiente de revisión manual del admin).
 
-Página nueva con 4 tarjetas (una por categoría) — cada una con:
-- Descripción en lenguaje claro
-- Tabla de datos recolectados (igual a la del brief)
-- Para qué se usan, con quién se comparten
-- Toggle ON/OFF (revocable)
-- Fecha de aceptación / última actualización
+Nuevo bloque **"Referencia personal (opcional)"**:
+- Sustituye los campos previos por un solo input de correo + botón "Enviar solicitud".
+- Antes de enviar, hint claro: *"Debe ser el correo de alguien ya registrado en RuedaVe. Es opcional, pero acelera tu verificación."*
+- Al enviar, llama `request_personal_reference`. Feedback:
+  - "Usuario no encontrado" si el email no existe → sugiere invitarlo por WhatsApp.
+  - "Solicitud enviada, esperando confirmación" si existe → muestra estado en vivo con `useReferenceRequests`.
+- El bloque de "Continuar" no depende de la referencia (es opcional).
 
-El toggle llama `record_consent` y refresca el estado.
+Nueva página `/perfil/referencias` (para el referente):
+- Lista de solicitudes pendientes con nombre y foto del solicitante.
+- Botones **Confirmar** / **Rechazar** → llaman `confirm_personal_reference`.
 
-### 3. UI — Banner de consentimiento de IA
+### 4. Edge function `verify-social-age`
 
-Modal/banner que aparece una vez después del primer viaje completado, con el texto exacto del brief:
-> "¿Autoriza a RuedaVe a utilizar sus datos de viaje anonimizados para mejorar la seguridad vial, la planificación urbana y el desarrollo de productos de movilidad? Sus datos nunca serán vendidos de forma identificable."
+- Recibe `provider`, `provider_access_token`, `verification_id`.
+- Verifica el token con el connector gateway (Facebook Graph `/me?fields=id,name,email` + endpoint de account age; Instagram Basic Display para `account_created_time`).
+- Escribe en `renter_verifications` con `service_role`.
+- Devuelve `{ verified, account_age_months, meets_threshold }`.
 
-Botones: **Autorizar** / **Ahora no** / **Ver detalles** (lleva a `/perfil/privacidad`).
+### 5. Compatibilidad y datos legacy
 
-### 4. UI — Captura de telemetría móvil
+- Formularios ya enviados con red social manual siguen mostrando su información antigua en el bloque de revisión (`own_social_platform`, `own_social_url`, `own_social_age_months`) pero con badge "Método antiguo — pendiente de revisión manual".
+- Las nuevas solicitudes solo se aprueban si `own_social_age_verified = true` o si el admin sube una anotación manual (mantiene poder de excepción).
 
-Hook `useTripTelemetry(reservationId)` que se activa solo durante una reserva `active` y solo si hay consentimiento `telemetry`:
-- Usa `navigator.geolocation.watchPosition` (GPS + velocidad)
-- Usa `DeviceMotionEvent` (acelerómetro → frenado brusco)
-- Usa visibilidad de pantalla + eventos touch para "uso de teléfono"
-- Hace batch a `telemetry_events` cada 60s
-- Banner persistente "Telemetría activa" con botón para pausar
+## Preguntas para el usuario tras aprobar el plan
 
-Disponible solo en la pantalla de viaje activo (no en background — limitación de la web). Se documenta como "captura en primer plano".
+- **Facebook/Instagram OAuth app**: necesitas crear la app en Meta Developers y darme las credenciales (Client ID + Secret) cuando llegue el momento. Puedo indicarte el redirect URI exacto del gateway de Lovable cuando activemos el connector.
+- **Apple Sign In**: se activa con el modo gestionado por defecto (sin credenciales propias). ¿Ok?
 
-### 5. Panel admin — Datos y Monetización
+## Notas técnicas
 
-Nueva pestaña en `AdminAnalyticsPage` (o página `/admin/datos`) con:
-- KPIs: % usuarios con cada consentimiento, eventos capturados por día, viajes con score de riesgo
-- Tabla de `trip_summaries` exportable a CSV (con guard anti-formula-injection que ya existe)
-- Mapa de calor de `demand_signals` por zona/hora
-- Lista de `fraud_signals` con score y acciones (marcar revisado, bloquear cuenta)
-- Botón "Generar dataset anonimizado para IA" → crea registro en `ai_training_datasets`
+- Todos los OAuth se hacen en popup separado; no rompen la sesión Supabase del arrendatario.
+- El referente recibe notificación in-app + email (via función existente de notificaciones).
+- El requisito de ≥6 meses queda en el frontend **y** en un check server-side en la función que aprueba solicitudes (`handle_renter_verification_approved` se amplía para bloquear aprobación automática si el social_age_verified es false y no hay override admin).
 
-### 6. Actualización legal
+## Fuera de alcance
 
-Añadir sección a `PrivacyPage.tsx`:
-- **17. Datos opcionales y monetización** — describe las 4 categorías, derecho a revocar, garantía de anonimización para terceros, prohibición de venta identificable.
-
-### 7. Huella de fraude (registro/login)
-
-En `useAuth` y formulario de registro: calcular `device_fingerprint_hash` (canvas + user-agent + zona horaria → SHA-256) e insertar en `fraud_signals` si:
-- Mismo fingerprint con > 1 `user_id`
-- Mismo IP con > 3 cuentas en 24h
-Trigger en backend evalúa y asigna `risk_score`.
-
-## Resumen técnico
-
-- Frontend: React + nuevos hooks (`useTripTelemetry`, `useConsents`, `useFraudFingerprint`), nuevas páginas (`PrivacySettingsPage`, ampliación de `AdminAnalyticsPage`), nuevo componente `AIConsentBanner`.
-- Backend: 1 migración con 5 tablas, 3 funciones, RLS estricta. Sin edge functions nuevas (todo via PostgREST).
-- Seguridad: consentimientos granulares revocables, hashing de IP/device, anonimización de coordenadas (3 decimales ≈ 100m), RLS impide acceso cruzado.
-- Sin proveedores externos por ahora; preparado para integrar con aseguradoras vía export de `trip_summaries`.
-
-## Lo que NO incluye este plan
-
-- App móvil nativa (la telemetría web es en primer plano solamente).
-- Integración real con aseguradoras o ad-networks (solo dejamos el dataset listo).
-- Pricing dinámico automático sobre `vehicles.price_per_day` — solo capturamos señales; el algoritmo de ajuste lo decides después.
-
-¿Avanzo con esta implementación, o ajustas el alcance (p. ej. dejar telemetría móvil para una fase 2)?
+- Verificación por Twitter/X (X connector es solo lectura pública, no hace login como usuario).
+- WhatsApp OAuth (no existe).
+- Restauración retroactiva de antigüedad para usuarios ya aprobados con método antiguo.
