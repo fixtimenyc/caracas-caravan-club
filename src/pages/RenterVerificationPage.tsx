@@ -114,7 +114,7 @@ const RenterVerificationPage = () => {
   });
   const [hasMedical, setHasMedical] = useState(false);
   const [linkedSocial, setLinkedSocial] = useState<LinkedIdentity | null>(null);
-  const [socialLinking, setSocialLinking] = useState<'google' | 'apple' | null>(null);
+  const [socialLinking, setSocialLinking] = useState<'google' | 'apple' | 'facebook' | 'instagram' | null>(null);
   const [declaredAgeMonths, setDeclaredAgeMonths] = useState<number>(12);
   const [noSocialAcknowledged, setNoSocialAcknowledged] = useState<boolean>(false);
   const [refEmail, setRefEmail] = useState<string>('');
@@ -212,15 +212,23 @@ const RenterVerificationPage = () => {
     toast.success('Teléfono verificado');
   };
 
-  const handleLinkSocial = async (provider: 'google' | 'apple') => {
+  const handleLinkSocial = async (
+    provider: 'google' | 'apple' | 'facebook' | 'instagram',
+  ) => {
     setSocialLinking(provider);
     try {
       const identity = await linkSocialInPopup(provider);
       setLinkedSocial(identity);
       setNoSocialAcknowledged(false);
-      toast.success(
-        `Identidad verificada con ${provider === 'google' ? 'Google' : 'Apple'}`,
-      );
+      const providerLabel =
+        provider === 'google'
+          ? 'Google'
+          : provider === 'apple'
+            ? 'Apple'
+            : provider === 'facebook'
+              ? 'Facebook'
+              : 'Instagram';
+      toast.success(`Identidad verificada con ${providerLabel}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'No se pudo verificar';
       if (/manual linking/i.test(msg)) {
@@ -341,6 +349,7 @@ const RenterVerificationPage = () => {
           own_social_verified_at: linkedSocial ? new Date().toISOString() : null,
           own_social_verified_name: linkedSocial?.name ?? null,
           own_social_verified_email: linkedSocial?.email ?? null,
+          own_social_verified_picture: linkedSocial?.picture ?? null,
           own_social_declared_age_months: declaredAgeMonths,
           accepted_terms: acceptedTerms,
         })
@@ -799,23 +808,37 @@ const RenterVerificationPage = () => {
                     Verifica tu identidad con una red social
                   </h3>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Inicia sesión con Google o Apple para vincular una identidad
-                    digital verificada a tu perfil. La misma cuenta no puede
-                    reutilizarse en otra verificación.
+                    Inicia sesión con Google, Apple, Facebook o Instagram para
+                    vincular una identidad digital verificada a tu perfil. La
+                    misma cuenta no puede reutilizarse en otra verificación.
                   </p>
 
                   {linkedSocial ? (
                     <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary shrink-0">
-                        <Check className="w-5 h-5" />
-                      </div>
+                      {linkedSocial.picture ? (
+                        <img
+                          src={linkedSocial.picture}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary shrink-0">
+                          <Check className="w-5 h-5" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground">
                           Verificado con{' '}
-                          {linkedSocial.provider === 'google' ? 'Google' : 'Apple'}
+                          {linkedSocial.provider === 'google'
+                            ? 'Google'
+                            : linkedSocial.provider === 'apple'
+                              ? 'Apple'
+                              : linkedSocial.provider === 'facebook'
+                                ? 'Facebook'
+                                : 'Instagram'}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {linkedSocial.email || linkedSocial.name || 'Identidad confirmada'}
+                          {linkedSocial.name || linkedSocial.email || 'Identidad confirmada'}
                         </p>
                       </div>
                       <Button
@@ -856,6 +879,46 @@ const RenterVerificationPage = () => {
                         )}
                         Continuar con Apple
                       </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('facebook')}
+                      >
+                        {socialLinking === 'facebook' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span className="mr-2 font-bold text-[#1877F2]">f</span>
+                        )}
+                        Continuar con Facebook
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('instagram')}
+                      >
+                        {socialLinking === 'instagram' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span
+                            className="mr-2 font-bold bg-clip-text text-transparent"
+                            style={{
+                              backgroundImage:
+                                'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',
+                            }}
+                          >
+                            IG
+                          </span>
+                        )}
+                        Continuar con Instagram
+                      </Button>
+                      <p className="text-[11px] text-muted-foreground sm:col-span-2 -mt-1">
+                        Instagram requiere que tu cuenta esté configurada como
+                        Business o Creator y enlazada a una página de Facebook.
+                      </p>
                     </div>
                   )}
 

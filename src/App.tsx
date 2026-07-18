@@ -47,6 +47,7 @@ import PrivacySettingsPage from "./pages/PrivacySettingsPage";
 import AdminDataPage from "./pages/AdminDataPage";
 import RenterReferencesPage from "./pages/RenterReferencesPage";
 import SocialLinkCallback from "./pages/SocialLinkCallback";
+import MetaCallbackPage from "./pages/MetaCallbackPage";
 
 import PendingReviewsGate from "./components/PendingReviewsGate";
 import { useFraudFingerprint } from "@/hooks/useFraudFingerprint";
@@ -114,6 +115,7 @@ const App = () => (
             <Route path="/perfil/privacidad" element={<PrivacySettingsPage />} />
             <Route path="/perfil/referencias" element={<RenterReferencesPage />} />
             <Route path="/verificacion/social-callback" element={<SocialLinkCallback />} />
+            <Route path="/verificacion/meta-callback" element={<MetaCallbackPage />} />
             <Route path="/admin/datos" element={<AdminDataPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
