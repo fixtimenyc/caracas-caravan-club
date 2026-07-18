@@ -4,7 +4,6 @@ import {
   User as UserIcon,
   FileText,
   Phone,
-  Globe,
   Users,
   Check,
   ArrowLeft,
@@ -12,7 +11,8 @@ import {
   Loader2,
   ShieldCheck,
   Upload,
-  ShieldCheck as ShieldCheckIcon,
+  Mail,
+  UserCheck,
 } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -42,13 +42,14 @@ import {
   sendVerificationCode,
   checkVerificationCode,
 } from '@/lib/phoneVerification';
+import { linkSocialInPopup, type LinkedIdentity } from '@/lib/socialIdentity';
 
 const VENEZUELAN_CITIES = [
   'Caracas', 'Maracaibo', 'Valencia', 'Barquisimeto', 'Maracay',
   'Ciudad Guayana', 'Maturín', 'Barcelona', 'Mérida', 'San Cristóbal', 'Otra',
 ];
 
-const SOCIAL_PLATFORMS = ['Instagram', 'Facebook', 'LinkedIn', 'X (Twitter)', 'TikTok', 'Otra'];
+
 
 const personalSchema = z.object({
   fullName: z.string().trim().min(2, 'Nombre muy corto').max(100),
@@ -82,22 +83,11 @@ const licenseSchema = z.object({
   drivingLicenseExpiry: z.string().min(1, 'Fecha de vencimiento requerida'),
 });
 
-const socialsSchema = z.object({
-  ownSocialPlatform: z.string().min(1, 'Selecciona la plataforma'),
-  ownSocialUrl: z.string().trim().url('URL inválida'),
-  ownSocialAgeMonths: z.coerce.number().min(12, 'Debe tener al menos 12 meses'),
-  referenceName: z.string().trim().min(2, 'Nombre requerido').max(100),
-  referenceRelationship: z.string().trim().min(2, 'Parentesco requerido').max(40),
-  referencePhone: z.string().trim().regex(/^(\+\d{1,3})?\d{7,15}$/, 'Teléfono inválido'),
-  referenceSocialPlatform: z.string().min(1, 'Selecciona la plataforma'),
-  referenceSocialUrl: z.string().trim().url('URL inválida'),
-  referenceSocialAgeMonths: z.coerce.number().min(12, 'Debe tener al menos 12 meses'),
-});
 
 type PersonalData = z.infer<typeof personalSchema>;
 type ContactData = z.infer<typeof contactSchema>;
 type LicenseData = z.infer<typeof licenseSchema>;
-type SocialsData = z.infer<typeof socialsSchema>;
+const refEmailSchema = z.string().trim().email('Correo inválido').max(255);
 
 const RenterVerificationPage = () => {
   const navigate = useNavigate();
@@ -123,11 +113,11 @@ const RenterVerificationPage = () => {
     drivingLicenseNumber: '', drivingLicenseExpiry: '',
   });
   const [hasMedical, setHasMedical] = useState(false);
-  const [socials, setSocials] = useState<SocialsData>({
-    ownSocialPlatform: '', ownSocialUrl: '', ownSocialAgeMonths: 12,
-    referenceName: '', referenceRelationship: '', referencePhone: '',
-    referenceSocialPlatform: '', referenceSocialUrl: '', referenceSocialAgeMonths: 12,
-  });
+  const [linkedSocial, setLinkedSocial] = useState<LinkedIdentity | null>(null);
+  const [socialLinking, setSocialLinking] = useState<'google' | 'apple' | null>(null);
+  const [declaredAgeMonths, setDeclaredAgeMonths] = useState<number>(12);
+  const [noSocialAcknowledged, setNoSocialAcknowledged] = useState<boolean>(false);
+  const [refEmail, setRefEmail] = useState<string>('');
 
   const [identityDoc, setIdentityDoc] = useState<File | null>(null);
   const [licenseDoc, setLicenseDoc] = useState<File | null>(null);
@@ -242,7 +232,24 @@ const RenterVerificationPage = () => {
         return;
       }
     }
-    if (step === 4 && !runValidation(socialsSchema, socials)) return;
+    if (step === 4) {
+      if (!linkedSocial && !noSocialAcknowledged) {
+        toast.error('Verifica con Google/Apple o marca "No dispongo de red"');
+        return;
+      }
+      if (declaredAgeMonths < 6) {
+        setErrors({ declaredAgeMonths: 'La cuenta debe tener al menos 6 meses' });
+        return;
+      }
+      if (refEmail.trim().length > 0) {
+        const parsed = refEmailSchema.safeParse(refEmail);
+        if (!parsed.success) {
+          setErrors({ refEmail: parsed.error.errors[0]?.message ?? 'Correo inválido' });
+          return;
+        }
+      }
+      setErrors({});
+    }
     setStep((s) => Math.min(s + 1, steps.length - 1));
   };
 
@@ -303,17 +310,14 @@ const RenterVerificationPage = () => {
         utility_bill_url: utilityPath,
         bank_reference_url: bankPath,
         selfie_url: selfiePath,
-        own_social_platform: socials.ownSocialPlatform,
-        own_social_url: socials.ownSocialUrl,
-        own_social_age_months: socials.ownSocialAgeMonths,
-        reference_name: socials.referenceName,
-        reference_relationship: socials.referenceRelationship,
-        reference_phone: socials.referencePhone,
-        reference_social_platform: socials.referenceSocialPlatform,
-        reference_social_url: socials.referenceSocialUrl,
-        reference_social_age_months: socials.referenceSocialAgeMonths,
+        own_social_provider: linkedSocial?.provider ?? null,
+        own_social_provider_user_id: linkedSocial?.providerUserId ?? null,
+        own_social_verified_at: linkedSocial ? new Date().toISOString() : null,
+        own_social_verified_name: linkedSocial?.name ?? null,
+        own_social_verified_email: linkedSocial?.email ?? null,
+        own_social_declared_age_months: declaredAgeMonths,
         accepted_terms: acceptedTerms,
-      });
+      }).select('id').single();
 
       if (error) {
         if (error.code === '23505') {
