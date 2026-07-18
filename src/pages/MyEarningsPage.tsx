@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { loadSystemSettings, INSURANCE_PER_DAY } from "@/lib/systemSettings";
+import { loadSystemSettings, computeOwnerBreakdown, describeCommission } from "@/lib/systemSettings";
 import { toCSV } from "@/lib/csv";
 
 const fmt = (n: number) =>
