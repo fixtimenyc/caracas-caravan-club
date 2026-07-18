@@ -29,6 +29,7 @@ type Reservation = {
 type Vehicle = { id: string; brand: string; model: string; year: number | null; price_per_day: number | null; house_rules?: any };
 type Profile = { user_id: string; full_name: string | null };
 type Payment = { id: string; reservation_id: string; status: string };
+type Payout = { period: string; status: string; proof_url: string | null };
 
 const statusLabel: Record<string, { text: string; variant: "default" | "secondary" | "outline" }> = {
   completed: { text: "Completada", variant: "default" },
