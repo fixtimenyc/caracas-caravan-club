@@ -822,7 +822,7 @@ function PayoutsTab({ loading, reservations, payments, vMap, pMap }: any) {
                 {payouts.map((r: any) => {
                   const proofUrl = r.saved?.id ? proofUrls[r.saved.id] : null;
                   return (
-                    <TableRow key={r.owner_id}>
+                    <TableRow key={r.key || r.owner_id}>
                       <TableCell>
                         <Link to={`/admin/usuarios/${r.owner_id}`} className="text-primary hover:underline text-sm font-medium">{r.owner_name}</Link>
                       </TableCell>
