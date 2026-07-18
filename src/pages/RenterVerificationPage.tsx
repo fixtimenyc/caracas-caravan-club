@@ -65,7 +65,7 @@ const personalSchema = z.object({
 });
 
 const contactSchema = z.object({
-  phone: z.string().trim().regex(/^(\+58|0)?\d{10}$/, 'Teléfono venezolano inválido'),
+  phone: z.string().trim().refine(isValidE164, 'Teléfono inválido (formato internacional)'),
   phoneSecondary: z.string().trim().max(20).optional(),
   contactEmail: z.string().trim().email('Email inválido').max(255).optional().or(z.literal('')),
   address: z.string().trim().min(5, 'Dirección muy corta').max(300),
