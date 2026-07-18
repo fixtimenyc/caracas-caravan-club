@@ -669,12 +669,12 @@ export type Database = {
           medical_certificate_url: string | null
           nationality: string | null
           occupation: string | null
-          own_social_age_months: number
+          own_social_age_months: number | null
           own_social_declared_age_months: number | null
-          own_social_platform: string
+          own_social_platform: string | null
           own_social_provider: string | null
           own_social_provider_user_id: string | null
-          own_social_url: string
+          own_social_url: string | null
           own_social_verified_at: string | null
           own_social_verified_email: string | null
           own_social_verified_name: string | null
@@ -682,12 +682,12 @@ export type Database = {
           personal_reference_user_id: string | null
           phone: string
           phone_secondary: string | null
-          reference_name: string
-          reference_phone: string
-          reference_relationship: string
-          reference_social_age_months: number
-          reference_social_platform: string
-          reference_social_url: string
+          reference_name: string | null
+          reference_phone: string | null
+          reference_relationship: string | null
+          reference_social_age_months: number | null
+          reference_social_platform: string | null
+          reference_social_url: string | null
           selfie_url: string
           state: string | null
           status: Database["public"]["Enums"]["renter_verification_status"]
@@ -722,12 +722,12 @@ export type Database = {
           medical_certificate_url?: string | null
           nationality?: string | null
           occupation?: string | null
-          own_social_age_months: number
+          own_social_age_months?: number | null
           own_social_declared_age_months?: number | null
-          own_social_platform: string
+          own_social_platform?: string | null
           own_social_provider?: string | null
           own_social_provider_user_id?: string | null
-          own_social_url: string
+          own_social_url?: string | null
           own_social_verified_at?: string | null
           own_social_verified_email?: string | null
           own_social_verified_name?: string | null
@@ -735,12 +735,12 @@ export type Database = {
           personal_reference_user_id?: string | null
           phone: string
           phone_secondary?: string | null
-          reference_name: string
-          reference_phone: string
-          reference_relationship: string
-          reference_social_age_months: number
-          reference_social_platform: string
-          reference_social_url: string
+          reference_name?: string | null
+          reference_phone?: string | null
+          reference_relationship?: string | null
+          reference_social_age_months?: number | null
+          reference_social_platform?: string | null
+          reference_social_url?: string | null
           selfie_url: string
           state?: string | null
           status?: Database["public"]["Enums"]["renter_verification_status"]
@@ -775,12 +775,12 @@ export type Database = {
           medical_certificate_url?: string | null
           nationality?: string | null
           occupation?: string | null
-          own_social_age_months?: number
+          own_social_age_months?: number | null
           own_social_declared_age_months?: number | null
-          own_social_platform?: string
+          own_social_platform?: string | null
           own_social_provider?: string | null
           own_social_provider_user_id?: string | null
-          own_social_url?: string
+          own_social_url?: string | null
           own_social_verified_at?: string | null
           own_social_verified_email?: string | null
           own_social_verified_name?: string | null
@@ -788,12 +788,12 @@ export type Database = {
           personal_reference_user_id?: string | null
           phone?: string
           phone_secondary?: string | null
-          reference_name?: string
-          reference_phone?: string
-          reference_relationship?: string
-          reference_social_age_months?: number
-          reference_social_platform?: string
-          reference_social_url?: string
+          reference_name?: string | null
+          reference_phone?: string | null
+          reference_relationship?: string | null
+          reference_social_age_months?: number | null
+          reference_social_platform?: string | null
+          reference_social_url?: string | null
           selfie_url?: string
           state?: string | null
           status?: Database["public"]["Enums"]["renter_verification_status"]
