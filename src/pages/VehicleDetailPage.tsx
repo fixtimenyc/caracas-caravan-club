@@ -270,6 +270,45 @@ const VehicleDetailPage = () => {
 
   const confirmReservation = async () => {
     if (!user || !vehicle || !dateRange?.from || !dateRange?.to) return;
+
+    // Gate: renter must have an approved verification before confirming a reservation
+    const { data: rv } = await supabase
+      .from("renter_verifications")
+      .select("status")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!rv) {
+      toast.error("Completa tu verificación de arrendatario", {
+        description: "Necesitamos verificar tu identidad antes de confirmar la reserva.",
+      });
+      setConfirmOpen(false);
+      navigate(`/arrendatario/verificacion?redirect=/vehiculo/${id}`);
+      return;
+    }
+    if ((rv.status as string) === "pending" || (rv.status as string) === "submitted") {
+      toast.error("Verificación en revisión", {
+        description: "Un administrador debe aprobar tu perfil antes de que puedas reservar.",
+      });
+      setConfirmOpen(false);
+      return;
+    }
+    if (rv.status === "rejected") {
+      toast.error("Verificación rechazada", {
+        description: "Actualiza tus datos de verificación para poder reservar.",
+      });
+      setConfirmOpen(false);
+      navigate(`/arrendatario/verificacion?redirect=/vehiculo/${id}`);
+      return;
+    }
+    if (rv.status !== "approved") {
+      toast.error("Verificación pendiente de aprobación");
+      setConfirmOpen(false);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { data: resv, error } = await supabase
