@@ -599,6 +599,7 @@ export type Database = {
           accepted_terms: boolean
           address: string
           admin_notes: string | null
+          bank_reference_url: string | null
           birth_date: string
           city: string
           contact_email: string | null
@@ -637,11 +638,13 @@ export type Database = {
           status: Database["public"]["Enums"]["renter_verification_status"]
           updated_at: string
           user_id: string
+          utility_bill_url: string | null
         }
         Insert: {
           accepted_terms?: boolean
           address: string
           admin_notes?: string | null
+          bank_reference_url?: string | null
           birth_date: string
           city: string
           contact_email?: string | null
@@ -680,11 +683,13 @@ export type Database = {
           status?: Database["public"]["Enums"]["renter_verification_status"]
           updated_at?: string
           user_id: string
+          utility_bill_url?: string | null
         }
         Update: {
           accepted_terms?: boolean
           address?: string
           admin_notes?: string | null
+          bank_reference_url?: string | null
           birth_date?: string
           city?: string
           contact_email?: string | null
@@ -723,6 +728,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["renter_verification_status"]
           updated_at?: string
           user_id?: string
+          utility_bill_url?: string | null
         }
         Relationships: []
       }
