@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Loader2,
   ShieldCheck,
+  Users,
 } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -27,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
@@ -40,6 +42,7 @@ import {
   sendVerificationCode,
   checkVerificationCode,
 } from '@/lib/phoneVerification';
+import { linkSocialInPopup, type LinkedIdentity } from '@/lib/socialIdentity';
 
 const MIN_AGE_YEARS = 21;
 
@@ -72,6 +75,7 @@ const personalSchema = z.object({
     }),
   phone: z.string().trim().refine(isValidE164, 'Teléfono inválido (formato internacional)'),
   address: z.string().trim().min(5, 'Dirección muy corta').max(300),
+  nationality: z.string().trim().min(2, 'Nacionalidad requerida').max(50),
 });
 
 const vehicleSchema = z.object({
@@ -102,8 +106,15 @@ const vehicleSchema = z.object({
   availabilityNotes: z.string().max(500).optional(),
 });
 
+const licenseSchema = z.object({
+  drivingLicenseNumber: z.string().trim().min(4, 'Número de licencia requerido').max(30),
+  drivingLicenseExpiry: z.string().min(1, 'Fecha de vencimiento requerida'),
+});
+
 type PersonalData = z.infer<typeof personalSchema>;
 type VehicleData = z.infer<typeof vehicleSchema>;
+type LicenseData = z.infer<typeof licenseSchema>;
+const refEmailSchema = z.string().trim().email('Correo inválido').max(255);
 
 const OwnerApplicationPage = () => {
   const navigate = useNavigate();
@@ -121,6 +132,7 @@ const OwnerApplicationPage = () => {
     birthDate: '',
     phone: '',
     address: '',
+    nationality: 'Venezolana',
   });
 
   const [vehicle, setVehicle] = useState<VehicleData>({
@@ -138,13 +150,33 @@ const OwnerApplicationPage = () => {
     availabilityNotes: '',
   });
 
+  const [license, setLicense] = useState<LicenseData>({
+    drivingLicenseNumber: '',
+    drivingLicenseExpiry: '',
+  });
+  const [hasMedical, setHasMedical] = useState(false);
+
   const [cedulaDoc, setCedulaDoc] = useState<File | null>(null);
   const [titleDoc, setTitleDoc] = useState<File | null>(null);
   const [insuranceDoc, setInsuranceDoc] = useState<File | null>(null);
   const [vehiclePhotos, setVehiclePhotos] = useState<File[]>([]);
+  const [licenseDoc, setLicenseDoc] = useState<File | null>(null);
+  const [selfie, setSelfie] = useState<File | null>(null);
+  const [utilityBill, setUtilityBill] = useState<File | null>(null);
+  const [bankReference, setBankReference] = useState<File | null>(null);
+  const [medicalDoc, setMedicalDoc] = useState<File | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Phone SMS verification (mock, see src/lib/phoneVerification.ts)
+  // Redes y referencia
+  const [linkedSocial, setLinkedSocial] = useState<LinkedIdentity | null>(null);
+  const [socialLinking, setSocialLinking] = useState<
+    'google' | 'apple' | 'facebook' | 'instagram' | null
+  >(null);
+  const [declaredAgeMonths, setDeclaredAgeMonths] = useState<number>(12);
+  const [noSocialAcknowledged, setNoSocialAcknowledged] = useState(false);
+  const [refEmail, setRefEmail] = useState('');
+
+  // Phone SMS verification
   const [phoneCountry, setPhoneCountry] = useState<string>('+58');
   const [phoneLocal, setPhoneLocal] = useState<string>('');
   const [otpSent, setOtpSent] = useState(false);
@@ -152,6 +184,8 @@ const OwnerApplicationPage = () => {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [checkingOtp, setCheckingOtp] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+
+  const isVenezuelan = personal.nationality.trim().toLowerCase().startsWith('venezol');
 
   const handleSendOtp = async () => {
     const e164 = toE164(phoneCountry, phoneLocal);
@@ -186,6 +220,37 @@ const OwnerApplicationPage = () => {
     toast.success('Teléfono verificado');
   };
 
+  const handleLinkSocial = async (
+    provider: 'google' | 'apple' | 'facebook' | 'instagram',
+  ) => {
+    setSocialLinking(provider);
+    try {
+      const identity = await linkSocialInPopup(provider);
+      setLinkedSocial(identity);
+      setNoSocialAcknowledged(false);
+      const label =
+        provider === 'google'
+          ? 'Google'
+          : provider === 'apple'
+            ? 'Apple'
+            : provider === 'facebook'
+              ? 'Facebook'
+              : 'Instagram';
+      toast.success(`Identidad verificada con ${label}`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'No se pudo verificar';
+      if (/manual linking/i.test(msg)) {
+        toast.error(
+          'Función deshabilitada. Un administrador debe habilitar "Manual Linking" en la configuración de Auth.',
+        );
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setSocialLinking(null);
+    }
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth?mode=signup&role=owner');
@@ -206,56 +271,75 @@ const OwnerApplicationPage = () => {
   }, [user, loading, navigate]);
 
   const steps = [
-    { title: 'Datos personales', icon: UserIcon },
-    { title: 'Tu vehículo', icon: Car },
-    { title: 'Documentos', icon: FileText },
+    { title: 'Personal', icon: UserIcon },
+    { title: 'Vehículo', icon: Car },
+    { title: 'Licencia', icon: FileText },
+    { title: 'Documentos', icon: Upload },
+    { title: 'Redes y referencia', icon: Users },
     { title: 'Revisión', icon: CheckCircle2 },
   ];
 
   const progress = ((step + 1) / steps.length) * 100;
 
-  const handlePersonalNext = () => {
-    if (!phoneVerified) {
-      toast.error('Verifica tu teléfono con el código SMS antes de continuar');
-      return;
-    }
-    const result = personalSchema.safeParse(personal);
+  const runValidation = <T,>(schema: z.ZodSchema<T>, data: T) => {
+    const result = schema.safeParse(data);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       result.error.errors.forEach((err) => {
         if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
-      return;
+      return false;
     }
     setErrors({});
-    setStep(1);
+    return true;
   };
 
-  const handleVehicleNext = () => {
-    const result = vehicleSchema.safeParse(vehicle);
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.errors.forEach((err) => {
-        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
-      });
-      setErrors(fieldErrors);
-      return;
+  const handleNext = () => {
+    if (step === 0) {
+      if (!phoneVerified) {
+        toast.error('Verifica tu teléfono con el código SMS antes de continuar');
+        return;
+      }
+      if (!runValidation(personalSchema, personal)) return;
     }
-    setErrors({});
-    setStep(2);
-  };
-
-  const handleDocumentsNext = () => {
-    if (!cedulaDoc || !titleDoc || !insuranceDoc) {
-      toast.error('Sube los 3 documentos requeridos');
-      return;
+    if (step === 1 && !runValidation(vehicleSchema, vehicle)) return;
+    if (step === 2 && !runValidation(licenseSchema, license)) return;
+    if (step === 3) {
+      if (!cedulaDoc || !titleDoc || !insuranceDoc || !licenseDoc || !selfie) {
+        toast.error(
+          'Sube los documentos requeridos: cédula, certificado de circulación, seguro, licencia y selfie',
+        );
+        return;
+      }
+      if (vehiclePhotos.length < 3) {
+        toast.error('Sube al menos 3 fotos del vehículo');
+        return;
+      }
+      if (hasMedical && !medicalDoc) {
+        toast.error('Sube tu certificado médico');
+        return;
+      }
     }
-    if (vehiclePhotos.length < 3) {
-      toast.error('Sube al menos 3 fotos del vehículo');
-      return;
+    if (step === 4) {
+      if (!linkedSocial && !noSocialAcknowledged) {
+        toast.error('Verifica con Google/Apple o marca "No dispongo de red"');
+        return;
+      }
+      if (declaredAgeMonths < 6) {
+        setErrors({ declaredAgeMonths: 'La cuenta debe tener al menos 6 meses' });
+        return;
+      }
+      if (refEmail.trim().length > 0) {
+        const parsed = refEmailSchema.safeParse(refEmail);
+        if (!parsed.success) {
+          setErrors({ refEmail: parsed.error.errors[0]?.message ?? 'Correo inválido' });
+          return;
+        }
+      }
+      setErrors({});
     }
-    setStep(3);
+    setStep((s) => Math.min(s + 1, steps.length - 1));
   };
 
   const uploadFile = async (file: File, folder: string) => {
@@ -278,13 +362,31 @@ const OwnerApplicationPage = () => {
 
     setSubmitting(true);
     try {
-      const [cedulaPath, titlePath, insurancePath, photoPaths] =
-        await Promise.all([
-          uploadFile(cedulaDoc!, 'cedula'),
-          uploadFile(titleDoc!, 'title'),
-          uploadFile(insuranceDoc!, 'insurance'),
-          Promise.all(vehiclePhotos.map((f) => uploadFile(f, 'photos'))),
-        ]);
+      const [
+        cedulaPath,
+        titlePath,
+        insurancePath,
+        licensePath,
+        selfiePath,
+        photoPaths,
+        utilityPath,
+        bankPath,
+        medicalPath,
+      ] = await Promise.all([
+        uploadFile(cedulaDoc!, 'cedula'),
+        uploadFile(titleDoc!, 'title'),
+        uploadFile(insuranceDoc!, 'insurance'),
+        uploadFile(licenseDoc!, 'license'),
+        uploadFile(selfie!, 'selfie'),
+        Promise.all(vehiclePhotos.map((f) => uploadFile(f, 'photos'))),
+        utilityBill ? uploadFile(utilityBill, 'utility') : Promise.resolve(null),
+        bankReference ? uploadFile(bankReference, 'bank') : Promise.resolve(null),
+        hasMedical && medicalDoc
+          ? uploadFile(medicalDoc, 'medical')
+          : medicalDoc
+            ? uploadFile(medicalDoc, 'medical')
+            : Promise.resolve(null),
+      ]);
 
       const { error } = await supabase.from('owner_applications').insert({
         user_id: user.id,
@@ -309,9 +411,24 @@ const OwnerApplicationPage = () => {
         insurance_doc_url: insurancePath,
         vehicle_photos: photoPaths,
         accepted_terms: acceptedTerms,
+        driving_license_number: license.drivingLicenseNumber,
+        driving_license_expiry: license.drivingLicenseExpiry,
+        driving_license_doc_url: licensePath,
+        selfie_url: selfiePath,
+        utility_bill_url: utilityPath,
+        bank_reference_url: bankPath,
+        medical_certificate_url: medicalPath,
+        has_medical_condition: hasMedical,
+        own_social_provider: linkedSocial?.provider ?? null,
+        own_social_provider_user_id: linkedSocial?.providerUserId ?? null,
+        own_social_verified_at: linkedSocial ? new Date().toISOString() : null,
+        own_social_verified_name: linkedSocial?.name ?? null,
+        own_social_verified_email: linkedSocial?.email ?? null,
+        own_social_verified_picture: linkedSocial?.picture ?? null,
+        own_social_declared_age_months: declaredAgeMonths,
+        personal_reference_email: refEmail.trim() || null,
       });
 
-      // Sync personal data to the user's profile so it shows across the app/admin
       await supabase
         .from('profiles')
         .update({
@@ -381,12 +498,8 @@ const OwnerApplicationPage = () => {
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className={cn('w-8 h-8', config.color)} />
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-3">
-            {config.title}
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            {config.desc}
-          </p>
+          <h1 className="text-2xl font-bold text-foreground mb-3">{config.title}</h1>
+          <p className="text-muted-foreground mb-6">{config.desc}</p>
           <Button onClick={() => navigate(config.path)} className="w-full">
             {config.action}
           </Button>
@@ -408,7 +521,6 @@ const OwnerApplicationPage = () => {
         </Button>
 
         <div className="bg-card border border-border rounded-2xl shadow-elegant overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-hero p-6 text-primary-foreground">
             <div className="flex items-center gap-3 mb-2">
               <ShieldCheck className="w-6 h-6" />
@@ -419,33 +531,29 @@ const OwnerApplicationPage = () => {
             </p>
           </div>
 
-          {/* Stepper */}
           <div className="px-6 pt-6">
             <Progress value={progress} className="h-1.5 mb-4" />
-            <div className="flex justify-between mb-6">
+            <div className="flex justify-between mb-6 overflow-x-auto gap-2">
               {steps.map((s, i) => {
                 const Icon = s.icon;
                 const active = i === step;
                 const done = i < step;
                 return (
-                  <div
-                    key={s.title}
-                    className="flex flex-col items-center flex-1"
-                  >
+                  <div key={s.title} className="flex flex-col items-center flex-1 min-w-[60px]">
                     <div
                       className={cn(
                         'w-9 h-9 rounded-full flex items-center justify-center mb-1.5 transition-smooth',
                         done && 'bg-primary text-primary-foreground',
                         active && 'bg-primary/15 text-primary ring-2 ring-primary',
-                        !done && !active && 'bg-muted text-muted-foreground'
+                        !done && !active && 'bg-muted text-muted-foreground',
                       )}
                     >
                       {done ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                     </div>
                     <span
                       className={cn(
-                        'text-[11px] font-medium text-center',
-                        active ? 'text-foreground' : 'text-muted-foreground'
+                        'text-[10px] font-medium text-center leading-tight',
+                        active ? 'text-foreground' : 'text-muted-foreground',
                       )}
                     >
                       {s.title}
@@ -461,55 +569,50 @@ const OwnerApplicationPage = () => {
             {step === 0 && (
               <div className="space-y-4">
                 <FieldGroup>
-                  <Field
-                    label="Nombre completo"
-                    error={errors.fullName}
-                    htmlFor="fullName"
-                  >
+                  <Field label="Nombre completo" error={errors.fullName} htmlFor="fullName">
                     <Input
                       id="fullName"
                       value={personal.fullName}
-                      onChange={(e) =>
-                        setPersonal({ ...personal, fullName: e.target.value })
-                      }
+                      onChange={(e) => setPersonal({ ...personal, fullName: e.target.value })}
                       placeholder="Juan Pérez"
                       maxLength={100}
                     />
                   </Field>
-                  <Field
-                    label="Cédula"
-                    error={errors.cedula}
-                    htmlFor="cedula"
-                    hint="Ej: V-12345678"
-                  >
+                  <Field label="Cédula" error={errors.cedula} htmlFor="cedula" hint="Ej: V-12345678">
                     <Input
                       id="cedula"
                       value={personal.cedula}
-                      onChange={(e) =>
-                        setPersonal({ ...personal, cedula: e.target.value })
-                      }
+                      onChange={(e) => setPersonal({ ...personal, cedula: e.target.value })}
                       placeholder="V-12345678"
                       maxLength={12}
                     />
                   </Field>
                 </FieldGroup>
 
-                <Field
-                  label="Fecha de nacimiento"
-                  error={errors.birthDate}
-                  htmlFor="birthDate"
-                  hint={`Debes ser mayor de ${MIN_AGE_YEARS} años`}
-                >
-                  <Input
-                    id="birthDate"
-                    type="date"
-                    value={personal.birthDate}
-                    max={minAgeDateString}
-                    onChange={(e) =>
-                      setPersonal({ ...personal, birthDate: e.target.value })
-                    }
-                  />
-                </Field>
+                <FieldGroup>
+                  <Field
+                    label="Fecha de nacimiento"
+                    error={errors.birthDate}
+                    htmlFor="birthDate"
+                    hint={`Debes ser mayor de ${MIN_AGE_YEARS} años`}
+                  >
+                    <Input
+                      id="birthDate"
+                      type="date"
+                      value={personal.birthDate}
+                      max={minAgeDateString}
+                      onChange={(e) => setPersonal({ ...personal, birthDate: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Nacionalidad" error={errors.nationality} htmlFor="nationality">
+                    <Input
+                      id="nationality"
+                      value={personal.nationality}
+                      maxLength={50}
+                      onChange={(e) => setPersonal({ ...personal, nationality: e.target.value })}
+                    />
+                  </Field>
+                </FieldGroup>
 
                 <div className="rounded-lg border border-border p-4 space-y-3 bg-muted/30">
                   <div className="flex items-center justify-between gap-2">
@@ -530,7 +633,9 @@ const OwnerApplicationPage = () => {
                       }}
                       disabled={phoneVerified}
                     >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent className="max-h-72">
                         {COUNTRY_CODES.map((c) => (
                           <SelectItem key={c.iso} value={c.code}>
@@ -569,7 +674,10 @@ const OwnerApplicationPage = () => {
                           disabled={sendingOtp || phoneLocal.length < 7}
                         >
                           {sendingOtp ? (
-                            <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Enviando...</>
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                              Enviando...
+                            </>
                           ) : (
                             'Enviar código SMS'
                           )}
@@ -578,7 +686,9 @@ const OwnerApplicationPage = () => {
                         <div className="space-y-2">
                           <p className="text-xs text-muted-foreground">
                             Ingresa el código de 6 dígitos que recibiste por SMS.{' '}
-                            <span className="italic">(Modo demo: usa <code className="font-mono">123456</code>)</span>
+                            <span className="italic">
+                              (Modo demo: usa <code className="font-mono">123456</code>)
+                            </span>
                           </p>
                           <div className="flex items-center gap-3 flex-wrap">
                             <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
@@ -595,7 +705,10 @@ const OwnerApplicationPage = () => {
                               disabled={checkingOtp || otpCode.length !== 6}
                             >
                               {checkingOtp ? (
-                                <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Verificando...</>
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                                  Verificando...
+                                </>
                               ) : (
                                 'Verificar'
                               )}
@@ -616,17 +729,11 @@ const OwnerApplicationPage = () => {
                   )}
                 </div>
 
-                <Field
-                  label="Dirección"
-                  error={errors.address}
-                  htmlFor="address"
-                >
+                <Field label="Dirección" error={errors.address} htmlFor="address">
                   <Textarea
                     id="address"
                     value={personal.address}
-                    onChange={(e) =>
-                      setPersonal({ ...personal, address: e.target.value })
-                    }
+                    onChange={(e) => setPersonal({ ...personal, address: e.target.value })}
                     placeholder="Urbanización, calle, edificio o casa, referencias"
                     rows={2}
                     maxLength={300}
@@ -643,9 +750,7 @@ const OwnerApplicationPage = () => {
                     <Input
                       id="brand"
                       value={vehicle.brand}
-                      onChange={(e) =>
-                        setVehicle({ ...vehicle, brand: e.target.value })
-                      }
+                      onChange={(e) => setVehicle({ ...vehicle, brand: e.target.value })}
                       placeholder="Toyota"
                       maxLength={50}
                     />
@@ -654,9 +759,7 @@ const OwnerApplicationPage = () => {
                     <Input
                       id="model"
                       value={vehicle.model}
-                      onChange={(e) =>
-                        setVehicle({ ...vehicle, model: e.target.value })
-                      }
+                      onChange={(e) => setVehicle({ ...vehicle, model: e.target.value })}
                       placeholder="Corolla"
                       maxLength={50}
                     />
@@ -671,21 +774,14 @@ const OwnerApplicationPage = () => {
                       value={vehicle.year}
                       min={2010}
                       max={new Date().getFullYear() + 1}
-                      onChange={(e) =>
-                        setVehicle({ ...vehicle, year: Number(e.target.value) })
-                      }
+                      onChange={(e) => setVehicle({ ...vehicle, year: Number(e.target.value) })}
                     />
                   </Field>
                   <Field label="Placa" error={errors.plate} htmlFor="plate">
                     <Input
                       id="plate"
                       value={vehicle.plate}
-                      onChange={(e) =>
-                        setVehicle({
-                          ...vehicle,
-                          plate: e.target.value.toUpperCase(),
-                        })
-                      }
+                      onChange={(e) => setVehicle({ ...vehicle, plate: e.target.value.toUpperCase() })}
                       placeholder="AB123CD"
                       maxLength={10}
                     />
@@ -697,44 +793,27 @@ const OwnerApplicationPage = () => {
                     <Input
                       id="color"
                       value={vehicle.color}
-                      onChange={(e) =>
-                        setVehicle({ ...vehicle, color: e.target.value })
-                      }
+                      onChange={(e) => setVehicle({ ...vehicle, color: e.target.value })}
                       placeholder="Plateado"
                       maxLength={30}
                     />
                   </Field>
-                  <Field
-                    label="Kilometraje"
-                    error={errors.mileage}
-                    htmlFor="mileage"
-                  >
+                  <Field label="Kilometraje" error={errors.mileage} htmlFor="mileage">
                     <Input
                       id="mileage"
                       type="number"
                       value={vehicle.mileage}
                       min={0}
-                      onChange={(e) =>
-                        setVehicle({
-                          ...vehicle,
-                          mileage: Number(e.target.value),
-                        })
-                      }
+                      onChange={(e) => setVehicle({ ...vehicle, mileage: Number(e.target.value) })}
                     />
                   </Field>
                 </FieldGroup>
 
                 <FieldGroup>
-                  <Field
-                    label="Combustible"
-                    error={errors.fuelType}
-                    htmlFor="fuelType"
-                  >
+                  <Field label="Combustible" error={errors.fuelType} htmlFor="fuelType">
                     <Select
                       value={vehicle.fuelType}
-                      onValueChange={(v) =>
-                        setVehicle({ ...vehicle, fuelType: v })
-                      }
+                      onValueChange={(v) => setVehicle({ ...vehicle, fuelType: v })}
                     >
                       <SelectTrigger id="fuelType">
                         <SelectValue placeholder="Selecciona" />
@@ -748,16 +827,10 @@ const OwnerApplicationPage = () => {
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Field
-                    label="Transmisión"
-                    error={errors.transmission}
-                    htmlFor="transmission"
-                  >
+                  <Field label="Transmisión" error={errors.transmission} htmlFor="transmission">
                     <Select
                       value={vehicle.transmission}
-                      onValueChange={(v) =>
-                        setVehicle({ ...vehicle, transmission: v })
-                      }
+                      onValueChange={(v) => setVehicle({ ...vehicle, transmission: v })}
                     >
                       <SelectTrigger id="transmission">
                         <SelectValue placeholder="Selecciona" />
@@ -781,12 +854,7 @@ const OwnerApplicationPage = () => {
                     type="number"
                     value={vehicle.pricePerDay}
                     min={5}
-                    onChange={(e) =>
-                      setVehicle({
-                        ...vehicle,
-                        pricePerDay: Number(e.target.value),
-                      })
-                    }
+                    onChange={(e) => setVehicle({ ...vehicle, pricePerDay: Number(e.target.value) })}
                   />
                 </Field>
 
@@ -822,30 +890,17 @@ const OwnerApplicationPage = () => {
                     <Input
                       id="addressDetail"
                       value={vehicle.addressDetail ?? ''}
-                      onChange={(e) =>
-                        setVehicle({
-                          ...vehicle,
-                          addressDetail: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setVehicle({ ...vehicle, addressDetail: e.target.value })}
                       placeholder="Ej: Av. Luis Roche, frente a la plaza"
                       maxLength={120}
                     />
                   </Field>
                 </FieldGroup>
-                <Field
-                  label="Notas de disponibilidad (opcional)"
-                  htmlFor="availabilityNotes"
-                >
+                <Field label="Notas de disponibilidad (opcional)" htmlFor="availabilityNotes">
                   <Textarea
                     id="availabilityNotes"
                     value={vehicle.availabilityNotes}
-                    onChange={(e) =>
-                      setVehicle({
-                        ...vehicle,
-                        availabilityNotes: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setVehicle({ ...vehicle, availabilityNotes: e.target.value })}
                     placeholder="Ej: disponible solo fines de semana"
                     rows={2}
                     maxLength={500}
@@ -854,8 +909,56 @@ const OwnerApplicationPage = () => {
               </div>
             )}
 
-            {/* Step 2: Documents */}
+            {/* Step 2: Licencia */}
             {step === 2 && (
+              <div className="space-y-4">
+                <FieldGroup>
+                  <Field
+                    label="Número de licencia de conducir"
+                    error={errors.drivingLicenseNumber}
+                    htmlFor="dln"
+                  >
+                    <Input
+                      id="dln"
+                      value={license.drivingLicenseNumber}
+                      maxLength={30}
+                      onChange={(e) =>
+                        setLicense({ ...license, drivingLicenseNumber: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field
+                    label="Vencimiento"
+                    error={errors.drivingLicenseExpiry}
+                    htmlFor="dle"
+                  >
+                    <Input
+                      id="dle"
+                      type="date"
+                      value={license.drivingLicenseExpiry}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) =>
+                        setLicense({ ...license, drivingLicenseExpiry: e.target.value })
+                      }
+                    />
+                  </Field>
+                </FieldGroup>
+                <div className="flex items-center justify-between rounded-lg border border-border p-4">
+                  <div>
+                    <Label className="text-sm font-semibold">
+                      ¿Tienes alguna condición médica relevante?
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Si aplica, te pediremos un certificado médico vigente
+                    </p>
+                  </div>
+                  <Switch checked={hasMedical} onCheckedChange={setHasMedical} />
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Documents */}
+            {step === 3 && (
               <div className="space-y-4">
                 <FileUpload
                   label="Cédula de identidad"
@@ -878,6 +981,20 @@ const OwnerApplicationPage = () => {
                   file={insuranceDoc}
                   onChange={setInsuranceDoc}
                 />
+                <FileUpload
+                  label="Licencia de conducir"
+                  description="Foto frontal de tu licencia"
+                  accept="image/*,application/pdf"
+                  file={licenseDoc}
+                  onChange={setLicenseDoc}
+                />
+                <FileUpload
+                  label="Selfie sosteniendo tu cédula"
+                  description="Tu rostro y cédula deben verse claramente"
+                  accept="image/*"
+                  file={selfie}
+                  onChange={setSelfie}
+                />
                 <MultiFileUpload
                   label="Fotos del vehículo"
                   description="Mínimo 3 fotos: frente, lateral e interior"
@@ -885,15 +1002,226 @@ const OwnerApplicationPage = () => {
                   files={vehiclePhotos}
                   onChange={setVehiclePhotos}
                 />
+
+                <div className="pt-4 border-t border-border">
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Documentos opcionales
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    No son obligatorios, pero ayudan a acelerar tu verificación.
+                  </p>
+                  <div className="space-y-4">
+                    <FileUpload
+                      label="Factura de servicios (opcional)"
+                      description="Recibo reciente de luz, agua, internet o teléfono a tu nombre"
+                      accept="image/*,application/pdf"
+                      file={utilityBill}
+                      onChange={setUtilityBill}
+                    />
+                    <FileUpload
+                      label="Referencia bancaria (opcional)"
+                      description="Carta o constancia emitida por tu banco"
+                      accept="image/*,application/pdf"
+                      file={bankReference}
+                      onChange={setBankReference}
+                    />
+                    {(hasMedical || isVenezuelan) && (
+                      <FileUpload
+                        label={
+                          hasMedical
+                            ? 'Certificado médico'
+                            : 'Certificado médico (opcional para venezolanos)'
+                        }
+                        description="Documento vigente expedido por médico autorizado"
+                        accept="image/*,application/pdf"
+                        file={medicalDoc}
+                        onChange={setMedicalDoc}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Step 3: Review */}
-            {step === 3 && (
+            {/* Step 4: Redes y referencia */}
+            {step === 4 && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Verifica tu identidad con una red social
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Inicia sesión con Google, Apple, Facebook o Instagram para vincular una
+                    identidad digital verificada a tu perfil. La misma cuenta no puede reutilizarse
+                    en otra verificación.
+                  </p>
+
+                  {linkedSocial ? (
+                    <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 flex items-start gap-3">
+                      {linkedSocial.picture ? (
+                        <img
+                          src={linkedSocial.picture}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary shrink-0">
+                          <Check className="w-5 h-5" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                          Verificado con{' '}
+                          {linkedSocial.provider === 'google'
+                            ? 'Google'
+                            : linkedSocial.provider === 'apple'
+                              ? 'Apple'
+                              : linkedSocial.provider === 'facebook'
+                                ? 'Facebook'
+                                : 'Instagram'}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {linkedSocial.name || linkedSocial.email || 'Identidad confirmada'}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => setLinkedSocial(null)}>
+                        Cambiar
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('google')}
+                      >
+                        {socialLinking === 'google' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span className="mr-2 font-bold text-[#4285F4]">G</span>
+                        )}
+                        Continuar con Google
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('apple')}
+                      >
+                        {socialLinking === 'apple' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span className="mr-2 font-bold text-foreground"></span>
+                        )}
+                        Continuar con Apple
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('facebook')}
+                      >
+                        {socialLinking === 'facebook' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span className="mr-2 font-bold text-[#1877F2]">f</span>
+                        )}
+                        Continuar con Facebook
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="justify-center"
+                        disabled={socialLinking !== null}
+                        onClick={() => void handleLinkSocial('instagram')}
+                      >
+                        {socialLinking === 'instagram' ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <span
+                            className="mr-2 font-bold bg-clip-text text-transparent"
+                            style={{
+                              backgroundImage:
+                                'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',
+                            }}
+                          >
+                            IG
+                          </span>
+                        )}
+                        Continuar con Instagram
+                      </Button>
+                      <p className="text-[11px] text-muted-foreground sm:col-span-2 -mt-1">
+                        Instagram requiere que tu cuenta esté configurada como Business o Creator y
+                        enlazada a una página de Facebook.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <Field
+                      label="Antigüedad declarada de tu cuenta (meses)"
+                      hint="Nuestro equipo verificará esta declaración durante la revisión."
+                      error={errors.declaredAgeMonths}
+                      htmlFor="dam"
+                    >
+                      <Input
+                        id="dam"
+                        type="number"
+                        min={6}
+                        value={declaredAgeMonths}
+                        onChange={(e) => setDeclaredAgeMonths(Number(e.target.value))}
+                      />
+                    </Field>
+                  </div>
+
+                  {!linkedSocial && (
+                    <label className="mt-3 flex items-start gap-2 rounded-lg border border-border p-3 cursor-pointer">
+                      <Checkbox
+                        checked={noSocialAcknowledged}
+                        onCheckedChange={(c) => setNoSocialAcknowledged(!!c)}
+                        className="mt-0.5"
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        No dispongo de una cuenta social para verificar. Entiendo que mi solicitud
+                        quedará en revisión manual del equipo.
+                      </span>
+                    </label>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <h3 className="font-semibold text-sm text-foreground mb-1">
+                    Referencia personal (opcional)
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Agrega el correo de alguien que ya use RuedaVe. Recibirá una notificación para
+                    confirmar que te conoce cuando envíes esta solicitud.{' '}
+                    <b>Es opcional, pero ayuda a acelerar tu verificación.</b>
+                  </p>
+                  <Field label="Correo del referente" error={errors.refEmail} htmlFor="ref-email">
+                    <Input
+                      id="ref-email"
+                      type="email"
+                      placeholder="referente@correo.com"
+                      value={refEmail}
+                      onChange={(e) => setRefEmail(e.target.value)}
+                    />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Review */}
+            {step === 5 && (
               <div className="space-y-4">
                 <ReviewSection title="Datos personales">
                   <ReviewRow label="Nombre" value={personal.fullName} />
                   <ReviewRow label="Cédula" value={personal.cedula} />
+                  <ReviewRow label="Nacionalidad" value={personal.nationality} />
                   <ReviewRow label="Teléfono" value={personal.phone} />
                 </ReviewSection>
 
@@ -903,29 +1231,60 @@ const OwnerApplicationPage = () => {
                     value={`${vehicle.brand} ${vehicle.model} ${vehicle.year}`}
                   />
                   <ReviewRow label="Placa" value={vehicle.plate} />
-                  <ReviewRow
-                    label="Precio/día"
-                    value={`$${vehicle.pricePerDay} USD`}
-                  />
+                  <ReviewRow label="Precio/día" value={`$${vehicle.pricePerDay} USD`} />
+                </ReviewSection>
+
+                <ReviewSection title="Licencia">
+                  <ReviewRow label="Número" value={license.drivingLicenseNumber} />
+                  <ReviewRow label="Vence" value={license.drivingLicenseExpiry} />
+                  <ReviewRow label="Condición médica" value={hasMedical ? 'Sí' : 'No'} />
                 </ReviewSection>
 
                 <ReviewSection title="Documentos">
-                  <ReviewRow
-                    label="Cédula"
-                    value={cedulaDoc?.name || '—'}
-                  />
-                  <ReviewRow
-                    label="Título"
-                    value={titleDoc?.name || '—'}
-                  />
-                  <ReviewRow
-                    label="Seguro"
-                    value={insuranceDoc?.name || '—'}
-                  />
-                  <ReviewRow
-                    label="Fotos"
-                    value={`${vehiclePhotos.length} fotos`}
-                  />
+                  <ReviewRow label="Cédula" value={cedulaDoc?.name || '—'} />
+                  <ReviewRow label="Certificado circulación" value={titleDoc?.name || '—'} />
+                  <ReviewRow label="Seguro" value={insuranceDoc?.name || '—'} />
+                  <ReviewRow label="Licencia" value={licenseDoc?.name || '—'} />
+                  <ReviewRow label="Selfie" value={selfie?.name || '—'} />
+                  <ReviewRow label="Fotos" value={`${vehiclePhotos.length} fotos`} />
+                  {utilityBill && <ReviewRow label="Factura servicios" value={utilityBill.name} />}
+                  {bankReference && (
+                    <ReviewRow label="Referencia bancaria" value={bankReference.name} />
+                  )}
+                  {medicalDoc && <ReviewRow label="Certificado médico" value={medicalDoc.name} />}
+                </ReviewSection>
+
+                <ReviewSection title="Red social">
+                  {linkedSocial ? (
+                    <>
+                      <ReviewRow
+                        label="Proveedor"
+                        value={
+                          linkedSocial.provider === 'google'
+                            ? 'Google'
+                            : linkedSocial.provider === 'apple'
+                              ? 'Apple'
+                              : linkedSocial.provider === 'facebook'
+                                ? 'Facebook'
+                                : 'Instagram'
+                        }
+                      />
+                      <ReviewRow
+                        label="Cuenta"
+                        value={linkedSocial.email || linkedSocial.name || '—'}
+                      />
+                      <ReviewRow
+                        label="Antigüedad declarada"
+                        value={`${declaredAgeMonths} meses`}
+                      />
+                    </>
+                  ) : (
+                    <ReviewRow label="Estado" value="Sin verificar — revisión manual" />
+                  )}
+                </ReviewSection>
+
+                <ReviewSection title="Referencia personal">
+                  <ReviewRow label="Correo" value={refEmail || 'No agregada (opcional)'} />
                 </ReviewSection>
 
                 <label className="flex items-start gap-3 p-4 rounded-lg border border-border bg-muted/30 cursor-pointer">
@@ -936,11 +1295,8 @@ const OwnerApplicationPage = () => {
                   />
                   <span className="text-sm text-foreground">
                     Confirmo que la información es verídica y acepto los{' '}
-                    <span className="text-primary font-medium">
-                      términos y condiciones
-                    </span>{' '}
-                    de Aliado de RuedaVe, incluyendo la comisión del 30% por
-                    cada renta.
+                    <span className="text-primary font-medium">términos y condiciones</span> de
+                    Aliado de RuedaVe, incluyendo la comisión del 30% por cada renta.
                   </span>
                 </label>
               </div>
@@ -957,16 +1313,8 @@ const OwnerApplicationPage = () => {
                 Atrás
               </Button>
 
-              {step < 3 ? (
-                <Button
-                  onClick={
-                    step === 0
-                      ? handlePersonalNext
-                      : step === 1
-                      ? handleVehicleNext
-                      : handleDocumentsNext
-                  }
-                >
+              {step < steps.length - 1 ? (
+                <Button onClick={handleNext}>
                   Continuar
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -1015,9 +1363,7 @@ const Field = ({
   <div className="space-y-1.5">
     <Label htmlFor={htmlFor}>{label}</Label>
     {children}
-    {hint && !error && (
-      <p className="text-xs text-muted-foreground">{hint}</p>
-    )}
+    {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
     {error && <p className="text-xs text-destructive">{error}</p>}
   </div>
 );
@@ -1043,22 +1389,14 @@ const FileUpload = ({
           <div
             className={cn(
               'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0',
-              file
-                ? 'bg-primary/10 text-primary'
-                : 'bg-muted text-muted-foreground'
+              file ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
             )}
           >
-            {file ? (
-              <Check className="w-5 h-5" />
-            ) : (
-              <Upload className="w-5 h-5" />
-            )}
+            {file ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-sm text-foreground">{label}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {file ? file.name : description}
-            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">{file ? file.name : description}</p>
           </div>
         </div>
         <input
@@ -1094,16 +1432,10 @@ const MultiFileUpload = ({
           <div
             className={cn(
               'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0',
-              files.length >= 3
-                ? 'bg-primary/10 text-primary'
-                : 'bg-muted text-muted-foreground'
+              files.length >= 3 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
             )}
           >
-            {files.length >= 3 ? (
-              <Check className="w-5 h-5" />
-            ) : (
-              <Upload className="w-5 h-5" />
-            )}
+            {files.length >= 3 ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-sm text-foreground">{label}</p>
@@ -1120,9 +1452,7 @@ const MultiFileUpload = ({
           multiple
           accept={accept}
           className="hidden"
-          onChange={(e) =>
-            onChange(e.target.files ? Array.from(e.target.files) : [])
-          }
+          onChange={(e) => onChange(e.target.files ? Array.from(e.target.files) : [])}
         />
       </label>
     </div>
@@ -1145,9 +1475,7 @@ const ReviewSection = ({
 const ReviewRow = ({ label, value }: { label: string; value: string }) => (
   <div className="flex justify-between gap-4 text-sm">
     <span className="text-muted-foreground">{label}</span>
-    <span className="text-foreground font-medium text-right truncate">
-      {value}
-    </span>
+    <span className="text-foreground font-medium text-right truncate">{value}</span>
   </div>
 );
 
