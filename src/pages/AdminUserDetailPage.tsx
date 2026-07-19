@@ -212,9 +212,7 @@ const AdminUserDetailPage = () => {
         supabase.from("user_roles").select("role").eq("user_id", uid),
         supabase
           .from("owner_applications")
-          .select(
-            "cedula_doc_url, title_doc_url, insurance_doc_url, vehicle_photos, birth_date, address"
-          )
+          .select("*")
           .eq("user_id", uid)
           .order("created_at", { ascending: false })
           .limit(1)
