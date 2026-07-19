@@ -895,7 +895,6 @@ const OwnerApplicationPage = () => {
                   <ReviewRow label="Nombre" value={personal.fullName} />
                   <ReviewRow label="Cédula" value={personal.cedula} />
                   <ReviewRow label="Teléfono" value={personal.phone} />
-                  <ReviewRow label="Ciudad" value={personal.city} />
                 </ReviewSection>
 
                 <ReviewSection title="Vehículo">
