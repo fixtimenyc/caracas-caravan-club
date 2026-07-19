@@ -1,0 +1,1 @@
+ALTER TABLE public.owner_applications ALTER COLUMN city DROP NOT NULL;
