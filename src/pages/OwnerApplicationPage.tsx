@@ -138,6 +138,48 @@ const OwnerApplicationPage = () => {
   const [vehiclePhotos, setVehiclePhotos] = useState<File[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // Phone SMS verification (mock, see src/lib/phoneVerification.ts)
+  const [phoneCountry, setPhoneCountry] = useState<string>('+58');
+  const [phoneLocal, setPhoneLocal] = useState<string>('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [checkingOtp, setCheckingOtp] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+
+  const handleSendOtp = async () => {
+    const e164 = toE164(phoneCountry, phoneLocal);
+    if (!isValidE164(e164)) {
+      toast.error('Ingresa un número de teléfono válido');
+      return;
+    }
+    setSendingOtp(true);
+    const res = await sendVerificationCode(e164);
+    setSendingOtp(false);
+    if (!res.ok) {
+      toast.error(res.message ?? 'No se pudo enviar el código');
+      return;
+    }
+    setOtpSent(true);
+    setPhoneVerified(false);
+    setPersonal((p) => ({ ...p, phone: e164 }));
+    toast.success('Código enviado por SMS (modo demo: usa 123456)');
+  };
+
+  const handleVerifyOtp = async () => {
+    const e164 = toE164(phoneCountry, phoneLocal);
+    setCheckingOtp(true);
+    const res = await checkVerificationCode(e164, otpCode);
+    setCheckingOtp(false);
+    if (!res.ok) {
+      toast.error(res.message ?? 'Código inválido');
+      return;
+    }
+    setPhoneVerified(true);
+    setPersonal((p) => ({ ...p, phone: e164 }));
+    toast.success('Teléfono verificado');
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth?mode=signup&role=owner');
