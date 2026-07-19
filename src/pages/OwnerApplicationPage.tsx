@@ -515,12 +515,13 @@ const OwnerApplicationPage = () => {
                   label="Fecha de nacimiento"
                   error={errors.birthDate}
                   htmlFor="birthDate"
+                  hint={`Debes ser mayor de ${MIN_AGE_YEARS} años`}
                 >
                   <Input
                     id="birthDate"
                     type="date"
                     value={personal.birthDate}
-                    max={new Date().toISOString().split('T')[0]}
+                    max={minAgeDateString}
                     onChange={(e) =>
                       setPersonal({ ...personal, birthDate: e.target.value })
                     }
