@@ -282,22 +282,63 @@ const AdminApplicationsPage = () => {
                   )}
                 </Section>
 
+                {(selected.driving_license_number || selected.driving_license_expiry || selected.has_medical_condition) && (
+                  <Section title="Licencia de conducir" icon={FileText}>
+                    <DetailRow label="Número" value={selected.driving_license_number || '—'} />
+                    <DetailRow
+                      label="Vencimiento"
+                      value={
+                        selected.driving_license_expiry
+                          ? new Date(selected.driving_license_expiry).toLocaleDateString('es-VE')
+                          : '—'
+                      }
+                    />
+                    <DetailRow
+                      label="Condición médica"
+                      value={selected.has_medical_condition ? 'Sí' : 'No'}
+                    />
+                  </Section>
+                )}
+
+                {(selected.own_social_provider ||
+                  selected.own_social_verified_name ||
+                  selected.personal_reference_email) && (
+                  <Section title="Redes sociales y referencia" icon={UserIcon}>
+                    <DetailRow label="Proveedor OAuth" value={selected.own_social_provider || '—'} />
+                    <DetailRow
+                      label="Verificado el"
+                      value={
+                        selected.own_social_verified_at
+                          ? new Date(selected.own_social_verified_at).toLocaleString('es-VE')
+                          : '—'
+                      }
+                    />
+                    <DetailRow label="Nombre en red" value={selected.own_social_verified_name || '—'} />
+                    <DetailRow label="Email en red" value={selected.own_social_verified_email || '—'} />
+                    <DetailRow
+                      label="Antigüedad declarada"
+                      value={
+                        selected.own_social_declared_age_months
+                          ? `${selected.own_social_declared_age_months} meses`
+                          : '—'
+                      }
+                    />
+                    <DetailRow
+                      label="Referencia personal (email)"
+                      value={selected.personal_reference_email || '—'}
+                    />
+                  </Section>
+                )}
+
                 <Section title="Documentos" icon={FileText}>
-                  <DocLink
-                    label="Cédula"
-                    path={selected.cedula_doc_url}
-                    onOpen={openDocument}
-                  />
-                  <DocLink
-                    label="Certificado de circulación"
-                    path={selected.title_doc_url}
-                    onOpen={openDocument}
-                  />
-                  <DocLink
-                    label="Póliza de seguro"
-                    path={selected.insurance_doc_url}
-                    onOpen={openDocument}
-                  />
+                  <DocLink label="Cédula" path={selected.cedula_doc_url} onOpen={openDocument} />
+                  <DocLink label="Certificado de circulación" path={selected.title_doc_url} onOpen={openDocument} />
+                  <DocLink label="Póliza de seguro" path={selected.insurance_doc_url} onOpen={openDocument} />
+                  <DocLink label="Licencia de conducir" path={selected.driving_license_doc_url} onOpen={openDocument} />
+                  <DocLink label="Selfie" path={selected.selfie_url} onOpen={openDocument} />
+                  <DocLink label="Factura de servicios" path={selected.utility_bill_url} onOpen={openDocument} />
+                  <DocLink label="Referencia bancaria" path={selected.bank_reference_url} onOpen={openDocument} />
+                  <DocLink label="Certificado médico" path={selected.medical_certificate_url} onOpen={openDocument} />
                   <div className="pt-2">
                     <p className="text-xs text-muted-foreground mb-2">
                       {selected.vehicle_photos?.length || 0} foto(s) del vehículo
