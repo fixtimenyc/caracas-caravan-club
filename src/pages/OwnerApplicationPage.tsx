@@ -345,7 +345,8 @@ const OwnerApplicationPage = () => {
   const uploadFile = async (file: File, folder: string) => {
     if (!user) throw new Error('No user');
     const ext = file.name.split('.').pop();
-    const path = `${user.id}/${folder}/${Date.now()}.${ext}`;
+    const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${user.id}/${folder}/${unique}.${ext}`;
     const { error } = await supabase.storage
       .from('owner-documents')
       .upload(path, file, { upsert: true });
