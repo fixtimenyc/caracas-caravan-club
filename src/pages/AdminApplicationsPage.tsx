@@ -290,7 +290,7 @@ const AdminApplicationsPage = () => {
                     onOpen={openDocument}
                   />
                   <DocLink
-                    label="Título de propiedad"
+                    label="Certificado de circulación"
                     path={selected.title_doc_url}
                     onOpen={openDocument}
                   />

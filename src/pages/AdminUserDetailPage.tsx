@@ -665,7 +665,7 @@ const AdminUserDetailPage = () => {
                     <DocPreview label="Cédula" url={docUrls.cedula} />
                   )}
                   {docUrls.title && (
-                    <DocPreview label="Título de propiedad" url={docUrls.title} />
+                  <DocPreview label="Certificado de circulación" url={docUrls.title} />
                   )}
                   {docUrls.insurance && (
                     <DocPreview label="Seguro" url={docUrls.insurance} />

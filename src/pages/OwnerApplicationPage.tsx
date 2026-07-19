@@ -877,8 +877,8 @@ const OwnerApplicationPage = () => {
                   onChange={setCedulaDoc}
                 />
                 <FileUpload
-                  label="Título de propiedad del vehículo"
-                  description="Documento que demuestra que eres el dueño"
+                  label="Certificado de circulación del vehículo"
+                  description="Documento oficial que acredita que el vehículo puede circular"
                   accept="image/*,application/pdf"
                   file={titleDoc}
                   onChange={setTitleDoc}
