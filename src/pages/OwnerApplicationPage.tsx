@@ -62,10 +62,7 @@ const personalSchema = z.object({
     .trim()
     .regex(/^[VEvе]-?\d{6,9}$/i, 'Formato: V-12345678'),
   birthDate: z.string().min(1, 'Selecciona tu fecha de nacimiento'),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^(\+58|0)?\d{10}$/, 'Teléfono venezolano inválido'),
+  phone: z.string().trim().refine(isValidE164, 'Teléfono inválido (formato internacional)'),
   city: z.string().min(1, 'Selecciona tu ciudad'),
   address: z.string().trim().min(5, 'Dirección muy corta').max(300),
 });
