@@ -41,20 +41,6 @@ import {
   checkVerificationCode,
 } from '@/lib/phoneVerification';
 
-const VENEZUELAN_CITIES = [
-  'Caracas',
-  'Maracaibo',
-  'Valencia',
-  'Barquisimeto',
-  'Maracay',
-  'Ciudad Guayana',
-  'Maturín',
-  'Barcelona',
-  'Mérida',
-  'San Cristóbal',
-  'Otra',
-];
-
 const MIN_AGE_YEARS = 21;
 
 const getAge = (birthDate: string): number => {
@@ -85,7 +71,6 @@ const personalSchema = z.object({
       message: `Debes tener al menos ${MIN_AGE_YEARS} años para ser aliado`,
     }),
   phone: z.string().trim().refine(isValidE164, 'Teléfono inválido (formato internacional)'),
-  city: z.string().min(1, 'Selecciona tu ciudad'),
   address: z.string().trim().min(5, 'Dirección muy corta').max(300),
 });
 
@@ -135,7 +120,6 @@ const OwnerApplicationPage = () => {
     cedula: '',
     birthDate: '',
     phone: '',
-    city: 'Caracas',
     address: '',
   });
 
@@ -306,7 +290,6 @@ const OwnerApplicationPage = () => {
         user_id: user.id,
         cedula: personal.cedula,
         birth_date: personal.birthDate,
-        city: personal.city,
         address: personal.address,
         phone: personal.phone,
         vehicle_brand: vehicle.brand,
