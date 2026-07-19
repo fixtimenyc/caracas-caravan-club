@@ -616,24 +616,6 @@ const OwnerApplicationPage = () => {
                   )}
                 </div>
 
-                <Field label="Ciudad" error={errors.city} htmlFor="city">
-                  <Select
-                    value={personal.city}
-                    onValueChange={(v) => setPersonal({ ...personal, city: v })}
-                  >
-                    <SelectTrigger id="city">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {VENEZUELAN_CITIES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-
                 <Field
                   label="Dirección"
                   error={errors.address}
