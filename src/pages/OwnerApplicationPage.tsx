@@ -55,13 +55,35 @@ const VENEZUELAN_CITIES = [
   'Otra',
 ];
 
+const MIN_AGE_YEARS = 21;
+
+const getAge = (birthDate: string): number => {
+  const birth = new Date(birthDate);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age -= 1;
+  }
+  return age;
+};
+
+const minAgeDate = new Date();
+minAgeDate.setFullYear(minAgeDate.getFullYear() - MIN_AGE_YEARS);
+const minAgeDateString = minAgeDate.toISOString().split('T')[0];
+
 const personalSchema = z.object({
   fullName: z.string().trim().min(2, 'Nombre muy corto').max(100),
   cedula: z
     .string()
     .trim()
     .regex(/^[VEvе]-?\d{6,9}$/i, 'Formato: V-12345678'),
-  birthDate: z.string().min(1, 'Selecciona tu fecha de nacimiento'),
+  birthDate: z
+    .string()
+    .min(1, 'Selecciona tu fecha de nacimiento')
+    .refine((d) => getAge(d) >= MIN_AGE_YEARS, {
+      message: `Debes tener al menos ${MIN_AGE_YEARS} años para ser aliado`,
+    }),
   phone: z.string().trim().refine(isValidE164, 'Teléfono inválido (formato internacional)'),
   city: z.string().min(1, 'Selecciona tu ciudad'),
   address: z.string().trim().min(5, 'Dirección muy corta').max(300),
@@ -493,12 +515,13 @@ const OwnerApplicationPage = () => {
                   label="Fecha de nacimiento"
                   error={errors.birthDate}
                   htmlFor="birthDate"
+                  hint={`Debes ser mayor de ${MIN_AGE_YEARS} años`}
                 >
                   <Input
                     id="birthDate"
                     type="date"
                     value={personal.birthDate}
-                    max={new Date().toISOString().split('T')[0]}
+                    max={minAgeDateString}
                     onChange={(e) =>
                       setPersonal({ ...personal, birthDate: e.target.value })
                     }
