@@ -292,7 +292,7 @@ export type Database = {
           birth_date: string | null
           cedula: string
           cedula_doc_url: string | null
-          city: string
+          city: string | null
           created_at: string
           fuel_type: string | null
           id: string
@@ -322,7 +322,7 @@ export type Database = {
           birth_date?: string | null
           cedula: string
           cedula_doc_url?: string | null
-          city: string
+          city?: string | null
           created_at?: string
           fuel_type?: string | null
           id?: string
@@ -352,7 +352,7 @@ export type Database = {
           birth_date?: string | null
           cedula?: string
           cedula_doc_url?: string | null
-          city?: string
+          city?: string | null
           created_at?: string
           fuel_type?: string | null
           id?: string

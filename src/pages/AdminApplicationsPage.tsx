@@ -254,7 +254,6 @@ const AdminApplicationsPage = () => {
                 <Section title="Datos personales" icon={UserIcon}>
                   <DetailRow label="Cédula" value={selected.cedula} />
                   <DetailRow label="Teléfono" value={selected.phone} icon={Phone} />
-                  <DetailRow label="Ciudad" value={selected.city} icon={MapPin} />
                   <DetailRow label="Dirección" value={selected.address} />
                   {selected.birth_date && (
                     <DetailRow
@@ -427,7 +426,7 @@ const ApplicationCard = ({
           {app.vehicle_brand} {app.vehicle_model} {app.vehicle_year}
         </h3>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Placa {app.vehicle_plate} · {app.city}
+          Placa {app.vehicle_plate} · {app.vehicle_zone}
         </p>
       </div>
       <StatusBadge status={app.status as Status} />
