@@ -1625,6 +1625,17 @@ export type Database = {
           state: string
         }[]
       }
+      get_vehicle_private_fields: {
+        Args: { _vehicle_id: string }
+        Returns: {
+          circulation_doc_url: string
+          insurance_doc_url: string
+          internal_notes: string
+          plate: string
+          soat_doc_url: string
+          vin: string
+        }[]
+      }
       has_consent: {
         Args: {
           _consent: Database["public"]["Enums"]["consent_type"]
