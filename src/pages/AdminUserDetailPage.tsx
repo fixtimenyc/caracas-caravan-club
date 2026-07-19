@@ -83,6 +83,21 @@ interface Application {
   vehicle_photos: string[] | null;
   birth_date: string | null;
   address: string | null;
+  driving_license_number: string | null;
+  driving_license_expiry: string | null;
+  driving_license_doc_url: string | null;
+  selfie_url: string | null;
+  utility_bill_url: string | null;
+  bank_reference_url: string | null;
+  medical_certificate_url: string | null;
+  has_medical_condition: boolean | null;
+  own_social_provider: string | null;
+  own_social_verified_at: string | null;
+  own_social_verified_name: string | null;
+  own_social_verified_email: string | null;
+  own_social_verified_picture: string | null;
+  own_social_declared_age_months: number | null;
+  personal_reference_email: string | null;
 }
 
 interface RenterVerification {
@@ -197,9 +212,7 @@ const AdminUserDetailPage = () => {
         supabase.from("user_roles").select("role").eq("user_id", uid),
         supabase
           .from("owner_applications")
-          .select(
-            "cedula_doc_url, title_doc_url, insurance_doc_url, vehicle_photos, birth_date, address"
-          )
+          .select("*")
           .eq("user_id", uid)
           .order("created_at", { ascending: false })
           .limit(1)
@@ -276,15 +289,25 @@ const AdminUserDetailPage = () => {
       // Sign owner documents
       if (appRes.data) {
         const a = appRes.data as Application;
-        const [cedula, title, insurance] = await Promise.all([
+        const [cedula, title, insurance, license, selfie, utility, bank, medicalOwner] = await Promise.all([
           signDoc(a.cedula_doc_url),
           signDoc(a.title_doc_url),
           signDoc(a.insurance_doc_url),
+          signDoc(a.driving_license_doc_url),
+          signDoc(a.selfie_url),
+          signDoc(a.utility_bill_url),
+          signDoc(a.bank_reference_url),
+          signDoc(a.medical_certificate_url),
         ]);
         const docs: Record<string, string> = {};
         if (cedula) docs.cedula = cedula;
         if (title) docs.title = title;
         if (insurance) docs.insurance = insurance;
+        if (license) docs.license = license;
+        if (selfie) docs.selfie = selfie;
+        if (utility) docs.utility = utility;
+        if (bank) docs.bank = bank;
+        if (medicalOwner) docs.medical = medicalOwner;
         setDocUrls(docs);
       }
 
@@ -657,19 +680,58 @@ const AdminUserDetailPage = () => {
               />
             </div>
 
-            {(docUrls.cedula || docUrls.title || docUrls.insurance) && (
+            {application && (application.driving_license_number || application.driving_license_expiry) && (
+              <div className="rounded-xl border bg-card p-6">
+                <h3 className="font-semibold mb-4">Licencia de conducir (Aliado)</h3>
+                <div className="grid sm:grid-cols-3 gap-4 text-sm">
+                  <Info label="Número" value={application.driving_license_number} />
+                  <Info
+                    label="Vencimiento"
+                    value={application.driving_license_expiry
+                      ? new Date(application.driving_license_expiry).toLocaleDateString("es-VE")
+                      : null}
+                  />
+                  <Info label="Condición médica" value={application.has_medical_condition ? 'Sí' : 'No'} />
+                </div>
+              </div>
+            )}
+
+            {application && (application.own_social_provider || application.personal_reference_email) && (
+              <div className="rounded-xl border bg-card p-6">
+                <h3 className="font-semibold mb-4">Redes sociales y referencia (Aliado)</h3>
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <Info label="Proveedor OAuth" value={application.own_social_provider} />
+                  <Info
+                    label="Verificado el"
+                    value={application.own_social_verified_at
+                      ? new Date(application.own_social_verified_at).toLocaleString("es-VE")
+                      : null}
+                  />
+                  <Info label="Nombre en red" value={application.own_social_verified_name} />
+                  <Info label="Email en red" value={application.own_social_verified_email} />
+                  <Info
+                    label="Antigüedad declarada"
+                    value={application.own_social_declared_age_months
+                      ? `${application.own_social_declared_age_months} meses`
+                      : null}
+                  />
+                  <Info label="Referencia personal (email)" value={application.personal_reference_email} />
+                </div>
+              </div>
+            )}
+
+            {(docUrls.cedula || docUrls.title || docUrls.insurance || docUrls.license || docUrls.selfie || docUrls.utility || docUrls.bank || docUrls.medical) && (
               <div className="rounded-xl border bg-card p-6">
                 <h3 className="font-semibold mb-4">Documentos cargados</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {docUrls.cedula && (
-                    <DocPreview label="Cédula" url={docUrls.cedula} />
-                  )}
-                  {docUrls.title && (
-                  <DocPreview label="Certificado de circulación" url={docUrls.title} />
-                  )}
-                  {docUrls.insurance && (
-                    <DocPreview label="Seguro" url={docUrls.insurance} />
-                  )}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {docUrls.cedula && <DocPreview label="Cédula" url={docUrls.cedula} />}
+                  {docUrls.title && <DocPreview label="Certificado de circulación" url={docUrls.title} />}
+                  {docUrls.insurance && <DocPreview label="Seguro" url={docUrls.insurance} />}
+                  {docUrls.license && <DocPreview label="Licencia" url={docUrls.license} />}
+                  {docUrls.selfie && <DocPreview label="Selfie" url={docUrls.selfie} />}
+                  {docUrls.utility && <DocPreview label="Factura de servicios" url={docUrls.utility} />}
+                  {docUrls.bank && <DocPreview label="Referencia bancaria" url={docUrls.bank} />}
+                  {docUrls.medical && <DocPreview label="Certificado médico" url={docUrls.medical} />}
                 </div>
               </div>
             )}
