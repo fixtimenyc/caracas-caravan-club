@@ -28,10 +28,18 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CARACAS_ZONES } from '@/lib/locations';
+import {
+  COUNTRY_CODES,
+  toE164,
+  isValidE164,
+  sendVerificationCode,
+  checkVerificationCode,
+} from '@/lib/phoneVerification';
 
 const VENEZUELAN_CITIES = [
   'Caracas',
@@ -54,10 +62,7 @@ const personalSchema = z.object({
     .trim()
     .regex(/^[VEvе]-?\d{6,9}$/i, 'Formato: V-12345678'),
   birthDate: z.string().min(1, 'Selecciona tu fecha de nacimiento'),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^(\+58|0)?\d{10}$/, 'Teléfono venezolano inválido'),
+  phone: z.string().trim().refine(isValidE164, 'Teléfono inválido (formato internacional)'),
   city: z.string().min(1, 'Selecciona tu ciudad'),
   address: z.string().trim().min(5, 'Dirección muy corta').max(300),
 });
@@ -133,6 +138,48 @@ const OwnerApplicationPage = () => {
   const [vehiclePhotos, setVehiclePhotos] = useState<File[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // Phone SMS verification (mock, see src/lib/phoneVerification.ts)
+  const [phoneCountry, setPhoneCountry] = useState<string>('+58');
+  const [phoneLocal, setPhoneLocal] = useState<string>('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [checkingOtp, setCheckingOtp] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+
+  const handleSendOtp = async () => {
+    const e164 = toE164(phoneCountry, phoneLocal);
+    if (!isValidE164(e164)) {
+      toast.error('Ingresa un número de teléfono válido');
+      return;
+    }
+    setSendingOtp(true);
+    const res = await sendVerificationCode(e164);
+    setSendingOtp(false);
+    if (!res.ok) {
+      toast.error(res.message ?? 'No se pudo enviar el código');
+      return;
+    }
+    setOtpSent(true);
+    setPhoneVerified(false);
+    setPersonal((p) => ({ ...p, phone: e164 }));
+    toast.success('Código enviado por SMS (modo demo: usa 123456)');
+  };
+
+  const handleVerifyOtp = async () => {
+    const e164 = toE164(phoneCountry, phoneLocal);
+    setCheckingOtp(true);
+    const res = await checkVerificationCode(e164, otpCode);
+    setCheckingOtp(false);
+    if (!res.ok) {
+      toast.error(res.message ?? 'Código inválido');
+      return;
+    }
+    setPhoneVerified(true);
+    setPersonal((p) => ({ ...p, phone: e164 }));
+    toast.success('Teléfono verificado');
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth?mode=signup&role=owner');
@@ -162,6 +209,10 @@ const OwnerApplicationPage = () => {
   const progress = ((step + 1) / steps.length) * 100;
 
   const handlePersonalNext = () => {
+    if (!phoneVerified) {
+      toast.error('Verifica tu teléfono con el código SMS antes de continuar');
+      return;
+    }
     const result = personalSchema.safeParse(personal);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
@@ -438,39 +489,126 @@ const OwnerApplicationPage = () => {
                   </Field>
                 </FieldGroup>
 
-                <FieldGroup>
-                  <Field
-                    label="Fecha de nacimiento"
-                    error={errors.birthDate}
-                    htmlFor="birthDate"
-                  >
-                    <Input
-                      id="birthDate"
-                      type="date"
-                      value={personal.birthDate}
-                      max={new Date().toISOString().split('T')[0]}
-                      onChange={(e) =>
-                        setPersonal({ ...personal, birthDate: e.target.value })
-                      }
-                    />
-                  </Field>
-                  <Field
-                    label="Teléfono"
-                    error={errors.phone}
-                    htmlFor="phone"
-                    hint="Con código (+58 o 0)"
-                  >
+                <Field
+                  label="Fecha de nacimiento"
+                  error={errors.birthDate}
+                  htmlFor="birthDate"
+                >
+                  <Input
+                    id="birthDate"
+                    type="date"
+                    value={personal.birthDate}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={(e) =>
+                      setPersonal({ ...personal, birthDate: e.target.value })
+                    }
+                  />
+                </Field>
+
+                <div className="rounded-lg border border-border p-4 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-sm font-semibold">Teléfono</Label>
+                    {phoneVerified && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                        <ShieldCheck className="w-3.5 h-3.5" /> Verificado
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-[140px_1fr] gap-2">
+                    <Select
+                      value={phoneCountry}
+                      onValueChange={(v) => {
+                        setPhoneCountry(v);
+                        setPhoneVerified(false);
+                        setOtpSent(false);
+                      }}
+                      disabled={phoneVerified}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {COUNTRY_CODES.map((c) => (
+                          <SelectItem key={c.iso} value={c.code}>
+                            <span className="mr-2">{c.flag}</span>
+                            {c.code} <span className="text-muted-foreground ml-1">{c.label}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Input
                       id="phone"
-                      value={personal.phone}
-                      onChange={(e) =>
-                        setPersonal({ ...personal, phone: e.target.value })
-                      }
-                      placeholder="04141234567"
+                      inputMode="tel"
+                      value={phoneLocal}
                       maxLength={15}
+                      onChange={(e) => {
+                        setPhoneLocal(e.target.value.replace(/[^\d]/g, ''));
+                        setPhoneVerified(false);
+                        setOtpSent(false);
+                      }}
+                      placeholder={
+                        COUNTRY_CODES.find((c) => c.code === phoneCountry)?.example ?? '4141234567'
+                      }
+                      disabled={phoneVerified}
                     />
-                  </Field>
-                </FieldGroup>
+                  </div>
+                  {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+
+                  {!phoneVerified && (
+                    <div className="space-y-3">
+                      {!otpSent ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={handleSendOtp}
+                          disabled={sendingOtp || phoneLocal.length < 7}
+                        >
+                          {sendingOtp ? (
+                            <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Enviando...</>
+                          ) : (
+                            'Enviar código SMS'
+                          )}
+                        </Button>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">
+                            Ingresa el código de 6 dígitos que recibiste por SMS.{' '}
+                            <span className="italic">(Modo demo: usa <code className="font-mono">123456</code>)</span>
+                          </p>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                              <InputOTPGroup>
+                                {[0, 1, 2, 3, 4, 5].map((i) => (
+                                  <InputOTPSlot key={i} index={i} />
+                                ))}
+                              </InputOTPGroup>
+                            </InputOTP>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleVerifyOtp}
+                              disabled={checkingOtp || otpCode.length !== 6}
+                            >
+                              {checkingOtp ? (
+                                <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Verificando...</>
+                              ) : (
+                                'Verificar'
+                              )}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleSendOtp}
+                              disabled={sendingOtp}
+                            >
+                              Reenviar
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 <Field label="Ciudad" error={errors.city} htmlFor="city">
                   <Select
