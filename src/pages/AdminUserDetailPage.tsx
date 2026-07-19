@@ -289,15 +289,25 @@ const AdminUserDetailPage = () => {
       // Sign owner documents
       if (appRes.data) {
         const a = appRes.data as Application;
-        const [cedula, title, insurance] = await Promise.all([
+        const [cedula, title, insurance, license, selfie, utility, bank, medicalOwner] = await Promise.all([
           signDoc(a.cedula_doc_url),
           signDoc(a.title_doc_url),
           signDoc(a.insurance_doc_url),
+          signDoc(a.driving_license_doc_url),
+          signDoc(a.selfie_url),
+          signDoc(a.utility_bill_url),
+          signDoc(a.bank_reference_url),
+          signDoc(a.medical_certificate_url),
         ]);
         const docs: Record<string, string> = {};
         if (cedula) docs.cedula = cedula;
         if (title) docs.title = title;
         if (insurance) docs.insurance = insurance;
+        if (license) docs.license = license;
+        if (selfie) docs.selfie = selfie;
+        if (utility) docs.utility = utility;
+        if (bank) docs.bank = bank;
+        if (medicalOwner) docs.medical = medicalOwner;
         setDocUrls(docs);
       }
 
