@@ -83,6 +83,21 @@ interface Application {
   vehicle_photos: string[] | null;
   birth_date: string | null;
   address: string | null;
+  driving_license_number: string | null;
+  driving_license_expiry: string | null;
+  driving_license_doc_url: string | null;
+  selfie_url: string | null;
+  utility_bill_url: string | null;
+  bank_reference_url: string | null;
+  medical_certificate_url: string | null;
+  has_medical_condition: boolean | null;
+  own_social_provider: string | null;
+  own_social_verified_at: string | null;
+  own_social_verified_name: string | null;
+  own_social_verified_email: string | null;
+  own_social_verified_picture: string | null;
+  own_social_declared_age_months: number | null;
+  personal_reference_email: string | null;
 }
 
 interface RenterVerification {
