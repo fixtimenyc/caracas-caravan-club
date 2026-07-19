@@ -209,6 +209,10 @@ const OwnerApplicationPage = () => {
   const progress = ((step + 1) / steps.length) * 100;
 
   const handlePersonalNext = () => {
+    if (!phoneVerified) {
+      toast.error('Verifica tu teléfono con el código SMS antes de continuar');
+      return;
+    }
     const result = personalSchema.safeParse(personal);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
