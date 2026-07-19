@@ -289,22 +289,38 @@ export type Database = {
           address: string
           admin_notes: string | null
           availability_notes: string | null
+          bank_reference_url: string | null
           birth_date: string | null
           cedula: string
           cedula_doc_url: string | null
           city: string | null
           created_at: string
+          driving_license_doc_url: string | null
+          driving_license_expiry: string | null
+          driving_license_number: string | null
           fuel_type: string | null
+          has_medical_condition: boolean
           id: string
           insurance_doc_url: string | null
+          medical_certificate_url: string | null
           mileage: number | null
+          own_social_declared_age_months: number | null
+          own_social_provider: string | null
+          own_social_provider_user_id: string | null
+          own_social_verified_at: string | null
+          own_social_verified_email: string | null
+          own_social_verified_name: string | null
+          own_social_verified_picture: string | null
+          personal_reference_email: string | null
           phone: string
+          selfie_url: string | null
           status: Database["public"]["Enums"]["application_status"]
           suggested_price_per_day: number
           title_doc_url: string | null
           transmission: string | null
           updated_at: string
           user_id: string
+          utility_bill_url: string | null
           vehicle_address_detail: string | null
           vehicle_brand: string
           vehicle_color: string | null
@@ -319,22 +335,38 @@ export type Database = {
           address: string
           admin_notes?: string | null
           availability_notes?: string | null
+          bank_reference_url?: string | null
           birth_date?: string | null
           cedula: string
           cedula_doc_url?: string | null
           city?: string | null
           created_at?: string
+          driving_license_doc_url?: string | null
+          driving_license_expiry?: string | null
+          driving_license_number?: string | null
           fuel_type?: string | null
+          has_medical_condition?: boolean
           id?: string
           insurance_doc_url?: string | null
+          medical_certificate_url?: string | null
           mileage?: number | null
+          own_social_declared_age_months?: number | null
+          own_social_provider?: string | null
+          own_social_provider_user_id?: string | null
+          own_social_verified_at?: string | null
+          own_social_verified_email?: string | null
+          own_social_verified_name?: string | null
+          own_social_verified_picture?: string | null
+          personal_reference_email?: string | null
           phone: string
+          selfie_url?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           suggested_price_per_day: number
           title_doc_url?: string | null
           transmission?: string | null
           updated_at?: string
           user_id: string
+          utility_bill_url?: string | null
           vehicle_address_detail?: string | null
           vehicle_brand: string
           vehicle_color?: string | null
@@ -349,22 +381,38 @@ export type Database = {
           address?: string
           admin_notes?: string | null
           availability_notes?: string | null
+          bank_reference_url?: string | null
           birth_date?: string | null
           cedula?: string
           cedula_doc_url?: string | null
           city?: string | null
           created_at?: string
+          driving_license_doc_url?: string | null
+          driving_license_expiry?: string | null
+          driving_license_number?: string | null
           fuel_type?: string | null
+          has_medical_condition?: boolean
           id?: string
           insurance_doc_url?: string | null
+          medical_certificate_url?: string | null
           mileage?: number | null
+          own_social_declared_age_months?: number | null
+          own_social_provider?: string | null
+          own_social_provider_user_id?: string | null
+          own_social_verified_at?: string | null
+          own_social_verified_email?: string | null
+          own_social_verified_name?: string | null
+          own_social_verified_picture?: string | null
+          personal_reference_email?: string | null
           phone?: string
+          selfie_url?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           suggested_price_per_day?: number
           title_doc_url?: string | null
           transmission?: string | null
           updated_at?: string
           user_id?: string
+          utility_bill_url?: string | null
           vehicle_address_detail?: string | null
           vehicle_brand?: string
           vehicle_color?: string | null
