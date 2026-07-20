@@ -377,6 +377,23 @@ export default function AdminSettingsPage() {
   const [logFilter, setLogFilter] = useState({ admin: "all", action: "all", q: "" });
   const [loadingAdmins, setLoadingAdmins] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [legal, setLegal] = useState<LegalContent>(loadLegalContent);
+  const [legalTab, setLegalTab] = useState<LegalKey>("terms");
+  const [legalPreview, setLegalPreview] = useState(false);
+
+  const updateLegal = (key: LegalKey, value: string) => {
+    setLegal((prev) => ({ ...prev, [key]: value }));
+  };
+  const saveLegal = () => {
+    saveLegalContent(legal);
+    toast({ title: "Contenido legal guardado", description: "Se aplicó a las páginas públicas." });
+  };
+  const resetLegal = (key: LegalKey) => {
+    const next = { ...legal, [key]: "" };
+    setLegal(next);
+    saveLegalContent(next);
+    toast({ title: "Restaurado", description: "Se volvió al texto por defecto para esta sección." });
+  };
 
   const syncPricingToDb = async (next: Settings) => {
     // Keep the DB trigger aligned with the configured commission %.
