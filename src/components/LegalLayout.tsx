@@ -48,7 +48,13 @@ const LegalLayout = ({ title, subtitle, updated = "Mayo 2026", children, overrid
               prose-a:text-primary hover:prose-a:underline
             "
           >
-            {children}
+            {override ? (
+              <div className="whitespace-pre-wrap text-foreground/80 leading-relaxed">
+                {override}
+              </div>
+            ) : (
+              children
+            )}
           </article>
         </div>
       </main>
