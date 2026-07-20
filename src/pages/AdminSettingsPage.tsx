@@ -20,6 +20,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import {
+  loadLegalContent, saveLegalContent, LEGAL_META,
+  type LegalContent, type LegalKey,
+} from "@/lib/legalContent";
 
 const STORAGE_KEY = "ruedave_system_settings_v1";
 
