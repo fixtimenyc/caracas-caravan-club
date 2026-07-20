@@ -1016,6 +1016,77 @@ export default function AdminSettingsPage() {
             </Card>
           </div>
         </TabsContent>
+        {/* LEGAL */}
+        <TabsContent value="legal" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Documentos legales públicos</CardTitle>
+              <CardDescription>
+                Edita el contenido que ven los usuarios en el pie de página. Si dejas
+                un documento vacío, se muestra el texto por defecto de RuedaVe.
+                Los cambios se aplican de inmediato en las páginas públicas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Tabs value={legalTab} onValueChange={(v) => setLegalTab(v as LegalKey)}>
+                <TabsList className="flex flex-wrap h-auto">
+                  <TabsTrigger value="terms">Términos y condiciones</TabsTrigger>
+                  <TabsTrigger value="privacy">Política de privacidad</TabsTrigger>
+                  <TabsTrigger value="cancellation">Política de cancelación</TabsTrigger>
+                  <TabsTrigger value="insurance">Seguro</TabsTrigger>
+                </TabsList>
+
+                {(Object.keys(LEGAL_META) as LegalKey[]).map((k) => (
+                  <TabsContent key={k} value={k} className="mt-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="font-medium">{LEGAL_META[k].title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Ruta pública: <code>{LEGAL_META[k].path}</code>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setLegalPreview((p) => !p)}>
+                          {legalPreview ? "Editar" : "Vista previa"}
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={LEGAL_META[k].path} target="_blank" rel="noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-1" /> Abrir
+                          </a>
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => resetLegal(k)}>
+                          Restaurar por defecto
+                        </Button>
+                      </div>
+                    </div>
+
+                    {legalPreview ? (
+                      <div className="rounded-md border bg-muted/30 p-4 max-h-[60vh] overflow-auto whitespace-pre-wrap text-sm leading-relaxed">
+                        {legal[k]?.trim()
+                          ? legal[k]
+                          : "— Vacío. Se mostrará el contenido por defecto de RuedaVe en la página pública. —"}
+                      </div>
+                    ) : (
+                      <Textarea
+                        rows={22}
+                        placeholder={`Escribe el texto completo de "${LEGAL_META[k].title}". Deja vacío para usar el contenido por defecto.`}
+                        value={legal[k]}
+                        onChange={(e) => updateLegal(k, e.target.value)}
+                        className="font-mono text-sm"
+                      />
+                    )}
+
+                    <div className="flex justify-end">
+                      <Button onClick={saveLegal}>
+                        <Save className="h-4 w-4 mr-2" /> Guardar contenido legal
+                      </Button>
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </AdminLayout>
   );
