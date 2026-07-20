@@ -3,6 +3,7 @@ import LegalLayout from "@/components/LegalLayout";
 const PrivacyPage = () => {
   return (
     <LegalLayout
+      overrideKey="privacy"
       title="Política de Privacidad"
       subtitle="Protección de datos personales en la plataforma de alquiler de vehículos"
     >
