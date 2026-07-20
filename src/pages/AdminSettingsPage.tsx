@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Settings, Building2, Shield, CreditCard, Plug, Mail, MessageSquare,
-  Users as UsersIcon, ScrollText, Save, Search,
+  Users as UsersIcon, ScrollText, Save, Search, Scale, ExternalLink,
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
