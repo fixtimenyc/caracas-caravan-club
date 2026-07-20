@@ -111,6 +111,7 @@ const App = () => (
             <Route path="/terminos" element={<TermsPage />} />
             <Route path="/politica-privacidad" element={<PrivacyPage />} />
             <Route path="/politica-cancelacion" element={<CancellationPage />} />
+            <Route path="/seguro" element={<InsurancePage />} />
             <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/perfil/privacidad" element={<PrivacySettingsPage />} />
