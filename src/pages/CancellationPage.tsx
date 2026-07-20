@@ -3,6 +3,7 @@ import LegalLayout from "@/components/LegalLayout";
 const CancellationPage = () => {
   return (
     <LegalLayout
+      overrideKey="cancellation"
       title="Políticas de Cancelación y Reembolsos"
       subtitle="Condiciones para la cancelación de reservas y devolución de pagos"
     >

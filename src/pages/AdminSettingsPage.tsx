@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Settings, Building2, Shield, CreditCard, Plug, Mail, MessageSquare,
-  Users as UsersIcon, ScrollText, Save, Search,
+  Users as UsersIcon, ScrollText, Save, Search, Scale, ExternalLink,
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,6 +20,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import {
+  loadLegalContent, saveLegalContent, LEGAL_META,
+  type LegalContent, type LegalKey,
+} from "@/lib/legalContent";
 
 const STORAGE_KEY = "ruedave_system_settings_v1";
 
@@ -373,6 +377,23 @@ export default function AdminSettingsPage() {
   const [logFilter, setLogFilter] = useState({ admin: "all", action: "all", q: "" });
   const [loadingAdmins, setLoadingAdmins] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [legal, setLegal] = useState<LegalContent>(loadLegalContent);
+  const [legalTab, setLegalTab] = useState<LegalKey>("terms");
+  const [legalPreview, setLegalPreview] = useState(false);
+
+  const updateLegal = (key: LegalKey, value: string) => {
+    setLegal((prev) => ({ ...prev, [key]: value }));
+  };
+  const saveLegal = () => {
+    saveLegalContent(legal);
+    toast({ title: "Contenido legal guardado", description: "Se aplicó a las páginas públicas." });
+  };
+  const resetLegal = (key: LegalKey) => {
+    const next = { ...legal, [key]: "" };
+    setLegal(next);
+    saveLegalContent(next);
+    toast({ title: "Restaurado", description: "Se volvió al texto por defecto para esta sección." });
+  };
 
   const syncPricingToDb = async (next: Settings) => {
     // Keep the DB trigger aligned with the configured commission %.
@@ -468,6 +489,7 @@ export default function AdminSettingsPage() {
           <TabsTrigger value="sms"><MessageSquare className="h-4 w-4 mr-2" />SMS/WhatsApp</TabsTrigger>
           <TabsTrigger value="admins"><UsersIcon className="h-4 w-4 mr-2" />Admins</TabsTrigger>
           <TabsTrigger value="contract"><ScrollText className="h-4 w-4 mr-2" />Contrato</TabsTrigger>
+          <TabsTrigger value="legal"><Scale className="h-4 w-4 mr-2" />Legal</TabsTrigger>
           <TabsTrigger value="logs"><ScrollText className="h-4 w-4 mr-2" />Logs</TabsTrigger>
         </TabsList>
 
@@ -993,6 +1015,77 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        {/* LEGAL */}
+        <TabsContent value="legal" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Documentos legales públicos</CardTitle>
+              <CardDescription>
+                Edita el contenido que ven los usuarios en el pie de página. Si dejas
+                un documento vacío, se muestra el texto por defecto de RuedaVe.
+                Los cambios se aplican de inmediato en las páginas públicas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Tabs value={legalTab} onValueChange={(v) => setLegalTab(v as LegalKey)}>
+                <TabsList className="flex flex-wrap h-auto">
+                  <TabsTrigger value="terms">Términos y condiciones</TabsTrigger>
+                  <TabsTrigger value="privacy">Política de privacidad</TabsTrigger>
+                  <TabsTrigger value="cancellation">Política de cancelación</TabsTrigger>
+                  <TabsTrigger value="insurance">Seguro</TabsTrigger>
+                </TabsList>
+
+                {(Object.keys(LEGAL_META) as LegalKey[]).map((k) => (
+                  <TabsContent key={k} value={k} className="mt-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="font-medium">{LEGAL_META[k].title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Ruta pública: <code>{LEGAL_META[k].path}</code>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setLegalPreview((p) => !p)}>
+                          {legalPreview ? "Editar" : "Vista previa"}
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={LEGAL_META[k].path} target="_blank" rel="noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-1" /> Abrir
+                          </a>
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => resetLegal(k)}>
+                          Restaurar por defecto
+                        </Button>
+                      </div>
+                    </div>
+
+                    {legalPreview ? (
+                      <div className="rounded-md border bg-muted/30 p-4 max-h-[60vh] overflow-auto whitespace-pre-wrap text-sm leading-relaxed">
+                        {legal[k]?.trim()
+                          ? legal[k]
+                          : "— Vacío. Se mostrará el contenido por defecto de RuedaVe en la página pública. —"}
+                      </div>
+                    ) : (
+                      <Textarea
+                        rows={22}
+                        placeholder={`Escribe el texto completo de "${LEGAL_META[k].title}". Deja vacío para usar el contenido por defecto.`}
+                        value={legal[k]}
+                        onChange={(e) => updateLegal(k, e.target.value)}
+                        className="font-mono text-sm"
+                      />
+                    )}
+
+                    <div className="flex justify-end">
+                      <Button onClick={saveLegal}>
+                        <Save className="h-4 w-4 mr-2" /> Guardar contenido legal
+                      </Button>
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </AdminLayout>

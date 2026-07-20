@@ -3,15 +3,19 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import { getLegalOverride, LegalKey } from "@/lib/legalContent";
 
 interface Props {
   title: string;
   subtitle?: string;
   updated?: string;
   children: ReactNode;
+  /** If set and admins have saved custom content for this key, that content replaces `children`. */
+  overrideKey?: LegalKey;
 }
 
-const LegalLayout = ({ title, subtitle, updated = "Mayo 2026", children }: Props) => {
+const LegalLayout = ({ title, subtitle, updated = "Mayo 2026", children, overrideKey }: Props) => {
+  const override = overrideKey ? getLegalOverride(overrideKey) : "";
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -44,7 +48,13 @@ const LegalLayout = ({ title, subtitle, updated = "Mayo 2026", children }: Props
               prose-a:text-primary hover:prose-a:underline
             "
           >
-            {children}
+            {override ? (
+              <div className="whitespace-pre-wrap text-foreground/80 leading-relaxed">
+                {override}
+              </div>
+            ) : (
+              children
+            )}
           </article>
         </div>
       </main>

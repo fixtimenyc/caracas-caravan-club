@@ -37,6 +37,7 @@ import MyEarningsPage from "./pages/MyEarningsPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import CancellationPage from "./pages/CancellationPage";
+import InsurancePage from "./pages/InsurancePage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ReservationInspectionPage from "./pages/ReservationInspectionPage";
@@ -110,6 +111,7 @@ const App = () => (
             <Route path="/terminos" element={<TermsPage />} />
             <Route path="/politica-privacidad" element={<PrivacyPage />} />
             <Route path="/politica-cancelacion" element={<CancellationPage />} />
+            <Route path="/seguro" element={<InsurancePage />} />
             <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/perfil/privacidad" element={<PrivacySettingsPage />} />

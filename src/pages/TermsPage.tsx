@@ -3,6 +3,7 @@ import LegalLayout from "@/components/LegalLayout";
 const TermsPage = () => {
   return (
     <LegalLayout
+      overrideKey="terms"
       title="Términos y Condiciones Generales de Uso"
       subtitle="Plataforma de alquiler de vehículos certificados entre particulares"
     >
