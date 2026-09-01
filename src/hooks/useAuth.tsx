@@ -103,10 +103,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const credentials = { email: email.trim(), password };
+    let { error } = await supabase.auth.signInWithPassword(credentials);
+
+    // A backend restart can leave the preview with a stale refresh token and
+    // briefly make the first password request fail at the network layer. Clear
+    // only the local session and retry once without invalidating other devices.
+    if (error && (error.message === 'Failed to fetch' || error.message.includes('fetch'))) {
+      await supabase.auth.signOut({ scope: 'local' });
+      await new Promise((resolve) => window.setTimeout(resolve, 500));
+      ({ error } = await supabase.auth.signInWithPassword(credentials));
+    }
 
     return { error: error as Error | null };
   };
