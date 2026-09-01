@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, Context } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,7 +15,15 @@ interface AuthContextType {
   hasRole: (role: AppRole) => boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Keep a single context instance even if this module is duplicated by HMR /
+// multiple bundle chunks — otherwise consumers read a different context and
+// throw "useAuth must be used within an AuthProvider".
+const globalRef = globalThis as unknown as {
+  __ruedave_auth_context?: Context<AuthContextType | undefined>;
+};
+const AuthContext =
+  globalRef.__ruedave_auth_context ??
+  (globalRef.__ruedave_auth_context = createContext<AuthContextType | undefined>(undefined));
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
