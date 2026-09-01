@@ -19,7 +19,7 @@ interface AuthContextType {
 // multiple bundle chunks — otherwise consumers read a different context and
 // throw "useAuth must be used within an AuthProvider".
 const globalRef = globalThis as unknown as {
-  __ruedave_auth_context?: React.Context<AuthContextType | undefined>;
+  __ruedave_auth_context?: Context<AuthContextType | undefined>;
 };
 const AuthContext =
   globalRef.__ruedave_auth_context ??
