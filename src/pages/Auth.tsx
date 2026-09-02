@@ -65,11 +65,6 @@ const Auth = () => {
     if (loading || !user) return;
     let cancelled = false;
     (async () => {
-      if (isLogin) {
-        navigate(safeRedirect ?? '/');
-        return;
-      }
-
       // Determine where to send the user based on their roles + verification state
       const { supabase } = await import('@/integrations/supabase/client');
       const [{ data: rolesData }, { data: verif }, { data: ownerApp }] = await Promise.all([
@@ -79,8 +74,15 @@ const Auth = () => {
       ]);
       if (cancelled) return;
       const userRoles = (rolesData ?? []).map((r) => r.role as string);
+      const isAdmin = userRoles.includes('admin');
       const isOwner = userRoles.includes('owner');
       const isRenter = userRoles.includes('renter');
+
+      if (isLogin) {
+        navigate(safeRedirect ?? (isAdmin ? '/admin' : '/'));
+        return;
+      }
+
       const signupUrlIntent = !isLogin ? role : null;
       const storedIntent = getStoredSignupRoleIntent();
       const metadataRole = (user.user_metadata as any)?.role as string | undefined;
@@ -136,7 +138,6 @@ const Auth = () => {
           }
         } else {
           toast.success('¡Bienvenido!');
-          navigate('/');
         }
       } else {
         const validation = signupSchema.safeParse({ fullName, email, password, role, acceptedTerms, acceptedPrivacy, acceptedCancellation });

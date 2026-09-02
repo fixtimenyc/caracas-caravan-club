@@ -18,14 +18,15 @@ type PendingReview = {
 const EXCLUDED_PREFIXES = ["/auth", "/reset-password", "/forgot-password"];
 
 const PendingReviewsGate = () => {
-  const { user, loading } = useAuth();
+  const { user, roles, loading } = useAuth();
   const location = useLocation();
   const [pending, setPending] = useState<PendingReview[]>([]);
   const [open, setOpen] = useState(false);
 
   const load = useCallback(async () => {
-    if (!user) {
+    if (!user || roles.includes("admin")) {
       setPending([]);
+      setOpen(false);
       return;
     }
     // Fetch completed reservations where user is either the renter or the vehicle owner
@@ -73,7 +74,7 @@ const PendingReviewsGate = () => {
       });
     setPending(list);
     setOpen(list.length > 0);
-  }, [user]);
+  }, [roles, user]);
 
   useEffect(() => {
     if (loading) return;
@@ -81,7 +82,7 @@ const PendingReviewsGate = () => {
   }, [loading, load, location.pathname]);
 
   const excluded = EXCLUDED_PREFIXES.some((p) => location.pathname.startsWith(p));
-  if (!user || excluded || pending.length === 0) return null;
+  if (!user || roles.includes("admin") || excluded || pending.length === 0) return null;
 
   const current = pending[0];
 
