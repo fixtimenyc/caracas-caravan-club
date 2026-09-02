@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -26,7 +26,6 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 const items = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -70,39 +69,20 @@ function AdminSidebar() {
 }
 
 export default function AdminLayout({ children, title }: { children: ReactNode; title: string }) {
-  const { user, loading } = useAuth();
+  const { user, roles, loading } = useAuth();
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const isAdmin = roles.includes("admin");
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      navigate("/auth");
+      navigate("/auth", { replace: true });
       return;
     }
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (cancelled) return;
-      if (!data) {
-        navigate("/");
-      } else {
-        setIsAdmin(true);
-      }
-      setChecking(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, loading, navigate]);
+    if (!isAdmin) navigate("/", { replace: true });
+  }, [user, loading, isAdmin, navigate]);
 
-  if (loading || checking || !isAdmin) {
+  if (loading || !user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/20">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-label="Cargando" />
