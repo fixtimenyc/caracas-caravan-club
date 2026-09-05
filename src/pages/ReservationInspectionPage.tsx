@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import VehicleInspectionForm from "@/components/VehicleInspectionForm";
+import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
 
 interface Props {
   type: "pickup" | "return";
@@ -32,7 +33,7 @@ export default function ReservationInspectionPage({ type }: Props) {
       setReservation(r);
       const { data: v } = await supabase
         .from("vehicles")
-        .select("*")
+        .select(VEHICLE_PUBLIC_COLUMNS)
         .eq("id", r.vehicle_id)
         .maybeSingle();
       setVehicle(v);

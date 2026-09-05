@@ -44,6 +44,7 @@ import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
 
 const FEATURES = [
   "Bluetooth",
@@ -136,7 +137,7 @@ const EditVehiclePage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("vehicles")
-        .select("*")
+        .select(VEHICLE_PUBLIC_COLUMNS)
         .eq("id", id)
         .maybeSingle();
 

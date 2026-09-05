@@ -73,6 +73,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 import { toast } from "sonner";
+import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
 
 type Vehicle = any;
 type Reservation = any;
@@ -135,7 +136,7 @@ export default function AdminVehicleDetailPage() {
 
   async function load() {
     setLoading(true);
-    const { data: v } = await supabase.from("vehicles").select("*").eq("id", vehicleId).maybeSingle();
+    const { data: v } = await supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).eq("id", vehicleId).maybeSingle();
     if (!v) {
       toast.error("Vehículo no encontrado");
       setLoading(false);

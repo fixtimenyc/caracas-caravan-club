@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
 import { loadSystemSettings, computePriceBreakdown } from "@/lib/systemSettings";
+import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
 
 const loadContractSettings = () => {
   const s = loadSystemSettings();
@@ -62,7 +63,7 @@ export default function AdminReservationContractPage() {
         return;
       }
       const [{ data: v }, { data: renterRows }, { data: payment }, { data: pickup }] = await Promise.all([
-        supabase.from("vehicles").select("*").eq("id", r.vehicle_id).maybeSingle(),
+        supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).eq("id", r.vehicle_id).maybeSingle(),
         supabase.rpc("get_reservation_renter_info", { _reservation_id: id }),
         supabase
           .from("payments")

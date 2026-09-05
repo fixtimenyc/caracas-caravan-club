@@ -54,6 +54,7 @@ import { toast } from "sonner";
 import ReviewDialog from "@/components/ReviewDialog";
 import { Star } from "lucide-react";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
+import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
 
 type Vehicle = {
   id: string;
@@ -113,7 +114,7 @@ const OwnerDashboardPage = () => {
       const [vehRes, appRes] = await Promise.all([
         supabase
           .from("vehicles")
-          .select("*")
+          .select(VEHICLE_PUBLIC_COLUMNS)
           .eq("owner_id", user.id)
           .order("created_at", { ascending: false }),
         supabase
