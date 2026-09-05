@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 import { loadSystemSettings, computePriceBreakdown } from "@/lib/systemSettings";
-import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
+import { VEHICLE_PUBLIC_COLUMNS, fetchVehiclePrivateFields } from "@/lib/vehicleColumns";
 
 const loadContractSettings = () => {
   const s = loadSystemSettings();
@@ -64,7 +64,9 @@ export default function ReservationContractPage() {
         .eq("id", id)
         .maybeSingle();
       if (!r) { setLoading(false); return; }
-      const { data: v } = await supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).eq("id", r.vehicle_id).maybeSingle();
+      const { data: vBase } = await supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).eq("id", r.vehicle_id).maybeSingle();
+      const vPriv = vBase ? await fetchVehiclePrivateFields(r.vehicle_id) : null;
+      const v: any = vBase ? { ...vBase, ...(vPriv || {}) } : null;
       const canView = r.renter_id === user.id || v?.owner_id === user.id;
       if (!canView) { setLoading(false); return; }
       setAllowed(true);
