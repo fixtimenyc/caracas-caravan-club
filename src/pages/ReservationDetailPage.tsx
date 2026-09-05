@@ -20,6 +20,7 @@ import PaymentReceiptUpload from "@/components/PaymentReceiptUpload";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { loadSystemSettings, computeRenterCharges, computeOwnerBreakdown } from "@/lib/systemSettings";
+import { VEHICLE_PUBLIC_COLUMNS, fetchVehiclePrivateFields } from "@/lib/vehicleColumns";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
@@ -51,7 +52,9 @@ export default function ReservationDetailPage() {
       setLoading(true);
       const { data: r } = await supabase.from("reservations").select("*").eq("id", id).maybeSingle();
       if (!r) { setLoading(false); return; }
-      const { data: v } = await supabase.from("vehicles").select("*").eq("id", r.vehicle_id).maybeSingle();
+      const { data: vBase } = await supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).eq("id", r.vehicle_id).maybeSingle();
+      const vPriv = vBase ? await fetchVehiclePrivateFields(r.vehicle_id) : null;
+      const v: any = vBase ? { ...vBase, ...(vPriv || {}) } : null;
       const owner = v?.owner_id === user.id;
       const renter = r.renter_id === user.id;
       if (!owner && !renter) { setLoading(false); return; }

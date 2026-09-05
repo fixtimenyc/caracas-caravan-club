@@ -64,6 +64,7 @@ import { toast } from "@/hooks/use-toast";
 import { CARACAS_ZONES, matchZone } from "@/lib/locations";
 import { VEHICLE_CATEGORIES, inferCategory, type VehicleCategory } from "@/lib/vehicleCategory";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
+import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
 
 type FleetStatus = "active" | "maintenance" | "paused" | "inactive";
 
@@ -157,7 +158,7 @@ export default function AdminFleetPage() {
     const since = subDays(new Date(), 30).toISOString().slice(0, 10);
 
     const [vehiclesRes, reservationsRes, maintenanceRes] = await Promise.all([
-      supabase.from("vehicles").select("*").order("created_at", { ascending: false }),
+      supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).order("created_at", { ascending: false }),
       supabase
         .from("reservations")
         .select("vehicle_id,start_date,end_date,status")

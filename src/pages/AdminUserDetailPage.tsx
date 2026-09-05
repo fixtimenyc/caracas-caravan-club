@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
 import StarRating from "@/components/StarRating";
+import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
 
 type AppRole = "renter" | "owner" | "admin";
 type AccountStatus = "active" | "suspended" | "banned";
@@ -227,7 +228,7 @@ const AdminUserDetailPage = () => {
           .select("*, vehicles(brand, model, year, owner_id), payments(status)")
           .eq("renter_id", uid)
           .order("created_at", { ascending: false }),
-        supabase.from("vehicles").select("*").eq("owner_id", uid),
+        supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).eq("owner_id", uid),
         supabase
           .from("reviews")
           .select("*")

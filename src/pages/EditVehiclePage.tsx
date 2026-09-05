@@ -44,6 +44,7 @@ import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { VEHICLE_PUBLIC_COLUMNS, fetchVehiclePrivateFields } from "@/lib/vehicleColumns";
 
 const FEATURES = [
   "Bluetooth",
@@ -136,9 +137,11 @@ const EditVehiclePage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("vehicles")
-        .select("*")
+        .select(VEHICLE_PUBLIC_COLUMNS)
         .eq("id", id)
         .maybeSingle();
+
+      const priv = await fetchVehiclePrivateFields(id);
 
       if (cancelled) return;
 
@@ -177,8 +180,8 @@ const EditVehiclePage = () => {
         model: data.model || "",
         year: data.year || new Date().getFullYear(),
         color: (data as any).color || "",
-        plate: (data as any).plate || "",
-        vin: (data as any).vin || "",
+        plate: priv?.plate || "",
+        vin: priv?.vin || "",
         features: Array.isArray((data as any).features) ? (data as any).features : [],
         customFeatures: Array.isArray((data as any).custom_features) ? (data as any).custom_features : [],
         photos: data.photos || [],

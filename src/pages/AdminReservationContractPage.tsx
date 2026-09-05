@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
 import { loadSystemSettings, computePriceBreakdown } from "@/lib/systemSettings";
+import { VEHICLE_PUBLIC_COLUMNS, fetchVehiclePrivateFields } from "@/lib/vehicleColumns";
 
 const loadContractSettings = () => {
   const s = loadSystemSettings();
@@ -61,8 +62,8 @@ export default function AdminReservationContractPage() {
         setLoading(false);
         return;
       }
-      const [{ data: v }, { data: renterRows }, { data: payment }, { data: pickup }] = await Promise.all([
-        supabase.from("vehicles").select("*").eq("id", r.vehicle_id).maybeSingle(),
+      const [{ data: vBase }, { data: renterRows }, { data: payment }, { data: pickup }] = await Promise.all([
+        supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).eq("id", r.vehicle_id).maybeSingle(),
         supabase.rpc("get_reservation_renter_info", { _reservation_id: id }),
         supabase
           .from("payments")
@@ -78,6 +79,8 @@ export default function AdminReservationContractPage() {
           .eq("type", "pickup")
           .maybeSingle(),
       ]);
+      const vPriv = vBase ? await fetchVehiclePrivateFields(r.vehicle_id) : null;
+      const v: any = vBase ? { ...vBase, ...(vPriv || {}) } : null;
       const renter = Array.isArray(renterRows) ? renterRows[0] : renterRows;
       const ownerProfile = v?.owner_id
         ? (

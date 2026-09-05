@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import ReservationInspectionsPanel from "@/components/admin/ReservationInspectionsPanel";
 import AdminPaymentVerification from "@/components/AdminPaymentVerification";
 import { resolveVehiclePhoto } from "@/lib/vehiclePhoto";
+import { VEHICLE_PUBLIC_COLUMNS, fetchVehiclePrivateFields } from "@/lib/vehicleColumns";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pendiente", cls: "bg-yellow-500/10 text-yellow-700 border-yellow-500/30" },
@@ -69,12 +70,13 @@ export default function AdminReservationDetailPage() {
     if (!r) { setLoading(false); return; }
     setReservation(r);
     const [{ data: v }, { data: rp }, { data: ev }, { data: pay }] = await Promise.all([
-      supabase.from("vehicles").select("*").eq("id", r.vehicle_id).maybeSingle(),
+      supabase.from("vehicles").select(VEHICLE_PUBLIC_COLUMNS).eq("id", r.vehicle_id).maybeSingle(),
       supabase.from("profiles").select("*").eq("user_id", r.renter_id).maybeSingle(),
       supabase.from("reservation_events").select("*").eq("reservation_id", id).order("created_at", { ascending: false }),
       supabase.from("payments").select("*").eq("reservation_id", id).order("created_at", { ascending: false }),
     ]);
-    setVehicle(v);
+    const vPriv = v ? await fetchVehiclePrivateFields(r.vehicle_id) : null;
+    setVehicle(v ? { ...v, ...(vPriv || {}) } : v);
     setVehiclePhoto(
       v?.photos?.[0] ? await resolveVehiclePhoto(v.photos[0]) : null,
     );
