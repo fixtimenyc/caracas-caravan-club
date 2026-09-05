@@ -73,7 +73,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveVehiclePhotos } from "@/lib/vehiclePhoto";
 import { toast } from "sonner";
-import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
+import { VEHICLE_PUBLIC_COLUMNS, fetchVehiclePrivateFields } from "@/lib/vehicleColumns";
 
 type Vehicle = any;
 type Reservation = any;
@@ -142,8 +142,10 @@ export default function AdminVehicleDetailPage() {
       setLoading(false);
       return;
     }
-    setVehicle(v);
-    setNotesDraft((v as any).internal_notes ?? "");
+    const vPriv = await fetchVehiclePrivateFields(vehicleId!);
+    const vFull: any = { ...v, ...(vPriv || {}) };
+    setVehicle(vFull);
+    setNotesDraft(vFull.internal_notes ?? "");
 
     const [{ data: prof }, { data: app }, { data: res }, { data: maint }, { data: rev }] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", v.owner_id).maybeSingle(),
