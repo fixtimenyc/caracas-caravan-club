@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { VEHICLE_PUBLIC_COLUMNS } from "@/lib/vehicleColumns";
+import { VEHICLE_PUBLIC_COLUMNS, fetchVehiclePrivateMap } from "@/lib/vehicleColumns";
 
 const COMMISSION = 0.20;
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#f59e0b", "#10b981", "#6366f1", "#ec4899", "#06b6d4", "#f43f5e"];
@@ -513,10 +513,11 @@ function ReportsTab({ raw, d }: any) {
     downloadCSV(`reporte-usuarios-${format(new Date(), "yyyyMMdd")}.csv`, rows);
   };
 
-  const reportAutos = (fmtType: string) => {
+  const reportAutos = async (fmtType: string) => {
     if (fmtType === "csv") {
+      const privMap = await fetchVehiclePrivateMap();
       const rows = [["Marca", "Modelo", "Año", "Placa", "Ubicación", "Precio/día", "Activo"]];
-      raw.vehicles.forEach((v: Row) => rows.push([v.brand, v.model, v.year, "", v.location, v.price_per_day, v.active ? "Sí" : "No"]));
+      raw.vehicles.forEach((v: Row) => rows.push([v.brand, v.model, v.year, privMap[v.id]?.plate || "", v.location, v.price_per_day, v.active ? "Sí" : "No"]));
       downloadCSV(`reporte-autos-${format(new Date(), "yyyyMMdd")}.csv`, rows);
     } else {
       const lines = raw.vehicles.slice(0, 30).map((v: Row) => `${v.brand} ${v.model} ${v.year} · ${v.location} · ${fmt(Number(v.price_per_day))}/día`);
