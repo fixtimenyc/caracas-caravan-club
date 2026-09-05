@@ -1655,6 +1655,18 @@ export type Database = {
         Returns: boolean
       }
       is_review_public: { Args: { _reservation_id: string }; Returns: boolean }
+      list_vehicle_private_fields: {
+        Args: never
+        Returns: {
+          circulation_doc_url: string
+          insurance_doc_url: string
+          internal_notes: string
+          plate: string
+          soat_doc_url: string
+          vehicle_id: string
+          vin: string
+        }[]
+      }
       record_consent: {
         Args: {
           _consent_type: Database["public"]["Enums"]["consent_type"]
