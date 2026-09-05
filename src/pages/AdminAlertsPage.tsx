@@ -42,6 +42,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw } from "lucide-react";
+import { fetchVehiclePrivateMap } from "@/lib/vehicleColumns";
 
 type Severity = "critical" | "warning" | "info" | "success";
 type Category = "operational" | "financial" | "users" | "technical";
@@ -198,11 +199,14 @@ async function deriveAlerts(state: StateMap): Promise<AlertItem[]> {
   // ---- Vehicles: SOAT / insurance / circulation expiry ----
   const { data: vehicles } = await supabase
     .from("vehicles")
-    .select("id, brand, model, plate, soat_expiry, insurance_expiry, circulation_expiry, active")
+    .select("id, brand, model, soat_expiry, insurance_expiry, circulation_expiry, active")
     .eq("active", true);
 
+  const privMap = await fetchVehiclePrivateMap();
+
   for (const v of vehicles || []) {
-    const label = `${v.brand} ${v.model}${v.plate ? ` (${v.plate})` : ""}`;
+    const plate = privMap[v.id]?.plate;
+    const label = `${v.brand} ${v.model}${plate ? ` (${plate})` : ""}`;
     const link = { label: "Ver vehículo", href: `/admin/flota/${v.id}` };
     if (v.soat_expiry && v.soat_expiry < todayISO) {
       push(
@@ -233,13 +237,14 @@ async function deriveAlerts(state: StateMap): Promise<AlertItem[]> {
   // ---- Maintenance overdue ----
   const { data: maint } = await supabase
     .from("vehicle_maintenance")
-    .select("id, vehicle_id, type, scheduled_date, status, vehicles(brand, model, plate)")
+    .select("id, vehicle_id, type, scheduled_date, status, vehicles(brand, model)")
     .eq("status", "scheduled")
     .lt("scheduled_date", todayISO);
 
   for (const m of (maint as any[]) || []) {
     const v = m.vehicles;
-    const label = v ? `${v.brand} ${v.model}${v.plate ? ` (${v.plate})` : ""}` : "Vehículo";
+    const mPlate = privMap[m.vehicle_id]?.plate;
+    const label = v ? `${v.brand} ${v.model}${mPlate ? ` (${mPlate})` : ""}` : "Vehículo";
     push(
       build(
         state,

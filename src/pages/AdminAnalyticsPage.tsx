@@ -516,7 +516,7 @@ function ReportsTab({ raw, d }: any) {
   const reportAutos = (fmtType: string) => {
     if (fmtType === "csv") {
       const rows = [["Marca", "Modelo", "Año", "Placa", "Ubicación", "Precio/día", "Activo"]];
-      raw.vehicles.forEach((v: Row) => rows.push([v.brand, v.model, v.year, v.plate || "", v.location, v.price_per_day, v.active ? "Sí" : "No"]));
+      raw.vehicles.forEach((v: Row) => rows.push([v.brand, v.model, v.year, "", v.location, v.price_per_day, v.active ? "Sí" : "No"]));
       downloadCSV(`reporte-autos-${format(new Date(), "yyyyMMdd")}.csv`, rows);
     } else {
       const lines = raw.vehicles.slice(0, 30).map((v: Row) => `${v.brand} ${v.model} ${v.year} · ${v.location} · ${fmt(Number(v.price_per_day))}/día`);
