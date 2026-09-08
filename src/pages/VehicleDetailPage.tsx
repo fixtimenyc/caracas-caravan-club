@@ -404,6 +404,14 @@ const VehicleDetailPage = () => {
     ? format(parseISO(owner.created_at), "MMMM yyyy", { locale: es })
     : "—";
 
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareTitle = vehicle
+    ? `${vehicle.brand} ${vehicle.model} ${vehicle.year ?? ""} en RuedaVe`.trim()
+    : "RuedaVe";
+  const shareText = vehicle
+    ? `Mira este ${vehicle.brand} ${vehicle.model} en alquiler por $${vehicle.price_per_day}/día en ${vehicle.location} — RuedaVe`
+    : "Alquila un vehículo en RuedaVe";
+
   return (
     <div className="min-h-screen bg-background">
       {vehicle && (
