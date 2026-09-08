@@ -28,7 +28,17 @@ import {
   Droplet,
   AlertCircle,
   Check,
+  Facebook,
+  Twitter,
+  Link as LinkIcon,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
@@ -404,6 +414,14 @@ const VehicleDetailPage = () => {
     ? format(parseISO(owner.created_at), "MMMM yyyy", { locale: es })
     : "—";
 
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareTitle = vehicle
+    ? `${vehicle.brand} ${vehicle.model} ${vehicle.year ?? ""} en RuedaVe`.trim()
+    : "RuedaVe";
+  const shareText = vehicle
+    ? `Mira este ${vehicle.brand} ${vehicle.model} en alquiler por $${vehicle.price_per_day}/día en ${vehicle.location} — RuedaVe`
+    : "Alquila un vehículo en RuedaVe";
+
   return (
     <div className="min-h-screen bg-background">
       {vehicle && (
@@ -520,9 +538,88 @@ const VehicleDetailPage = () => {
                 className={cn("w-4 h-4", isFavorite && "fill-accent text-accent")}
               />
             </Button>
-            <Button variant="outline" size="icon">
-              <Share2 className="w-4 h-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Compartir vehículo">
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                {typeof navigator !== "undefined" && !!(navigator as any).share && (
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      try {
+                        await (navigator as any).share({
+                          title: shareTitle,
+                          text: shareText,
+                          url: shareUrl,
+                        });
+                      } catch {
+                        /* usuario canceló */
+                      }
+                    }}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" /> Compartir…
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={() =>
+                    window.open(
+                      `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    window.open(
+                      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                >
+                  <Facebook className="w-4 h-4 mr-2" /> Facebook
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    window.open(
+                      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                >
+                  <Twitter className="w-4 h-4 mr-2" /> X (Twitter)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    window.open(
+                      `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`,
+                      "_self",
+                    )
+                  }
+                >
+                  <Mail className="w-4 h-4 mr-2" /> Correo
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(shareUrl);
+                      toast.success("Enlace copiado");
+                    } catch {
+                      toast.error("No se pudo copiar el enlace");
+                    }
+                  }}
+                >
+                  <LinkIcon className="w-4 h-4 mr-2" /> Copiar enlace
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
