@@ -833,7 +833,7 @@ const VehicleDetailPage = () => {
                     <ul className="grid sm:grid-cols-3 gap-2 text-sm text-foreground">
                       <li className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-primary" />
-                        Aprobado para conducir
+                        Vehículo inspeccionado
                       </li>
                       <li className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-primary" />
